@@ -35,7 +35,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/surge/glog"
-	"github.com/trustpath/sequence"
+	"sequence"
 )
 
 var (
@@ -171,6 +171,7 @@ func analyze(cmd *cobra.Command, args []string) {
 
 	// Now that we have built the analyzer, let's go through each log message again
 	// to determine the unique patterns
+	err_count := 0
 	for iscan.Scan() {
 		line := iscan.Text()
 		if len(line) == 0 || line[0] == '#' {
@@ -197,6 +198,7 @@ func analyze(cmd *cobra.Command, args []string) {
 			aseq, err := analyzer.Analyze(seq)
 			if err != nil {
 				log.Printf("Error analyzing: %s", line)
+				err_count++
 			} else {
 				pat := aseq.String()
 				stat, ok := amap[pat]
@@ -224,7 +226,7 @@ func analyze(cmd *cobra.Command, args []string) {
 		fmt.Fprintf(ofile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.cnt, stat.ex)
 	}
 
-	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new.", n, len(pmap)+len(amap), len(amap))
+	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored", n, len(pmap)+len(amap), len(amap), err_count)
 }
 
 func parse(cmd *cobra.Command, args []string) {
@@ -247,7 +249,7 @@ func parse(cmd *cobra.Command, args []string) {
 
 	n := 0
 	now := time.Now()
-
+	err_count := 0
 	for iscan.Scan() {
 		line := iscan.Text()
 		if len(line) == 0 || line[0] == '#' {
@@ -260,13 +262,14 @@ func parse(cmd *cobra.Command, args []string) {
 		seq, err := parser.Parse(seq)
 		if err != nil {
 			log.Printf("Error (%s) parsing: %s", err, line)
+			err_count++
 		} else {
 			fmt.Fprintf(ofile, "%s\n%s\n\n", line, seq.PrintTokens())
 		}
 	}
 
 	since := time.Since(now)
-	log.Printf("Parsed %d messages in %.2f secs, ~ %.2f msgs/sec", n, float64(since)/float64(time.Second), float64(n)/(float64(since)/float64(time.Second)))
+	log.Printf("Parsed %d messages in %.2f secs, ~ %.2f msgs/sec. %d records unable to be parsed.", n, float64(since)/float64(time.Second), float64(n)/(float64(since)/float64(time.Second)), err_count)
 	close(quit)
 	<-done
 }
@@ -396,6 +399,45 @@ func benchParse(cmd *cobra.Command, args []string) {
 	log.Printf("Parsed %d messages in %.2f secs, ~ %.2f msgs/sec, ~ %.2f MB/sec", n, float64(since)/float64(time.Second), float64(n)/(float64(since)/float64(time.Second)), float64(totalSize)/float64(mbyte)/(float64(since)/float64(time.Second)))
 	close(quit)
 	<-done
+}
+
+func convert(cmd *cobra.Command, args []string) {
+	readConfig()
+	profile()
+
+	file, err := os.Open("2.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	//every three lines is one record separated by a blank line.
+	//the first line is the pattern
+	//the second line is the number of examples that match
+	//the third line is the example
+	currentLine := 1
+	pattern := sequence.Pattern{}
+	for scanner.Scan() {
+		//ignore the blank lines
+		if len(scanner.Text()) > 0 {
+			switch {
+			case currentLine == 1:
+				pattern.Pattern = scanner.Text()
+				currentLine++
+			case currentLine == 2:
+				pattern.ExampleCount = scanner.Text()
+				currentLine++
+			case currentLine == 3:
+				pattern.Example = scanner.Text()
+				currentLine = 1
+				sequence.ConvertToYaml(pattern)
+			}
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func scanMessage(scanner *sequence.Scanner, data string) sequence.Sequence {
@@ -559,6 +601,11 @@ func main() {
 			Short: "analyzes a log file and output a list of patterns that will match all the log messages",
 		}
 
+		convertCmd = &cobra.Command{
+			Use:   "convert",
+			Short: "converts the output of the analyze function into a YAML file",
+		}
+
 		parseCmd = &cobra.Command{
 			Use:   "parse",
 			Short: "parses a log file and output a list of parsed tokens for each of the log messages",
@@ -578,6 +625,8 @@ func main() {
 			Use:   "parse",
 			Short: "benchmarks the parsing of a log file, no output is provided",
 		}
+
+
 	)
 
 	sequenceCmd.PersistentFlags().StringVarP(&cfgfile, "config", "", "", "TOML-formatted configuration file, default checks ./sequence.toml, then sequence.toml in the same directory as program")
@@ -591,6 +640,7 @@ func main() {
 
 	scanCmd.Run = scan
 	analyzeCmd.Run = analyze
+	convertCmd.Run = convert
 	parseCmd.Run = parse
 	benchScanCmd.Run = benchScan
 	benchParseCmd.Run = benchParse
@@ -600,6 +650,7 @@ func main() {
 
 	sequenceCmd.AddCommand(scanCmd)
 	sequenceCmd.AddCommand(analyzeCmd)
+	sequenceCmd.AddCommand(convertCmd)
 	sequenceCmd.AddCommand(parseCmd)
 	sequenceCmd.AddCommand(benchCmd)
 

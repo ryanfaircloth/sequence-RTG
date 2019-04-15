@@ -114,7 +114,7 @@ func name2TokenType(s string) TokenType {
 		return TokenInteger
 	case "float":
 		return TokenFloat
-	case "url":
+	case "uri":
 		return TokenURI
 	case "mac":
 		return TokenMac

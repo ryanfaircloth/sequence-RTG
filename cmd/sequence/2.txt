@@ -1,0 +1,7 @@
+%string% %string% : %integer% : message has been queued for %integer% days
+# 1010 log messages matched
+# postfix/pickup warning: 635541320: message has been queued for 20 days
+
+%string% %srcip% - - [ %msgtime% ] " %action% %string% %protocol% " %integer% %integer%
+# 36 log messages matched
+# rest-api-passive-probes-backend 172.19.0.13 - - [09/Apr/2019:06:25:02 +0000] "POST /service HTTP/1.1" 200 46

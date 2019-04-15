@@ -225,7 +225,7 @@ var (
 	TagMsgId      TagType // The message identifier
 	TagMsgTime    TagType // The timestamp that’s part of the log message
 	TagSeverity   TagType // The severity of the event, e.g., Emergency, …
-	TagPriority   TagType // The pirority of the event
+	TagPriority   TagType // The priority of the event
 	TagAppHost    TagType // The hostname of the host where the log message is generated
 	TagAppIP      TagType // The IP address of the host where the application that generated the log message is running on.
 	TagAppVendor  TagType // The type of application that generated the log message, e.g., Cisco, ISS
