@@ -29,6 +29,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime/pprof"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -42,6 +43,7 @@ var (
 	cfgfile    string
 	infile     string
 	outfile    string
+	outformat  string
 	patfile    string
 	cpuprofile string
 	workers    int
@@ -159,10 +161,12 @@ func analyze(cmd *cobra.Command, args []string) {
 	iscan, ifile = openInputFile(infile)
 	defer ifile.Close()
 
+	//these are existing patterns
 	pmap := make(map[string]struct {
 		ex  string
 		cnt int
 	})
+	//these are the newly discovered patterns
 	amap := make(map[string]struct {
 		ex  string
 		cnt int
@@ -218,16 +222,121 @@ func analyze(cmd *cobra.Command, args []string) {
 	ofile := openOutputFile(outfile)
 	defer ofile.Close()
 
-	for pat, stat := range pmap {
-		fmt.Fprintf(ofile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.cnt, stat.ex)
-	}
+	//
+	if outformat == "text" || outformat == ""{
+		for pat, stat := range pmap {
+			fmt.Fprintf(ofile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.cnt, stat.ex)
+		}
 
-	for pat, stat := range amap {
-		fmt.Fprintf(ofile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.cnt, stat.ex)
-	}
+		for pat, stat := range amap {
+			fmt.Fprintf(ofile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.cnt, stat.ex)
+		}
+	}else{
+		if outformat == "yaml"{
+			fmt.Fprintf(ofile, "coloss::patterndb::simple::rule:\n")
+		}
+		//TODO: make this calculate the date, check the version requirements?
+		if outformat == "xml"{
+			fmt.Fprintf(ofile, "<?xml version='1.0' encoding='UTF-8'?><patterndb version='4' pub_date='2019-02-12'>\n")
+		}
+		pattern := sequence.AnalyzerResult{}
+		for pat, stat := range pmap {
+			pattern = sequence.AnalyzerResult{pat, stat.cnt, stat.ex}
+			y := convertTo(pattern, outformat)
+			//write to the file line by line with a tab in front.
+			s := strings.Split(y,"\n")
+			for _, v := range s {
+				if len(v)>0{
+					fmt.Fprintf(ofile, "\t%s\n", v)
+				}
 
+			}
+		}
+		for pat, stat := range amap {
+			pattern = sequence.AnalyzerResult{pat, stat.cnt, stat.ex}
+			y := convertTo(pattern, outformat)
+			//write to the file line by line with a tab in front.
+			s := strings.Split(y,"\n")
+			for _, v := range s {
+				if len(v)>0{
+					fmt.Fprintf(ofile, "\t%s\n", v)
+				}
+
+			}
+		}
+		if outformat == "xml"{
+			fmt.Fprintf(ofile, "</patterndb>\n")
+		}
+	}
 	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored", n, len(pmap)+len(amap), len(amap), err_count)
 }
+
+func convertTo(result sequence.AnalyzerResult, format string) string {
+	var z string
+	if format == "yaml"{
+		z = sequence.ConvertToYaml(result)
+	}
+	if format == "xml"{
+		z = sequence.ConvertToXml(result)
+	}
+	return z
+}
+
+func convert(cmd *cobra.Command, args []string) {
+	readConfig()
+	profile()
+
+	file, err := os.Open("output_analyze.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	//every three lines is one record separated by a blank line.
+	//the first line is the pattern
+	//the second line is the number of examples that match
+	//the third line is the example
+	currentLine := 1
+	r := sequence.AnalyzerResult{}
+	ofile := openOutputFile(infile)
+	defer ofile.Close()
+	fmt.Fprintf(ofile, "coloss::patterndb::simple::rule:\n")
+	for scanner.Scan() {
+		//ignore the blank lines
+		if len(scanner.Text()) > 0 {
+			switch {
+			case currentLine == 1:
+				r.Pattern = scanner.Text()
+				fmt.Println(r.Pattern)
+				currentLine++
+			case currentLine == 2:
+				// get the example count from the string
+				s := strings.Fields(scanner.Text())
+				r.ExampleCount, err = strconv.Atoi(s[1])
+				currentLine++
+			case currentLine == 3:
+				r.Example = scanner.Text()
+				currentLine = 1
+				y := sequence.ConvertToYaml(r)
+				//write to the file line by line with a tab in front.
+				s := strings.Split(y,"\n")
+				for _, v := range s {
+					if len(v)>0{
+						fmt.Fprintf(ofile, "\t%s\n", v)
+					}
+
+				}
+			}
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+
+
 
 func parse(cmd *cobra.Command, args []string) {
 	readConfig()
@@ -401,44 +510,7 @@ func benchParse(cmd *cobra.Command, args []string) {
 	<-done
 }
 
-func convert(cmd *cobra.Command, args []string) {
-	readConfig()
-	profile()
 
-	file, err := os.Open("2.txt")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	//every three lines is one record separated by a blank line.
-	//the first line is the pattern
-	//the second line is the number of examples that match
-	//the third line is the example
-	currentLine := 1
-	pattern := sequence.Pattern{}
-	for scanner.Scan() {
-		//ignore the blank lines
-		if len(scanner.Text()) > 0 {
-			switch {
-			case currentLine == 1:
-				pattern.Pattern = scanner.Text()
-				currentLine++
-			case currentLine == 2:
-				pattern.ExampleCount = scanner.Text()
-				currentLine++
-			case currentLine == 3:
-				pattern.Example = scanner.Text()
-				currentLine = 1
-				sequence.ConvertToYaml(pattern)
-			}
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
-	}
-}
 
 func scanMessage(scanner *sequence.Scanner, data string) sequence.Sequence {
 	var (
@@ -625,8 +697,6 @@ func main() {
 			Use:   "parse",
 			Short: "benchmarks the parsing of a log file, no output is provided",
 		}
-
-
 	)
 
 	sequenceCmd.PersistentFlags().StringVarP(&cfgfile, "config", "", "", "TOML-formatted configuration file, default checks ./sequence.toml, then sequence.toml in the same directory as program")
@@ -634,6 +704,7 @@ func main() {
 	sequenceCmd.PersistentFlags().StringVarP(&infile, "input", "i", "", "input file, required")
 	sequenceCmd.PersistentFlags().StringVarP(&outfile, "output", "o", "", "output file, if empty, to stdout")
 	sequenceCmd.PersistentFlags().StringVarP(&patfile, "patterns", "p", "", "patterns, can be a file or directory, used by analyze and parse")
+	sequenceCmd.PersistentFlags().StringVarP(&outformat, "out-format", "f", "", "format of the output file, can be YAML or text, if empty it uses text, used by analyze")
 
 	benchCmd.PersistentFlags().StringVarP(&cpuprofile, "cpuprofile", "", "", "CPU profile filename")
 	benchCmd.PersistentFlags().IntVarP(&workers, "workers", "", 1, "number of parsing workers")

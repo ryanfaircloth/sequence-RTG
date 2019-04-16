@@ -4,7 +4,7 @@ import(
 	"testing"
 )
 
-var pattern1 = Pattern{"%string% %string% : %integer% : message has been queued for %integer% %srcuser%",
+var pattern1 = AnalyzerResult{"%string% %string% : %integer% : message has been queued for %integer% %srcuser%",
 	1010,"#postfix/pickup warning: 635541320: message has been queued for 20 days"}
 
 
