@@ -30,7 +30,6 @@ import (
 	"os/signal"
 	"runtime/pprof"
 	"sequence/syslog_ng"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -177,6 +176,8 @@ func analyze(cmd *cobra.Command, args []string) {
 	// Now that we have built the analyzer, let's go through each log message again
 	// to determine the unique patterns
 	err_count := 0
+	var vals []int
+
 	for iscan.Scan() {
 		line := iscan.Text()
 		if len(line) == 0 || line[0] == '#' {
@@ -223,6 +224,10 @@ func analyze(cmd *cobra.Command, args []string) {
 	ofile := openOutputFile(outfile)
 	defer ofile.Close()
 
+	//get the threshold for including the pattern in the
+	//output files
+	threshold := syslog_ng.GetThreshold(n)
+
 	//
 	if outformat == "text" || outformat == ""{
 		for pat, stat := range pmap {
@@ -251,76 +256,9 @@ func analyze(cmd *cobra.Command, args []string) {
 		}
 		for pat, stat := range amap {
 			pattern = sequence.AnalyzerResult{pat, stat.cnt, stat.ex}
-			y := syslog_ng.ConvertToYaml(pattern)
-			//write to the file line by line with a tab in front.
-			s := strings.Split(y,"\n")
-			for _, v := range s {
-				if len(v)>0{
-					fmt.Fprintf(ofile, "\t%s\n", v)
-				}
-
-			}
-		}
-	}
-
-	if outformat == "xml"{
-		fmt.Fprintf(ofile, "<?xml version='1.0' encoding='UTF-8'?>\n")
-		pattDB := syslog_ng.PatternDB{Version:"4", Pubdate:time.Now().String()}
-		pattern := sequence.AnalyzerResult{}
-		for pat, stat := range pmap {
-			pattern = sequence.AnalyzerResult{pat, stat.cnt, stat.ex}
-			pattDB = syslog_ng.AddToRuleset(pattern, pattDB)
-
-		}
-		for pat, stat := range amap {
-			pattern = sequence.AnalyzerResult{pat, stat.cnt, stat.ex}
-			pattDB = syslog_ng.AddToRuleset(pattern, pattDB)
-		}
-
-		//write to the file
-		y := syslog_ng.ConvertToXml(pattDB)
-		fmt.Fprintf(ofile, "\t%s\n", y)
-	}
-	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored", n, len(pmap)+len(amap), len(amap), err_count)
-}
-
-func convert(cmd *cobra.Command, args []string) {
-	readConfig()
-	profile()
-
-	file, err := os.Open("output_analyze.txt")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	//every three lines is one record separated by a blank line.
-	//the first line is the pattern
-	//the second line is the number of examples that match
-	//the third line is the example
-	currentLine := 1
-	r := sequence.AnalyzerResult{}
-	ofile := openOutputFile(infile)
-	defer ofile.Close()
-	fmt.Fprintf(ofile, "coloss::patterndb::simple::rule:\n")
-	for scanner.Scan() {
-		//ignore the blank lines
-		if len(scanner.Text()) > 0 {
-			switch {
-			case currentLine == 1:
-				r.Pattern = scanner.Text()
-				fmt.Println(r.Pattern)
-				currentLine++
-			case currentLine == 2:
-				// get the example count from the string
-				s := strings.Fields(scanner.Text())
-				r.ExampleCount, err = strconv.Atoi(s[1])
-				currentLine++
-			case currentLine == 3:
-				r.Example = scanner.Text()
-				currentLine = 1
-				y := syslog_ng.ConvertToYaml(r)
+			//only add patterns with a certain number of examples found
+			if threshold < stat.cnt {
+				y := syslog_ng.ConvertToYaml(pattern)
 				//write to the file line by line with a tab in front.
 				s := strings.Split(y,"\n")
 				for _, v := range s {
@@ -329,16 +267,39 @@ func convert(cmd *cobra.Command, args []string) {
 					}
 
 				}
+				vals = append(vals, stat.cnt)
 			}
+
 		}
 	}
-	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+
+	if outformat == "xml"{
+		fmt.Fprintf(ofile, "<?xml version='1.0' encoding='UTF-8'?>\n")
+		pattDB := syslog_ng.PatternDB{Version:"4", Pubdate:time.Now().Format("2006-01-02 15:04:05")}
+		pattern := sequence.AnalyzerResult{}
+
+		//existing patterns
+		for pat, stat := range pmap {
+			pattern = sequence.AnalyzerResult{pat, stat.cnt, stat.ex}
+			pattDB = syslog_ng.AddToRuleset(pattern, pattDB)
+
+		}
+		//new patterns
+		for pat, stat := range amap {
+			pattern = sequence.AnalyzerResult{pat, stat.cnt, stat.ex}
+			if threshold < stat.cnt{
+				pattDB = syslog_ng.AddToRuleset(pattern, pattDB)
+				vals = append(vals, stat.cnt)
+			}
+		}
+
+		//write to the file
+		y := syslog_ng.ConvertToXml(pattDB)
+		fmt.Fprintf(ofile, "\t%s\n", y)
 	}
+
+	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d passed the threshold and were added to the xml/yaml file, %d messages errored", n, len(pmap)+len(amap), len(amap), len(vals), err_count)
 }
-
-
-
 
 func parse(cmd *cobra.Command, args []string) {
 	readConfig()
@@ -675,11 +636,6 @@ func main() {
 			Short: "analyzes a log file and output a list of patterns that will match all the log messages",
 		}
 
-		convertCmd = &cobra.Command{
-			Use:   "convert",
-			Short: "converts the output of the analyze function into a YAML file",
-		}
-
 		parseCmd = &cobra.Command{
 			Use:   "parse",
 			Short: "parses a log file and output a list of parsed tokens for each of the log messages",
@@ -713,7 +669,6 @@ func main() {
 
 	scanCmd.Run = scan
 	analyzeCmd.Run = analyze
-	convertCmd.Run = convert
 	parseCmd.Run = parse
 	benchScanCmd.Run = benchScan
 	benchParseCmd.Run = benchParse
@@ -723,7 +678,6 @@ func main() {
 
 	sequenceCmd.AddCommand(scanCmd)
 	sequenceCmd.AddCommand(analyzeCmd)
-	sequenceCmd.AddCommand(convertCmd)
 	sequenceCmd.AddCommand(parseCmd)
 	sequenceCmd.AddCommand(benchCmd)
 

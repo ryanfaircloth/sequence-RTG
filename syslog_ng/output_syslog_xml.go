@@ -2,7 +2,6 @@ package syslog_ng
 
 import (
 	"encoding/xml"
-	"github.com/google/uuid"
 	"log"
 	"sequence"
 	"strconv"
@@ -73,12 +72,12 @@ func ConvertToXml(document PatternDB) string {
 }
 
 func AddToRuleset(pattern sequence.AnalyzerResult, document PatternDB) PatternDB {
-	//get the ruleset name for the example
-	//it will be the first value
 	//build the rule as XML
 	rule := buildRuleXML(pattern)
+	//get the ruleset name for the example
+	//it will be the first value
 	s := strings.Fields(pattern.Example)
-	rsName := s[0]
+	rsName := strings.ToLower(s[0])
 	found := false
 	//look in the ruleset if it exists already
 	for i, rls := range document.Rulesets {
@@ -115,10 +114,6 @@ func buildRuleXML (result sequence.AnalyzerResult) XRule {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//remove the first two chars, TODO try to prevent them in the source file.
-	if result.Example[0:2] == "# "{
-		result.Example = result.Example[2:len(result.Example)]
-	}
 	var p XPattern
 	var e XExample
 	p.Pattern = replaceTags(result.Pattern)
@@ -126,18 +121,14 @@ func buildRuleXML (result sequence.AnalyzerResult) XRule {
 	rule.Patterns = append(rule.Patterns, p)
 	rule.Examples.Examples = append(rule.Examples.Examples, e)
 	//create a new UUID
-	rule.ID = uuid.Must(uuid.NewRandom()).String()
+	rule.ID = generateIDFromPattern(result.Pattern)
 	return rule
 }
 
 func buildRulesetXML (rsName string) XRuleset {
 	rs := XRuleset{Name:rsName}
-	rs.ID = uuid.Must(uuid.NewRandom()).String()
+	rs.ID = generateIDFromPattern(rsName)
 	return rs
-}
-
-func checkIfNewRuleset(rsName string) bool {
-	return false
 }
 
 

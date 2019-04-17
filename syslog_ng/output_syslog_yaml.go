@@ -1,7 +1,6 @@
 package syslog_ng
 
 import (
-	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
 	"log"
 	"sequence"
@@ -59,25 +58,21 @@ func AddIdField(y string, id string) string{
 	return y
 }
 
-func buildRule (pattern sequence.AnalyzerResult) YRule {
+func buildRule (result sequence.AnalyzerResult) YRule {
 	var err error
 	rule := YRule{}
-	rule.Details.Values.Seqmatches = pattern.ExampleCount
+	rule.Details.Values.Seqmatches = result.ExampleCount
 	if err != nil {
 		log.Fatal(err)
 	}
-	//remove the first two chars, TODO try to prevent them in the source file.
-	if pattern.Example[0:2] == "# "{
-		pattern.Example = pattern.Example[2:len(pattern.Example)]
-	}
 	//get the ruleset from the example (first string)
-	s := strings.Fields(pattern.Example)
+	s := strings.Fields(result.Example)
 	rule.Details.Ruleset =	s[0]
-	rule.Details.Patterns = append(rule.Details.Patterns, replaceTags(pattern.Pattern))
-	rule.Details.Examples = append(rule.Details.Examples, pattern.Example)
+	rule.Details.Patterns = append(rule.Details.Patterns, replaceTags(result.Pattern))
+	rule.Details.Examples = append(rule.Details.Examples, result.Example)
 	rule.Details.Values.New = true
 	//create a new UUID
-	rule.Details.ID = uuid.Must(uuid.NewRandom()).String()
+	rule.Details.ID = generateIDFromPattern(result.Pattern)
 	return rule
 }
 

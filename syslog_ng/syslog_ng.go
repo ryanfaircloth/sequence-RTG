@@ -1,6 +1,9 @@
 package syslog_ng
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
+	"math"
 	"sequence"
 	"strings"
 )
@@ -77,4 +80,23 @@ func replaceTags(pattern string) string{
 
 func checkIfNew(pattern sequence.AnalyzerResult) bool {
 	return false
+}
+
+//this is so that the same pattern will have the same id
+//in all files and the id is reproducible
+//returns a sha1 hash as the id
+func generateIDFromPattern(pattern string) string{
+	h := sha1.New()
+	h.Write([]byte(pattern))
+	sha := h.Sum(nil)  // "sha" is uint8 type, encoded in base16
+	shaStr := hex.EncodeToString(sha)  // String representation
+	return shaStr
+}
+
+func GetThreshold(numTotal int) int {
+	trPercent := 0.001
+	total := float64(numTotal)
+	t := trPercent * total
+	tr := int(math.Floor(t))
+	return tr
 }
