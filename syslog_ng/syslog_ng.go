@@ -1,6 +1,9 @@
 package syslog_ng
 
-import "strings"
+import (
+	"sequence"
+	"strings"
+)
 
 var syslog_ng = map[string]string{
 	"%string%":"@STRING@",
@@ -24,4 +27,8 @@ func replaceTags(pattern string) string{
 		new += " " + p
 	}
 	return new
+}
+
+func checkIfNew(pattern sequence.AnalyzerResult) bool {
+	return false
 }

@@ -81,9 +81,7 @@ func buildRule (pattern sequence.AnalyzerResult) YRule {
 	return rule
 }
 
-func checkIfNew(pattern sequence.AnalyzerResult) bool {
-	return false
-}
+
 
 //convert each pattern, check if it exists, ignore if yes, add if no
 //do a formatting check

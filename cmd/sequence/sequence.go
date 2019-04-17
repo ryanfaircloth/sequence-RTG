@@ -232,18 +232,14 @@ func analyze(cmd *cobra.Command, args []string) {
 		for pat, stat := range amap {
 			fmt.Fprintf(ofile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.cnt, stat.ex)
 		}
-	}else{
-		if outformat == "yaml"{
-			fmt.Fprintf(ofile, "coloss::patterndb::simple::rule:\n")
-		}
-		//TODO: make this calculate the date, check the version requirements?
-		if outformat == "xml"{
-			fmt.Fprintf(ofile, "<?xml version='1.0' encoding='UTF-8'?><patterndb version='4' pub_date='2019-02-12'>\n")
-		}
+	}
+
+	if outformat == "yaml"{
+		fmt.Fprintf(ofile, "coloss::patterndb::simple::rule:\n")
 		pattern := sequence.AnalyzerResult{}
 		for pat, stat := range pmap {
 			pattern = sequence.AnalyzerResult{pat, stat.cnt, stat.ex}
-			y := convertTo(pattern, outformat)
+			y := syslog_ng.ConvertToYaml(pattern)
 			//write to the file line by line with a tab in front.
 			s := strings.Split(y,"\n")
 			for _, v := range s {
@@ -255,7 +251,7 @@ func analyze(cmd *cobra.Command, args []string) {
 		}
 		for pat, stat := range amap {
 			pattern = sequence.AnalyzerResult{pat, stat.cnt, stat.ex}
-			y := convertTo(pattern, outformat)
+			y := syslog_ng.ConvertToYaml(pattern)
 			//write to the file line by line with a tab in front.
 			s := strings.Split(y,"\n")
 			for _, v := range s {
@@ -265,22 +261,27 @@ func analyze(cmd *cobra.Command, args []string) {
 
 			}
 		}
-		if outformat == "xml"{
-			fmt.Fprintf(ofile, "</patterndb>\n")
+	}
+
+	if outformat == "xml"{
+		fmt.Fprintf(ofile, "<?xml version='1.0' encoding='UTF-8'?>\n")
+		pattDB := syslog_ng.PatternDB{Version:"4", Pubdate:time.Now().String()}
+		pattern := sequence.AnalyzerResult{}
+		for pat, stat := range pmap {
+			pattern = sequence.AnalyzerResult{pat, stat.cnt, stat.ex}
+			pattDB = syslog_ng.AddToRuleset(pattern, pattDB)
+
 		}
+		for pat, stat := range amap {
+			pattern = sequence.AnalyzerResult{pat, stat.cnt, stat.ex}
+			pattDB = syslog_ng.AddToRuleset(pattern, pattDB)
+		}
+
+		//write to the file
+		y := syslog_ng.ConvertToXml(pattDB)
+		fmt.Fprintf(ofile, "\t%s\n", y)
 	}
 	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored", n, len(pmap)+len(amap), len(amap), err_count)
-}
-
-func convertTo(result sequence.AnalyzerResult, format string) string {
-	var z string
-	if format == "yaml"{
-		z = syslog_ng.ConvertToYaml(result)
-	}
-	if format == "xml"{
-		z = syslog_ng.ConvertToXml(result)
-	}
-	return z
 }
 
 func convert(cmd *cobra.Command, args []string) {
