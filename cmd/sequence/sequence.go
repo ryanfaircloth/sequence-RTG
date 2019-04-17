@@ -29,6 +29,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime/pprof"
+	"sequence/syslog_ng"
 	"strconv"
 	"strings"
 	"sync"
@@ -274,10 +275,10 @@ func analyze(cmd *cobra.Command, args []string) {
 func convertTo(result sequence.AnalyzerResult, format string) string {
 	var z string
 	if format == "yaml"{
-		z = sequence.ConvertToYaml(result)
+		z = syslog_ng.ConvertToYaml(result)
 	}
 	if format == "xml"{
-		z = sequence.ConvertToXml(result)
+		z = syslog_ng.ConvertToXml(result)
 	}
 	return z
 }
@@ -318,7 +319,7 @@ func convert(cmd *cobra.Command, args []string) {
 			case currentLine == 3:
 				r.Example = scanner.Text()
 				currentLine = 1
-				y := sequence.ConvertToYaml(r)
+				y := syslog_ng.ConvertToYaml(r)
 				//write to the file line by line with a tab in front.
 				s := strings.Split(y,"\n")
 				for _, v := range s {

@@ -1,4 +1,4 @@
-package sequence
+package syslog_ng
 
 import "strings"
 
@@ -10,14 +10,6 @@ var syslog_ng = map[string]string{
 	"%srcip%":"@IPvANY@",
 	"%msgtime%":"@ANYSTRING@",
 	"%protocol%":"@IPvANY@",
-}
-
-//pattern to be used as the starting block for
-//all conversions
-type AnalyzerResult struct {
-	Pattern string
-	ExampleCount int
-	Example string
 }
 
 func replaceTags(pattern string) string{

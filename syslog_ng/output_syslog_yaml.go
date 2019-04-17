@@ -1,9 +1,10 @@
-package sequence
+package syslog_ng
 
 import (
 	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
 	"log"
+	"sequence"
 	"strings"
 )
 
@@ -34,7 +35,7 @@ type YRuleset struct{
 
 //This method takes the path to the file output by the analyzer as in and
 //converts it to Yaml and saves in the out path.
-func ConvertToYaml(pattern AnalyzerResult) string {
+func ConvertToYaml(pattern sequence.AnalyzerResult) string {
 	//check if the pattern exists
 	var rule YRule
 	if !checkIfNew(pattern){
@@ -58,7 +59,7 @@ func AddIdField(y string, id string) string{
 	return y
 }
 
-func buildRule (pattern AnalyzerResult) YRule {
+func buildRule (pattern sequence.AnalyzerResult) YRule {
 	var err error
 	rule := YRule{}
 	rule.Details.Values.Seqmatches = pattern.ExampleCount
@@ -80,7 +81,7 @@ func buildRule (pattern AnalyzerResult) YRule {
 	return rule
 }
 
-func checkIfNew(pattern AnalyzerResult) bool {
+func checkIfNew(pattern sequence.AnalyzerResult) bool {
 	return false
 }
 

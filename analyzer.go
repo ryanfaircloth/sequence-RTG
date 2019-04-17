@@ -75,6 +75,14 @@ type Analyzer struct {
 	mu sync.RWMutex
 }
 
+//pattern to be used as the starting block for
+//all conversions
+type AnalyzerResult struct {
+	Pattern string
+	ExampleCount int
+	Example string
+}
+
 type analyzerNode struct {
 	Token
 

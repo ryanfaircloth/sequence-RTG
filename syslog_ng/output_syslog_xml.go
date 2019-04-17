@@ -1,10 +1,11 @@
-package sequence
+package syslog_ng
 
 import (
 	"encoding/xml"
 	"fmt"
 	"github.com/google/uuid"
 	"log"
+	"sequence"
 	"strconv"
 )
 
@@ -52,7 +53,7 @@ type XRuleValue struct {
 
 //This method takes the path to the file output by the analyzer as in and
 //converts it to Yaml and saves in the out path.
-func ConvertToXml(pattern AnalyzerResult) string {
+func ConvertToXml(pattern sequence.AnalyzerResult) string {
 	//check if the pattern exists
 	var rule XRule
 	if !checkIfNew(pattern){
@@ -65,7 +66,7 @@ func ConvertToXml(pattern AnalyzerResult) string {
 	return string(y)
 }
 
-func buildRuleXML (result AnalyzerResult) XRule {
+func buildRuleXML (result sequence.AnalyzerResult) XRule {
 	var err error
 	rule := XRule{}
 	count := XRuleValue{Name:"seq-matches", Value: strconv.Itoa(result.ExampleCount)}
