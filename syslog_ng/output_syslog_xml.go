@@ -5,7 +5,6 @@ import (
 	"log"
 	"sequence"
 	"strconv"
-	"strings"
 )
 
 //This represents a ruleset section in the sys-log ng yaml file
@@ -82,9 +81,8 @@ func AddToRuleset(pattern sequence.AnalyzerResult, document PatternDB) PatternDB
 	//build the rule as XML
 	rule := buildRuleXML(pattern)
 	//get the ruleset name for the example
-	//it will be the first value
-	s := strings.Fields(pattern.Example)
-	rsName := strings.ToLower(s[0])
+	//it will be the service value
+	rsName := pattern.Service
 	found := false
 	//look in the ruleset if it exists already
 	for i, rls := range document.Rulesets {
@@ -125,9 +123,7 @@ func buildRuleXML (result sequence.AnalyzerResult) XRule {
 	var e XExample
 	var t XTestMessage
 	t.TestMessage = result.Example
-	//it will be the first value
-	s := strings.Fields(result.Example)
-	t.Program = strings.ToLower(s[0])
+	t.Program = result.Service
 	p.Pattern = replaceTags(result.Pattern)
 	e.TestMessage = t
 	rule.Patterns = append(rule.Patterns, p)

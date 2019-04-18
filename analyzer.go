@@ -81,7 +81,9 @@ type AnalyzerResult struct {
 	Pattern string
 	ExampleCount int
 	Example string
+	Service string
 }
+
 
 type analyzerNode struct {
 	Token

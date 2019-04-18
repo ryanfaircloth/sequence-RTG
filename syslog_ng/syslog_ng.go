@@ -8,6 +8,11 @@ import (
 	"strings"
 )
 
+type LogRecord struct {
+	Service string
+	Message string
+}
+
 var syslog_ng = map[string]string{
 	"%string%"		:   "@ESTRING:unknown:@",
 	"%srcemail%"	: 	"@EMAIL:srcemail:@",
@@ -99,5 +104,16 @@ func GetThreshold(numTotal int) int {
 	t := trPercent * total
 	tr := int(math.Floor(t))
 	return tr
+}
+
+func CreateLogRecordTxT(message string) LogRecord {
+	//the first field is the service, delimited by a space
+	k := strings.Fields(message)
+	s := k[0]
+	//we need to remove the service from the remaining message
+	i := len(s)+1
+	m := message[i:]
+	r := LogRecord{Service:s, Message:m}
+	return r
 }
 
