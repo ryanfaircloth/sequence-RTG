@@ -1,12 +1,9 @@
 package main
 
 import (
-	"bufio"
-	"compress/gzip"
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/surge/glog"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
@@ -81,7 +78,7 @@ func analyze(cmd *cobra.Command, args []string) {
 	scanner := sequence.NewScanner()
 
 	// Open input file
-	iscan, ifile := openInputFile(infile)
+	iscan, ifile := syslog_ng.OpenInputFile(infile)
 
 	defer ifile.Close()
 
@@ -103,7 +100,7 @@ func analyze(cmd *cobra.Command, args []string) {
 	ifile.Close()
 	analyzer.Finalize()
 
-	iscan, ifile = openInputFile(infile)
+	iscan, ifile = syslog_ng.OpenInputFile(infile)
 	defer ifile.Close()
 
 	//these are existing patterns
@@ -166,7 +163,7 @@ func analyze(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	ofile := openOutputFile(outfile)
+	ofile := syslog_ng.OpenOutputFile(outfile)
 	defer ofile.Close()
 
 	//get the threshold for including the pattern in the
@@ -278,7 +275,7 @@ func buildParser() *sequence.Parser {
 	if fi, err := os.Stat(patfile); err != nil {
 		log.Fatal(err)
 	} else if fi.Mode().IsDir() {
-		files = getDirOfFiles(patfile)
+		files = syslog_ng.GetDirOfFiles(patfile)
 	} else {
 		files = append(files, patfile)
 	}
@@ -287,7 +284,7 @@ func buildParser() *sequence.Parser {
 
 	for _, file := range files {
 		// Open pattern file
-		pscan, pfile := openInputFile(file)
+		pscan, pfile := syslog_ng.OpenInputFile(file)
 
 		for pscan.Scan() {
 			line := pscan.Text()
@@ -331,60 +328,7 @@ func readConfig() {
 	}
 }
 
-func getDirOfFiles(path string) []string {
-	filenames := make([]string, 0, 10)
 
-	files, err := ioutil.ReadDir(path)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, f := range files {
-		filenames = append(filenames, path+"/"+f.Name())
-	}
-
-	return filenames
-}
-
-func openInputFile(fname string) (*bufio.Scanner, *os.File) {
-	var s *bufio.Scanner
-	f, err := os.Open(fname)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if strings.HasSuffix(fname, ".gz") {
-		gunzip, err := gzip.NewReader(f)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		s = bufio.NewScanner(gunzip)
-	} else {
-		s = bufio.NewScanner(f)
-	}
-
-	return s, f
-}
-
-func openOutputFile(fname string) *os.File {
-	var (
-		ofile *os.File
-		err   error
-	)
-
-	if fname == "" {
-		ofile = os.Stdin
-	} else {
-		// Open output file
-		ofile, err = os.OpenFile(fname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	return ofile
-}
 
 func main() {
 	quit = make(chan struct{})

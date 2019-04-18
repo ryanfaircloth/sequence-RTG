@@ -48,8 +48,14 @@ type XExamples struct {
 
 type XExample struct {
 	XMLName  xml.Name `xml:"example"`
-	TestMessage string `xml:"test_message"`
+	TestMessage XTestMessage `xml:"test_message"`
 	TestValues []string `xml:"test_values"`
+}
+
+type XTestMessage struct {
+	XMLName  xml.Name `xml:"test_message"`
+	TestMessage string `xml:",chardata"`
+	Program string `xml:"program,attr"`
 }
 
 type XRuleValues struct {
@@ -116,8 +122,13 @@ func buildRuleXML (result sequence.AnalyzerResult) XRule {
 	}
 	var p XPattern
 	var e XExample
+	var t XTestMessage
+	t.TestMessage = result.Example
+	//it will be the first value
+	s := strings.Fields(result.Example)
+	t.Program = strings.ToLower(s[0])
 	p.Pattern = replaceTags(result.Pattern)
-	e.TestMessage = result.Example
+	e.TestMessage = t
 	rule.Patterns = append(rule.Patterns, p)
 	rule.Examples.Examples = append(rule.Examples.Examples, e)
 	//create a new UUID
