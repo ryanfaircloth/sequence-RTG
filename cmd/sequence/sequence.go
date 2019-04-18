@@ -29,21 +29,19 @@ import (
 	"os"
 	"os/signal"
 	"runtime/pprof"
-	"sequence/syslog_ng"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/surge/glog"
-	"sequence"
+	"github.com/trustpath/sequence"
 )
 
 var (
 	cfgfile    string
 	infile     string
 	outfile    string
-	outformat  string
 	patfile    string
 	cpuprofile string
 	workers    int
@@ -161,12 +159,10 @@ func analyze(cmd *cobra.Command, args []string) {
 	iscan, ifile = openInputFile(infile)
 	defer ifile.Close()
 
-	//these are existing patterns
 	pmap := make(map[string]struct {
 		ex  string
 		cnt int
 	})
-	//these are the newly discovered patterns
 	amap := make(map[string]struct {
 		ex  string
 		cnt int
@@ -175,9 +171,6 @@ func analyze(cmd *cobra.Command, args []string) {
 
 	// Now that we have built the analyzer, let's go through each log message again
 	// to determine the unique patterns
-	err_count := 0
-	var vals []int
-
 	for iscan.Scan() {
 		line := iscan.Text()
 		if len(line) == 0 || line[0] == '#' {
@@ -204,7 +197,6 @@ func analyze(cmd *cobra.Command, args []string) {
 			aseq, err := analyzer.Analyze(seq)
 			if err != nil {
 				log.Printf("Error analyzing: %s", line)
-				err_count++
 			} else {
 				pat := aseq.String()
 				stat, ok := amap[pat]
@@ -224,81 +216,15 @@ func analyze(cmd *cobra.Command, args []string) {
 	ofile := openOutputFile(outfile)
 	defer ofile.Close()
 
-	//get the threshold for including the pattern in the
-	//output files
-	threshold := syslog_ng.GetThreshold(n)
-
-	//
-	if outformat == "text" || outformat == ""{
-		for pat, stat := range pmap {
-			fmt.Fprintf(ofile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.cnt, stat.ex)
-		}
-
-		for pat, stat := range amap {
-			fmt.Fprintf(ofile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.cnt, stat.ex)
-		}
+	for pat, stat := range pmap {
+		fmt.Fprintf(ofile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.cnt, stat.ex)
 	}
 
-	if outformat == "yaml"{
-		fmt.Fprintf(ofile, "coloss::patterndb::simple::rule:\n")
-		pattern := sequence.AnalyzerResult{}
-		for pat, stat := range pmap {
-			pattern = sequence.AnalyzerResult{pat, stat.cnt, stat.ex}
-			y := syslog_ng.ConvertToYaml(pattern)
-			//write to the file line by line with a tab in front.
-			s := strings.Split(y,"\n")
-			for _, v := range s {
-				if len(v)>0{
-					fmt.Fprintf(ofile, "\t%s\n", v)
-				}
-
-			}
-		}
-		for pat, stat := range amap {
-			pattern = sequence.AnalyzerResult{pat, stat.cnt, stat.ex}
-			//only add patterns with a certain number of examples found
-			if threshold < stat.cnt {
-				y := syslog_ng.ConvertToYaml(pattern)
-				//write to the file line by line with a tab in front.
-				s := strings.Split(y,"\n")
-				for _, v := range s {
-					if len(v)>0{
-						fmt.Fprintf(ofile, "\t%s\n", v)
-					}
-
-				}
-				vals = append(vals, stat.cnt)
-			}
-
-		}
+	for pat, stat := range amap {
+		fmt.Fprintf(ofile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.cnt, stat.ex)
 	}
 
-	if outformat == "xml"{
-		fmt.Fprintf(ofile, "<?xml version='1.0' encoding='UTF-8'?>\n")
-		pattDB := syslog_ng.PatternDB{Version:"4", Pubdate:time.Now().Format("2006-01-02 15:04:05")}
-		pattern := sequence.AnalyzerResult{}
-
-		//existing patterns
-		for pat, stat := range pmap {
-			pattern = sequence.AnalyzerResult{pat, stat.cnt, stat.ex}
-			pattDB = syslog_ng.AddToRuleset(pattern, pattDB)
-
-		}
-		//new patterns
-		for pat, stat := range amap {
-			pattern = sequence.AnalyzerResult{pat, stat.cnt, stat.ex}
-			if threshold < stat.cnt{
-				pattDB = syslog_ng.AddToRuleset(pattern, pattDB)
-				vals = append(vals, stat.cnt)
-			}
-		}
-
-		//write to the file
-		y := syslog_ng.ConvertToXml(pattDB)
-		fmt.Fprintf(ofile, "\t%s\n", y)
-	}
-
-	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d passed the threshold and were added to the xml/yaml file, %d messages errored", n, len(pmap)+len(amap), len(amap), len(vals), err_count)
+	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new.", n, len(pmap)+len(amap), len(amap))
 }
 
 func parse(cmd *cobra.Command, args []string) {
@@ -321,7 +247,7 @@ func parse(cmd *cobra.Command, args []string) {
 
 	n := 0
 	now := time.Now()
-	err_count := 0
+
 	for iscan.Scan() {
 		line := iscan.Text()
 		if len(line) == 0 || line[0] == '#' {
@@ -334,14 +260,13 @@ func parse(cmd *cobra.Command, args []string) {
 		seq, err := parser.Parse(seq)
 		if err != nil {
 			log.Printf("Error (%s) parsing: %s", err, line)
-			err_count++
 		} else {
 			fmt.Fprintf(ofile, "%s\n%s\n\n", line, seq.PrintTokens())
 		}
 	}
 
 	since := time.Since(now)
-	log.Printf("Parsed %d messages in %.2f secs, ~ %.2f msgs/sec. %d records unable to be parsed.", n, float64(since)/float64(time.Second), float64(n)/(float64(since)/float64(time.Second)), err_count)
+	log.Printf("Parsed %d messages in %.2f secs, ~ %.2f msgs/sec", n, float64(since)/float64(time.Second), float64(n)/(float64(since)/float64(time.Second)))
 	close(quit)
 	<-done
 }
@@ -472,8 +397,6 @@ func benchParse(cmd *cobra.Command, args []string) {
 	close(quit)
 	<-done
 }
-
-
 
 func scanMessage(scanner *sequence.Scanner, data string) sequence.Sequence {
 	var (
@@ -662,7 +585,6 @@ func main() {
 	sequenceCmd.PersistentFlags().StringVarP(&infile, "input", "i", "", "input file, required")
 	sequenceCmd.PersistentFlags().StringVarP(&outfile, "output", "o", "", "output file, if empty, to stdout")
 	sequenceCmd.PersistentFlags().StringVarP(&patfile, "patterns", "p", "", "patterns, can be a file or directory, used by analyze and parse")
-	sequenceCmd.PersistentFlags().StringVarP(&outformat, "out-format", "f", "", "format of the output file, can be YAML or text, if empty it uses text, used by analyze")
 
 	benchCmd.PersistentFlags().StringVarP(&cpuprofile, "cpuprofile", "", "", "CPU profile filename")
 	benchCmd.PersistentFlags().IntVarP(&workers, "workers", "", 1, "number of parsing workers")
