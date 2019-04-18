@@ -168,7 +168,7 @@ func analyze(cmd *cobra.Command, args []string) {
 
 	//get the threshold for including the pattern in the
 	//output files
-	threshold := 0 //syslog_ng.GetThreshold(len(lr))
+	threshold := syslog_ng.GetThreshold(len(lr))
 
 	//
 	if outformat == "text" || outformat == ""{
