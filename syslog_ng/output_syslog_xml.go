@@ -20,6 +20,7 @@ type PatternDB struct{
 type XRuleset struct{
 	ID string `xml:"id,attr"`
 	Name string `xml:"name,attr"`
+	Patterns []XPattern  `xml:"patterns"`
 	Rules XRules `xml:"rules"`
 }
 
@@ -139,6 +140,8 @@ func buildRuleXML (result sequence.AnalyzerResult) XRule {
 func buildRulesetXML (rsName string) XRuleset {
 	rs := XRuleset{Name:rsName}
 	rs.ID = generateIDFromPattern(rsName)
+	var p = XPattern{Pattern:rsName}
+	rs.Patterns = append(rs.Patterns, p)
 	return rs
 }
 
