@@ -1,0 +1,53 @@
+---
+stages:
+  - build
+  - package
+  - deploy
+build:
+  image: golang:latest
+  stage: build
+  script:
+    - apt update
+    - ln -s /builds /go/src/gitlab.in2p3.fr
+    - cd /go/src/gitlab.in2p3.fr/cc-in2p3-system/sequence
+    - go get -t -d -v
+    - go build
+    - go test
+    - sed -e "s/__CREDENTIALS__/gitlab-ci-token:${CI_BUILD_TOKEN}/" .gitlab-ci-godeps-config > ~/.gitconfig
+    - cd cmd/sequence/
+    - sed -i 's:github.com/trustpath/sequence:gitlab.in2p3.fr/cc-in2p3-system/sequence:' sequence.go
+    - go get -t -d -v
+    - go build sequence.go
+  artifacts:
+    expire_in: '1 hour'
+    paths:
+      - cmd
+package:
+  image: gitlab-registry.in2p3.fr/cc-in2p3/docker-fpm:latest
+  stage: package
+  script:
+    - find
+    - mkdir -p usr/bin
+    - mkdir -p var/lib/sequence
+    - mv cmd/sequence/sequence ./usr/bin
+    - fpm -s dir -t rpm --license "CECILL-B" --no-rpm-autoreqprov -n "sequence" -v "$(git describe --always --tags HEAD | sed s/^v//)" --url "https://gitlab.in2p3.fr/cc-in2p3-system/sequence" --description "high performance sequential log scanner, analyzer and parser" --maintainer "Fabien Wernli <wernli@in2p3.fr>" ./usr ./var
+  dependencies:
+    - build
+  artifacts:
+    expire_in: '1 hour'
+    paths:
+      - "*.rpm"
+deploy:
+  image: gitlab-registry.in2p3.fr/cc-in2p3/gitlab-ci-ccin2p3-docker-images:pulp-admin
+  stage: deploy
+  only:
+    - tags
+  script:
+    - 'mkdir -m 0700 -p /root/.pulp && echo -e "${PULP_CREDENTIALS}" >/root/.pulp/user-cert.pem'
+    - 'mkdir -p rpm && cp *.rpm rpm/'
+    - 'pulp-admin rpm repo uploads rpm --dir rpm --repo-id cc6'
+    - 'pulp-admin rpm repo publish run --repo-id cc6'
+    - 'pulp-admin rpm repo uploads rpm --dir rpm --repo-id cc7'
+    - 'pulp-admin rpm repo publish run --repo-id cc7'
+  dependencies:
+    - package

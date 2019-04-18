@@ -1,0 +1,5 @@
+#!/bin/sh
+
+exec cat >> /var/tmp/processed_by_sequence.log
+
+
