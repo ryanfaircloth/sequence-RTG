@@ -137,12 +137,12 @@ func (this *Parser) Add(seq Sequence) error {
 
 		case token.Type == TokenLiteral:
 			var ok bool
-			v := strings.ToLower(token.Value)
+			v := token.Value
 			if found, ok = parent.lc[v]; !ok {
 				found = newParseNode()
 				found.Token = token
 				found.Value = v
-				found.until = strings.ToLower(token.until)
+				found.until = token.until
 				parent.lc[v] = found
 				parent.parent = true
 			}
@@ -205,12 +205,6 @@ func (this *Parser) Add(seq Sequence) error {
 func (this *Parser) Parse(seq Sequence) (Sequence, error) {
 	this.mu.RLock()
 	defer this.mu.RUnlock()
-
-	for i, t := range seq {
-		if t.Type == TokenLiteral {
-			seq[i].Value = strings.ToLower(t.Value)
-		}
-	}
 
 	var (
 		parent stackParseNode

@@ -770,7 +770,7 @@ func analyzeSequence(seq Sequence) Sequence {
 	// Step 2: lower case all literals, and try to recognize emails and host names
 	for i, tok := range seq {
 		if tok.Type == TokenLiteral && tok.Tag == TagUnknown {
-			seq[i].Value = strings.ToLower(tok.Value)
+			//seq[i].Value = strings.ToLower(tok.Value)
 
 			// Matching a effective top level domain
 			if etld.Match(tok.Value) > 0 {

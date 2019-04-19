@@ -19,6 +19,7 @@ var (
 	infile     string
 	outfile    string
 	outformat  string
+	informat  string
 	patfile    string
 	cpuprofile string
 	workers    int
@@ -70,38 +71,29 @@ func analyze(cmd *cobra.Command, args []string) {
 	if infile == "" {
 		log.Fatal("Invalid input file specified")
 	}
-
 	profile()
 	parser := buildParser()
 	analyzer := sequence.NewAnalyzer()
 	scanner := sequence.NewScanner()
 
-	// Open input file
-	iscan, ifile := syslog_ng.OpenInputFile(infile)
-
-	defer ifile.Close()
+	//We load the file completely so we can sort and sent the messages
+	//from each service together
 	var lr []syslog_ng.LogRecord
+
+	if informat == "json" {
+		lr = syslog_ng.ReadLogRecordJson(infile)
+	} else{
+		lr = syslog_ng.ReadLogRecordTxt(infile)
+	}
 
 	// For all the log messages, if we can't parse it, then let's add it to the
 	// analyzer for pattern analysis
-	for iscan.Scan() {
-		line := iscan.Text()
-		if len(line) == 0 || line[0] == '#' {
-			continue
-		}
-		//convert it to an object
-		//the text until the first space is the service
-		r := syslog_ng.CreateLogRecordTxT(line)
-		lr = append(lr, r)
-
+	for _, r := range lr {
 		seq := scanMessage(scanner, r.Message)
-
 		if _, err := parser.Parse(seq); err != nil {
 			analyzer.Add(seq)
 		}
 	}
-
-	ifile.Close()
 	analyzer.Finalize()
 
 	//these are existing patterns
@@ -111,15 +103,12 @@ func analyze(cmd *cobra.Command, args []string) {
 		svc string
 	})
 	//these are the newly discovered patterns
-	amap := make(map[string]struct {
-		ex  string
-		cnt int
-		svc string
-	})
+	amap := make(map[string]sequence.AnalyzerResult)
 
 	// Now that we have built the analyzer, let's go through each log message again
 	// to determine the unique patterns
 	err_count := 0
+	processed := 0
 	var vals []int
 
 	for _, l := range lr {
@@ -149,18 +138,15 @@ func analyze(cmd *cobra.Command, args []string) {
 				pat := strings.TrimSpace(aseq.String())
 				stat, ok := amap[pat]
 				if !ok {
-					stat = struct {
-						ex  string
-						cnt int
-						svc string
-					}{}
+					stat = sequence.AnalyzerResult{}
 				}
-				stat.ex = l.Message
-				stat.cnt++
-				stat.svc = l.Service
+				stat.Example = l.Message
+				stat.ExampleCount++
+				stat.Service = l.Service
 				amap[pat] = stat
 			}
 		}
+		processed++
 	}
 
 	ofile := syslog_ng.OpenOutputFile(outfile)
@@ -177,7 +163,7 @@ func analyze(cmd *cobra.Command, args []string) {
 		}
 
 		for pat, stat := range amap {
-			fmt.Fprintf(ofile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.cnt, stat.ex)
+			fmt.Fprintf(ofile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.ExampleCount, stat.Example)
 		}
 	}
 
@@ -197,9 +183,9 @@ func analyze(cmd *cobra.Command, args []string) {
 			}
 		}
 		for pat, stat := range amap {
-			pattern = sequence.AnalyzerResult{pat, stat.cnt, stat.ex, stat.svc}
+			pattern = sequence.AnalyzerResult{pat, stat.ExampleCount, stat.Example, stat.Service}
 			//only add patterns with a certain number of examples found
-			if threshold < stat.cnt {
+			if threshold < stat.ExampleCount {
 				y := syslog_ng.ConvertToYaml(pattern)
 				//write to the file line by line with a tab in front.
 				s := strings.Split(y,"\n")
@@ -209,7 +195,7 @@ func analyze(cmd *cobra.Command, args []string) {
 					}
 
 				}
-				vals = append(vals, stat.cnt)
+				vals = append(vals, stat.ExampleCount)
 			}
 
 		}
@@ -228,10 +214,10 @@ func analyze(cmd *cobra.Command, args []string) {
 		}
 		//new patterns
 		for pat, stat := range amap {
-			pattern = sequence.AnalyzerResult{pat, stat.cnt, stat.ex, stat.svc}
-			if threshold < stat.cnt{
+			pattern = sequence.AnalyzerResult{pat, stat.ExampleCount, stat.Example, stat.Service}
+			if threshold < stat.ExampleCount{
 				pattDB = syslog_ng.AddToRuleset(pattern, pattDB)
-				vals = append(vals, stat.cnt)
+				vals = append(vals, stat.ExampleCount)
 			}
 		}
 
@@ -350,7 +336,7 @@ func main() {
 	sequenceCmd.PersistentFlags().StringVarP(&outfile, "output", "o", "", "output file, if empty, to stdout")
 	sequenceCmd.PersistentFlags().StringVarP(&patfile, "patterns", "p", "", "existing patterns text file, can be a file or directory")
 	sequenceCmd.PersistentFlags().StringVarP(&outformat, "out-format", "f", "", "format of the output file, can be YAML or text, if empty it uses text, used by analyze")
-	sequenceCmd.PersistentFlags().StringVarP(&outformat, "in-format", "k", "", "format of the input data, can be JSON or text, if empty it uses text, used by analyze")
+	sequenceCmd.PersistentFlags().StringVarP(&informat, "in-format", "k", "", "format of the input data, can be JSON or text, if empty it uses text, used by analyze")
 
 	analyzeCmd.Run = analyze
 

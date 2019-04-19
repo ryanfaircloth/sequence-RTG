@@ -159,7 +159,6 @@ func (this *Message) scanToken(data string) (int, TokenType, error) {
 	for i, r := range data {
 		if !tokenStop {
 			tokenStop = this.tokenStep(i, r)
-
 			if !tokenStop {
 				tokenLen++
 			}
@@ -278,15 +277,18 @@ func (this *Message) tokenStep(i int, r rune) bool {
 			//glog.Debugf("i=%d, r=%c, inquote=%t, nxquote=%t, chquote=%c", i, r, this.state.inquote, this.state.nxquote, this.state.chquote)
 
 		case '<':
-			this.state.tokenStop = true
-			this.state.tokenType = TokenLiteral
 
+			this.state.tokenType = TokenLiteral
 			if !this.state.inquote {
 				// If we are not inside a quote now and we are at the beginning,
 				// then let's be inside the quote now. This is basically the
 				// beginning quotation mark.
+				this.state.tokenStop = true
 				this.state.inquote = true
 				this.state.chquote = r
+			}else{
+				this.state.tokenStop = false
+				this.state.tokenType = TokenLiteral
 			}
 
 		case '>':
