@@ -251,6 +251,8 @@ func (this *Message) tokenStep(i int, r rune) bool {
 			if this.state.prevToken.Type == TokenIPv4 {
 				this.state.tokenType = TokenLiteral
 				this.state.tokenStop = true
+			}else{
+				this.state.tokenType = TokenLiteral
 			}
 
 		case '"', '\'':
