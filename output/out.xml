@@ -7,7 +7,7 @@
 			<rules>
 				<rule id="11cc5189673932dea0a854362940c5eb773f4ff7">
 					<patterns>
-						<pattern>warning: @ESTRING:::@ @ESTRING:status: @ @ESTRING:action: @ 387A67C1: queue @ESTRING:object: @ write error</pattern>
+						<pattern>warning: @ESTRING:::@ @ESTRING:status: @@ESTRING:action: @387A67C1: queue @ESTRING:object: @write error</pattern>
 					</patterns>
 					<examples>
 						<example>
@@ -21,7 +21,7 @@
 				</rule>
 				<rule id="f709bd6b4ebe8608c9b6e2e9526b8c741a1ff558">
 					<patterns>
-						<pattern>warning: @ESTRING:::@ @ESTRING:: @ @ESTRING:: @ been @ESTRING:: @ for @NUMBER@ @ESTRING:srcuser: @</pattern>
+						<pattern>warning: @ESTRING:::@ @ESTRING:: @has been @ESTRING:: @for @NUMBER@ days</pattern>
 					</patterns>
 					<examples>
 						<example>
