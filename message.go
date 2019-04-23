@@ -63,9 +63,12 @@ const (
 // Scan is similar to Tokenize except it returns one token at a time
 func (this *Message) Tokenize() (Token, error) {
 	if this.state.start < this.state.end {
-		// Number of spaces skipped
-		nss := this.skipSpace(this.Data[this.state.start:])
-		this.state.start += nss
+
+		if !config.keepSpaces{
+			// Number of spaces skipped
+			nss := this.skipSpace(this.Data[this.state.start:])
+			this.state.start += nss
+		}
 
 		// Let's see if this is a tag token, enclosed in two '%' chars
 		// at least 2 chars left, and the first is a '%'
@@ -103,10 +106,13 @@ func (this *Message) Tokenize() (Token, error) {
 
 		// remove any trailing spaces
 		s := 0 // trail space count
-		for this.Data[this.state.start+l-1] == ' ' && l > 0 {
-			l--
-			s++
+		if !config.keepSpaces{
+			for this.Data[this.state.start+l-1] == ' ' && l > 0 {
+				l--
+				s++
+			}
 		}
+
 
 		tok := Token{Tag: TagUnknown, Type: t, Value: this.Data[this.state.start : this.state.start+l]}
 		this.state.tokCount++

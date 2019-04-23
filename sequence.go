@@ -33,7 +33,11 @@ type Sequence []Token
 // String returns a single line string that represents the pattern for the Sequence
 func (this Sequence) String() string {
 	var p string
-
+	var space = " "
+	//if the spaces have been kept we don't need to add them when rebuilding
+	if config.keepSpaces{
+		space = ""
+	}
 	for _, token := range this {
 		var c string
 
@@ -69,13 +73,12 @@ func (this Sequence) String() string {
 			} else if token.star {
 				c += ":*"
 			}
-
 			c = "%" + c + "%"
 		} else {
 			c = token.Value
 		}
 
-		p += c + " "
+		p += c + space
 	}
 
 	return strings.TrimSpace(p)

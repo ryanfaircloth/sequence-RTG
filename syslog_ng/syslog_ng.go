@@ -4,8 +4,10 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"math"
 	"sequence"
+	"sort"
 	"strings"
 )
 
@@ -15,7 +17,8 @@ type LogRecord struct {
 }
 
 var syslog_ng = map[string]string{
-	"%string%"		:   "@ESTRING:unknown:@",
+	"%string%"		:   "@ESTRING::@",
+	"%string%:"		:   "@ESTRING:::@",
 	"%srcemail%"	: 	"@EMAIL:srcemail:@",
 	"%float%"		:   "@FLOAT@",
 	"%integer%"		:  	"@NUMBER@",
@@ -195,6 +198,18 @@ func ReadLogRecordJson(fname string) []LogRecord {
 		lr = append(lr, r)
 	}
 	return lr
+}
+
+//this can be used to sort and inspect the records in order
+func SortandPrintLogMessages(lr []LogRecord, fname string  ){
+	sort.Slice(lr, func(i, j int) bool {
+		return lr[i].Service < lr[j].Service
+	})
+	ofile := OpenOutputFile(fname)
+	defer ofile.Close()
+	for _, r := range lr{
+		fmt.Fprintf(ofile, "%s: %s\n", r.Service, r.Message )
+	}
 }
 
 

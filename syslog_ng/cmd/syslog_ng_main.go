@@ -96,6 +96,10 @@ func analyze(cmd *cobra.Command, args []string) {
 	}
 	analyzer.Finalize()
 
+	//Uncomment this to sort the slice by the service
+	//Useful for debugging
+	//syslog_ng.SortandPrintLogMessages(lr, "C:\\data\\debug.txt")
+
 	//these are existing patterns
 	pmap := make(map[string]struct {
 		ex  string
@@ -149,23 +153,26 @@ func analyze(cmd *cobra.Command, args []string) {
 		processed++
 	}
 
-	ofile := syslog_ng.OpenOutputFile(outfile)
-	defer ofile.Close()
+	opatfile := syslog_ng.OpenOutputFile("C:\\data\\pattern.txt")
+	defer opatfile.Close()
 
 	//get the threshold for including the pattern in the
 	//output files
 	threshold := syslog_ng.GetThreshold(len(lr))
 
 	//
-	if outformat == "text" || outformat == ""{
+	//if outformat == "text" || outformat == ""{
 		for pat, stat := range pmap {
-			fmt.Fprintf(ofile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.cnt, stat.ex)
+			fmt.Fprintf(opatfile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.cnt, stat.ex)
 		}
 
 		for pat, stat := range amap {
-			fmt.Fprintf(ofile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.ExampleCount, stat.Example)
+			fmt.Fprintf(opatfile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.ExampleCount, stat.Example)
 		}
-	}
+	//}
+
+	ofile := syslog_ng.OpenOutputFile(outfile)
+	defer ofile.Close()
 
 	if outformat == "yaml"{
 		fmt.Fprintf(ofile, "coloss::patterndb::simple::rule:\n")

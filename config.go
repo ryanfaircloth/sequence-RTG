@@ -27,6 +27,10 @@ var (
 		tagIDs   map[string]TagType
 		tagNames []string
 		tagTypes []TokenType
+		//keep the spaces during tokenization
+		//set to true if spacing matters for your output
+		//format
+  		keepSpaces bool
 	}
 
 	keymaps struct {
@@ -44,6 +48,7 @@ func ReadConfig(file string) error {
 		Version     string
 		TimeFormats []string
 		Tags        []string
+		KeepSpaces 	bool
 
 		Analyzer struct {
 			Prekeys  map[string][]string
@@ -60,6 +65,7 @@ func ReadConfig(file string) error {
 	config.tagIDs = make(map[string]TagType, 30)
 	config.tagNames = config.tagNames[:0]
 	config.tagTypes = config.tagTypes[:0]
+	config.keepSpaces  = configInfo.KeepSpaces
 
 	keymaps.keywords = make(map[string]TagType, 30)
 	keymaps.prekeys = make(map[string][]TagType, 30)
