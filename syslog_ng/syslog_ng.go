@@ -19,7 +19,11 @@ type LogRecord struct {
 var syslog_ng = map[string]string{
 	"%string%"		:   "@ESTRING::@",
 	"%string%:"		:   "@ESTRING:::@",
-	"%srcemail%"	: 	"@EMAIL:srcemail:@",
+	"\"%string%\""	:   "@QSTRING::\"@",
+	"[%string%]"	:	"@QSTRING::[]@",
+	"(%string%)"	:	"@QSTRING::()@",
+	"`%string%`"	:	"@QSTRING::`@",
+   	"%srcemail%"	: 	"@EMAIL:srcemail:@",
 	"%float%"		:   "@FLOAT@",
 	"%integer%"		:  	"@NUMBER@",
 	"%srcip%"		:   "@IPvANY:srcip@",
@@ -82,29 +86,14 @@ func replaceTags(pattern string) string{
 	s := strings.Fields(pattern)
 	var new []string
 	var del = ""
-	for i, p := range s{
+	for _, p := range s{
 		//this is to catch a delimiter char and skip it
 		if del == p{
 			del = ""
 			continue
 		}
 		if val, ok := syslog_ng[p]; ok {
-			//check if before and after are quote chars, such as ", ', <> etc
-			if i > 0 && i < len(s)-1{
-				if checkIfDelimited(p, s[i-1], s[i+1]){
-					p = getSpecial(p, s[i-1])
-					//remove the delimited added in the previous iteration
-					if len(new) > 0 {
-						new = new[:len(new)-1]
-					}
-					//set the delimiter value to be checked next iteration
-					del = s[i-1]
-				} else {
-					p=val
-				}
-			} else {
-				p=val
-			}
+			p=val
 		}
 		//reconstruct
 		new = append(new, p)
@@ -116,13 +105,6 @@ func replaceTags(pattern string) string{
 		space = " "
 	}
 	return result
-}
-
-func checkIfDelimited(string, before, after string) bool {
-	if before == after{
-		return true
-	}
-	return false
 }
 
 func getSpecial(p, del string) string {
@@ -203,7 +185,11 @@ func ReadLogRecordJson(fname string) []LogRecord {
 //this can be used to sort and inspect the records in order
 func SortandPrintLogMessages(lr []LogRecord, fname string  ){
 	sort.Slice(lr, func(i, j int) bool {
-		return lr[i].Service < lr[j].Service
+		if lr[i].Service != lr[j].Service {
+			return lr[i].Service < lr[j].Service
+		}
+
+		return lr[i].Message < lr[j].Message
 	})
 	ofile := OpenOutputFile(fname)
 	defer ofile.Close()

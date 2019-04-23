@@ -685,9 +685,19 @@ func markSequenceKV(seq Sequence) Sequence {
 			ki := i - 1 // key index
 			vi := i + 1 // value index
 
+			//if we keep the spaces we could have key = value.
+			if config.keepSpaces{
+				if vi < l && seq[vi].Value == " "{
+					vi = i + 2
+				}
+				if ki > 1 && seq[ki].Value == " "{
+					ki = i - 2
+				}
+			}
+
 			if vi < l && seq[vi].Type == TokenLiteral &&
 				(seq[vi].Value == "\"" || seq[vi].Value == "'" || seq[vi].Value == "<") {
-				vi = i + 2
+				vi = vi + 1
 			}
 
 			// if the value index is smaller than the last node index, that means
