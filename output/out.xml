@@ -1,2 +1,38 @@
 <?xml version='1.0' encoding='UTF-8'?>
-	<patterndb version="4" pub_date="2019-04-23 11:55:58"><ruleset id="081be1ef9c54936ac25719ddea77060ef1b9c7df" name="postfix/pickup:"><patterns><pattern>postfix/pickup:</pattern></patterns><rules><rule id="11cc5189673932dea0a854362940c5eb773f4ff7"><patterns><pattern>warning: @ESTRING:::@ @ESTRING:status:@ @ESTRING:action:@ 387A67C1: queue @ESTRING:object:@ write error</pattern></patterns><examples><example><test_message program="postfix/pickup:">warning: maildrop/40F1A43D: error writing 387A67C1: queue file write error</test_message></example></examples><values><value name="seq-matches">1</value><value name="seq-new">true</value></values></rule><rule id="f709bd6b4ebe8608c9b6e2e9526b8c741a1ff558"><patterns><pattern>warning: @ESTRING:::@ @ESTRING::@ @ESTRING::@ been @ESTRING::@ for @NUMBER@ @ESTRING:srcuser:@</pattern></patterns><examples><example><test_message program="postfix/pickup:">warning: E701F2228: message has been queued for 74 days</test_message></example></examples><values><value name="seq-matches">1</value><value name="seq-new">true</value></values></rule></rules></ruleset></patterndb>
+	<patterndb version="4" pub_date="2019-04-23 11:55:58">
+		<ruleset id="081be1ef9c54936ac25719ddea77060ef1b9c7df" name="postfix/pickup:">
+			<patterns>
+				<pattern>postfix/pickup:</pattern>
+			</patterns>
+			<rules>
+				<rule id="11cc5189673932dea0a854362940c5eb773f4ff7">
+					<patterns>
+						<pattern>warning: @ESTRING:::@ @ESTRING:status: @ @ESTRING:action: @ 387A67C1: queue @ESTRING:object: @ write error</pattern>
+					</patterns>
+					<examples>
+						<example>
+							<test_message program="postfix/pickup:">warning: maildrop/40F1A43D: error writing 387A67C1: queue file write error</test_message>
+						</example>
+					</examples>
+					<values>	
+						<value name="seq-matches">1</value>
+						<value name="seq-new">true</value>
+					</values>
+				</rule>
+				<rule id="f709bd6b4ebe8608c9b6e2e9526b8c741a1ff558">
+					<patterns>
+						<pattern>warning: @ESTRING:::@ @ESTRING:: @ @ESTRING:: @ been @ESTRING:: @ for @NUMBER@ @ESTRING:srcuser: @</pattern>
+					</patterns>
+					<examples>
+						<example>
+							<test_message program="postfix/pickup:">warning: E701F2228: message has been queued for 74 days</test_message>
+						</example>
+					</examples>
+					<values>
+						<value name="seq-matches">1</value>
+						<value name="seq-new">true</value>
+					</values>
+				</rule>
+			</rules>
+		</ruleset>
+	</patterndb>
