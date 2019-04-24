@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"index/suffixarray"
 	"math"
 	"sequence"
 	"sort"
@@ -22,6 +23,9 @@ var syslog_ng = map[string]string{
 	"\"%string%\""	:   "@QSTRING::\"@",
 	"[%string%]"	:	"@QSTRING::[]@",
 	"(%string%)"	:	"@QSTRING::()@",
+	"<%string%>"	:   "@QSTRING::<>@",
+	"(%srcuser%)"   :	"@QSTRING:srcuser:()@",
+	"<%srcuser%>"   :	"@QSTRING:srcuser:<>@",
 	"`%string%`"	:	"@QSTRING::`@",
    	"%srcemail%"	: 	"@EMAIL:srcemail:@",
 	"%float%"		:   "@FLOAT@",
@@ -82,23 +86,22 @@ var syslog_ng_quote = map[string]string{
 }
 
 //this replaces the sequence tags with the syslog-ng tags
+//first we replace the easy ones that are surrounded by spaces
+//then we deal with the compound ones
 func replaceTags(pattern string) string{
 	s := strings.Fields(pattern)
 	var new []string
-	var del = ""
 	for _, p := range s{
-		//this is to catch a delimiter char and skip it
-		if del == p{
-			del = ""
-			continue
-		}
 		if val, ok := syslog_ng[p]; ok {
 			p=val
+		}else{
+			p=getSpecial(p)
 		}
 		//reconstruct
 		new = append(new, p)
 	}
 	var result string
+	//no space at the start
 	var space = ""
 	for _, k := range new{
 		result += space + k
@@ -107,17 +110,48 @@ func replaceTags(pattern string) string{
 	return result
 }
 
-func getSpecial(p, del string) string {
-	if val, ok := syslog_ng_quote["qstring"]; ok{
-		fieldname := strings.TrimSuffix(p[1:], "%")
-		if fieldname == "string"{
-			fieldname = "unknown"
+func getSpecial(p string) string {
+	//first get the indexes of the % function
+	k := p
+	index := suffixarray.New([]byte(p))
+	offsets := index.Lookup([]byte("%"), -1)
+	sort.Slice(offsets, func(i, j int) bool {
+		return offsets[i] < offsets[j]
+	})
+
+	for i, off := range offsets {
+		if i % 2 == 0{
+			//s:= p[off:offsets[i+1]+1]
+			s:= getWithDelimiters(p, off, offsets[i+1]+1)
+			if val, ok := syslog_ng[s]; ok {
+				k = strings.Replace(k, s, val, 1)
+			}
+
 		}
-		result := strings.Replace(val, "[fieldname]", fieldname, 1)
-		result = strings.Replace(result, "[del]", del, 1)
-		return result
 	}
-	return p
+	return k
+}
+
+func getWithDelimiters(p string, start, end int ) string{
+	if start > 0 && end < len(p) {
+		before := p[start-1:start]
+		after :=  p[end:end+1]
+		switch {
+		case before == after && (before == "\"" || before == "'"):
+			return p[start-1:end+1]
+		case before == "(" && after == ")":
+			return p[start-1:end+1]
+		case before == "<" && after == ">":
+			return p[start-1:end+1]
+		}
+	}else if end < len(p){
+		after :=  p[end:end+1]
+		if after == ":" {
+			return p[start:end+1]
+		}
+		return p[start:end]
+	}
+	return p[start:end]
 }
 
 func checkIfNew(pattern sequence.AnalyzerResult) bool {
