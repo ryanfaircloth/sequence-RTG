@@ -73,7 +73,7 @@ type XRuleValue struct {
 //converts it to Yaml and saves in the out path.
 func ConvertToXml(document PatternDB) string {
 	// turn the document into XML format
-	y, _ := xml.Marshal(document)
+	y, _ := xml.MarshalIndent(document, "  ", "   ")
 	return string(y)
 }
 

@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	//"github.com/texttheater/golang-levenshtein/levenshtein"
 	"index/suffixarray"
 	"math"
 	"sequence"
@@ -20,23 +21,32 @@ type LogRecord struct {
 var syslog_ng = map[string]string{
 	"%string%"		:   "@ESTRING:: @",
 	"%string%:"		:   "@ESTRING:::@",
+	"%string%,"		:   "@ESTRING::,@",
 	"\"%string%\""	:   "@QSTRING::\"@",
 	"[%string%]"	:	"@QSTRING::[]@",
 	"(%string%)"	:	"@QSTRING::()@",
 	"<%string%>"	:   "@QSTRING::<>@",
 	"(%srcuser%)"   :	"@QSTRING:srcuser:()@",
 	"<%srcuser%>"   :	"@QSTRING:srcuser:<>@",
+	"%srcuser%:"	:	"@ESTRING:srcuser::@",
+	"\"%srcuser%\""	:	"@QSTRING:srcuser:\"@",
+	"<%dstuser%>"	:	"@QSTRING:dstuser:<>@",
+	"\"%dstuser%\""	:	"@QSTRING:dstuser:\"@",
 	"`%string%`"	:	"@QSTRING::`@",
    	"%srcemail%"	: 	"@EMAIL:srcemail:@",
 	"%float%"		:   "@FLOAT@",
 	"%integer%"		:  	"@NUMBER@",
+	"%integer%:"	:  	"@NUMBER@:",
+	"(%integer%)"	:	"(@NUMBER@)",
 	"%srcip%"		:   "@IPvANY:srcip@",
 	"%dstip%"		:   "@IPvANY:dstip@",
 	"%msgtime%"		:  	"@ESTRING:msgtime: @",
+	"\"%msgtime%\""	:	"@QSTRING:msgtime:\"@",
 	"%protocol%"	: 	"@ESTRING:protocol: @",
+	"%protocol%:"	:	"@ESTRING:protocol::@",
 	"%msgid%" 		:   "@ESTRING:msgid: @",
 	"%severity%" 	:	"@ESTRING:severity: @",
-	"priority%" 	: 	"@ESTRING:priority: @",
+	"%priority%" 	: 	"@ESTRING:priority: @",
 	"%apphost%" 	: 	"@ESTRING:apphost: @",
 	"%appip%" 		:   "@ESTRING:appip: @",
 	"%appvendor%"	:	"@ESTRING:appvendor: @",
@@ -46,6 +56,7 @@ var syslog_ng = map[string]string{
 	"%srchost%" 	: 	"@HOSTNAME:srchost@",
 	"%srcipnat%" 	:	"@ESTRING:srcipnat: @",
 	"%srcport%" 	: 	"@NUMBER:srcport@",
+	"%srcport%:" 	: 	"@NUMBER:srcport@:",
 	"%srcportnat%" 	: 	"@ESTRING:srcportnat: @",
 	"%srcmac%" 		: 	"@MACADDR:srcmac@",
 	"%srcuser%" 	: 	"@ESTRING:srcuser: @",
@@ -70,8 +81,10 @@ var syslog_ng = map[string]string{
 	"%action%" 		: 	"@ESTRING:action: @",
 	"%command%" 	: 	"@ESTRING:command: @",
 	"%object%" 		: 	"@ESTRING:object: @",
+	"%object%:"		:	"@ESTRING:object::@",
 	"%method%" 		: 	"@ESTRING:method: @",
 	"%status%" 		: 	"@ESTRING:status: @",
+	"%status%:" 	: 	"@ESTRING:status::@",
 	"%reason%" 		: 	"@ESTRING:reason: @",
 	"%bytesrecv%" 	: 	"@ESTRING:bytesrecv: @",
 	"%bytessent%" 	: 	"@ESTRING:bytessent: @",
@@ -106,6 +119,12 @@ func replaceTags(pattern string) string{
 	for _, k := range new{
 		result += space + k
 		space = " "
+		//need to remove the space after an ESTRING if space delimited
+		if len(k) > 10 {
+			if k[1:8] == "ESTRING" && k[len(k)-3:] == ": @"{
+				space = ""
+			}
+		}
 	}
 	return result
 }
@@ -126,7 +145,6 @@ func getSpecial(p string) string {
 			if val, ok := syslog_ng[s]; ok {
 				k = strings.Replace(k, s, val, 1)
 			}
-
 		}
 	}
 	return k
@@ -146,7 +164,7 @@ func getWithDelimiters(p string, start, end int ) string{
 		}
 	}else if end < len(p){
 		after :=  p[end:end+1]
-		if after == ":" {
+		if after == ":" || after == "," {
 			return p[start:end+1]
 		}
 		return p[start:end]
@@ -227,8 +245,11 @@ func SortandPrintLogMessages(lr []LogRecord, fname string  ){
 	})
 	ofile := OpenOutputFile(fname)
 	defer ofile.Close()
+	//var prev = LogRecord{}
 	for _, r := range lr{
-		fmt.Fprintf(ofile, "%s: %s\n", r.Service, r.Message )
+		//distance := levenshtein.DistanceForStrings([]rune(prev.Message), []rune(r.Message), levenshtein.DefaultOptions)
+		fmt.Fprintf(ofile, "%s  %s\n",  r.Service, r.Message )
+		//prev = r
 	}
 }
 
