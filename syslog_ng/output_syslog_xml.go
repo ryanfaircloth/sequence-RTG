@@ -122,12 +122,16 @@ func buildRuleXML (result sequence.AnalyzerResult) XRule {
 	var p XPattern
 	var e XExample
 	var t XTestMessage
-	t.TestMessage = result.Example
-	t.Program = result.Service
+	for _, ex := range result.Examples{
+		e = XExample{}
+		t.TestMessage = ex
+		t.Program = result.Service
+		e.TestMessage = t
+		rule.Examples.Examples = append(rule.Examples.Examples, e)
+	}
 	p.Pattern = replaceTags(result.Pattern)
-	e.TestMessage = t
 	rule.Patterns = append(rule.Patterns, p)
-	rule.Examples.Examples = append(rule.Examples.Examples, e)
+
 	//create a new UUID
 	rule.ID = generateIDFromPattern(result.Pattern)
 	return rule

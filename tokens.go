@@ -58,7 +58,11 @@ const (
 	TokenFloat                      // Token is a floating point number
 	TokenURI                        // Token is an URL, in the form of http://... or https://...
 	TokenMac                        // Token is a mac address
-	TokenString                     // Token is a string that reprensents multiple possible values
+	TokenString                     // Token is a string that represents multiple possible values
+	TokenAlphaNum                   // Token is a string that can have only alphanumeric characters
+	TokenPath                 		// Token is a string that can have only alphanumeric characters and the forward or back slash
+	TokenId                 		// Token is a string that can have only alphanumeric characters and the dash or underscore
+	TokenAlphaOnly					// Token has only A-Z or a-z
 	token__END__                    // All tag types must be inserted before this one
 	token__host__                   // Token is a host name
 	token__email__                  // Token is an email address
@@ -77,6 +81,10 @@ var tokens = [...]struct {
 	{"uri"},
 	{"mac"},
 	{"string"},
+	{"alphanum"},
+	{"path"},
+	{"id"},
+	{"alpha"},
 	{"token__END__"},
 	{"token__host__"},
 	{"token__email__"},
@@ -120,6 +128,14 @@ func name2TokenType(s string) TokenType {
 		return TokenMac
 	case "string":
 		return TokenString
+	case "alphanum":
+		return TokenAlphaNum
+	case "path":
+		return TokenPath
+	case "id":
+		return TokenId
+	case "alpha":
+		return TokenAlphaOnly
 	case "token__END__":
 		return token__END__
 	case "token__host__":

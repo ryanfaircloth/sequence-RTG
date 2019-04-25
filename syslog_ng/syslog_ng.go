@@ -20,30 +20,19 @@ type LogRecord struct {
 
 var syslog_ng = map[string]string{
 	"%string%"		:   "@ESTRING:: @",
-	"%string%:"		:   "@ESTRING:::@",
-	"%string%,"		:   "@ESTRING::,@",
-	"\"%string%\""	:   "@QSTRING::\"@",
-	"[%string%]"	:	"@QSTRING::[]@",
-	"(%string%)"	:	"@QSTRING::()@",
-	"<%string%>"	:   "@QSTRING::<>@",
-	"(%srcuser%)"   :	"@QSTRING:srcuser:()@",
-	"<%srcuser%>"   :	"@QSTRING:srcuser:<>@",
-	"%srcuser%:"	:	"@ESTRING:srcuser::@",
-	"\"%srcuser%\""	:	"@QSTRING:srcuser:\"@",
-	"<%dstuser%>"	:	"@QSTRING:dstuser:<>@",
-	"\"%dstuser%\""	:	"@QSTRING:dstuser:\"@",
-	"`%string%`"	:	"@QSTRING::`@",
+	"%alphanum%"	:   "@ESTRING:: @",
+	"%path%"		:   "@ESTRING:path: @",
+	"%id%"			:   "@ESTRING:id: @",
    	"%srcemail%"	: 	"@EMAIL:srcemail:@",
 	"%float%"		:   "@FLOAT@",
 	"%integer%"		:  	"@NUMBER@",
 	"%integer%:"	:  	"@NUMBER@:",
 	"(%integer%)"	:	"(@NUMBER@)",
+	"'%integer%'"	:   "'@NUMBER@'",
 	"%srcip%"		:   "@IPvANY:srcip@",
 	"%dstip%"		:   "@IPvANY:dstip@",
 	"%msgtime%"		:  	"@ESTRING:msgtime: @",
-	"\"%msgtime%\""	:	"@QSTRING:msgtime:\"@",
 	"%protocol%"	: 	"@ESTRING:protocol: @",
-	"%protocol%:"	:	"@ESTRING:protocol::@",
 	"%msgid%" 		:   "@ESTRING:msgid: @",
 	"%severity%" 	:	"@ESTRING:severity: @",
 	"%priority%" 	: 	"@ESTRING:priority: @",
@@ -94,8 +83,18 @@ var syslog_ng = map[string]string{
 	"%uri%"			:	"@ESTRING:uri: @",
 }
 
-var syslog_ng_quote = map[string]string{
-	"qstring"		: 	"@QSTRING:[fieldname]:[del]@",
+var syslog_ng_string = map[string]string{
+	"()"		: 	"@QSTRING:[fieldname]:()@",
+	"[]"		: 	"@QSTRING:[fieldname]:[]@",
+	"\"\""		: 	"@QSTRING:[fieldname]:\"@",
+	"''"		: 	"@QSTRING:[fieldname]:'@",
+	"<>"		:	"@QSTRING:[fieldname]:<>@",
+	"``"		:	"@QSTRING:[fieldname]:`@",
+	":"			:	"@ESTRING:[fieldname]::@",
+	","			:	"@ESTRING:[fieldname]:,@",
+	";"			:	"@ESTRING:[fieldname]:;@",
+	">"			:	"@ESTRING:[fieldname]:>@",
+
 }
 
 //this replaces the sequence tags with the syslog-ng tags
@@ -121,7 +120,7 @@ func replaceTags(pattern string) string{
 		space = " "
 		//need to remove the space after an ESTRING if space delimited
 		if len(k) > 10 {
-			if k[1:8] == "ESTRING" && k[len(k)-3:] == ": @"{
+			if k[len(k)-3:] == ": @"{
 				space = ""
 			}
 		}
@@ -139,37 +138,52 @@ func getSpecial(p string) string {
 	})
 
 	for i, off := range offsets {
-		if i % 2 == 0{
+		if i % 2 == 0 && i < len(offsets)-1{
 			//s:= p[off:offsets[i+1]+1]
-			s:= getWithDelimiters(p, off, offsets[i+1]+1)
-			if val, ok := syslog_ng[s]; ok {
-				k = strings.Replace(k, s, val, 1)
+			s, pat, fieldname := getWithDelimiters(p, off, offsets[i+1]+1)
+			if pat != ""{
+				if val, ok := syslog_ng_string[pat]; ok {
+					val = strings.Replace(val, "[fieldname]", fieldname, 1)
+					k = strings.Replace(k, s, val, 1)
+				}
+			}else{
+				if val, ok := syslog_ng[s]; ok {
+					k = strings.Replace(k, s, val, 1)
+				}
 			}
+
 		}
 	}
 	return k
 }
 
-func getWithDelimiters(p string, start, end int ) string{
+func getWithDelimiters(p string, start, end int ) (string, string, string){
+	fieldname := p[start+1:end-1]
+	//integer fields are not considered strings so can bypass this
+	if fieldname == "integer"{
+		return p[start:end], "", fieldname
+	}
 	if start > 0 && end < len(p) {
 		before := p[start-1:start]
 		after :=  p[end:end+1]
 		switch {
-		case before == after && (before == "\"" || before == "'"):
-			return p[start-1:end+1]
-		case before == "(" && after == ")":
-			return p[start-1:end+1]
+		case before == after && (before == "\"" || before == "'" || before == "`"):
+			return p[start-1:end+1], before + after, fieldname
+		case (before == "(" && after == ")") || (before == "[" && after == "]") :
+			return p[start-1:end+1], before + after, fieldname
 		case before == "<" && after == ">":
-			return p[start-1:end+1]
+			return p[start-1:end+1], before + after, fieldname
+		case after == ":" || after == "," || after == ";" || after == ">":
+			return p[start:end+1], after, fieldname
 		}
 	}else if end < len(p){
 		after :=  p[end:end+1]
-		if after == ":" || after == "," {
-			return p[start:end+1]
+		if after == ":" || after == "," || after == ";" {
+			return p[start:end+1], after, fieldname
 		}
-		return p[start:end]
+		return p[start:end], "", fieldname
 	}
-	return p[start:end]
+	return p[start:end], "", fieldname
 }
 
 func checkIfNew(pattern sequence.AnalyzerResult) bool {

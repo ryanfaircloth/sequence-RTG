@@ -80,7 +80,7 @@ type Analyzer struct {
 type AnalyzerResult struct {
 	Pattern string
 	ExampleCount int
-	Example string
+	Examples []string
 	Service string
 }
 
@@ -104,6 +104,23 @@ type stackAnalyzerNode struct {
 	node  *analyzerNode
 	level int
 	score int
+}
+
+func AddExampleToAnalyzerResult(this *AnalyzerResult, message string){
+	//cap this at 3 TODO:Maybe check for sameness/differentness and select the best examples
+	var found bool
+	if len(this.Examples) < 3{
+		//don't add if one already the same
+		for _, ex := range this.Examples{
+			if ex == message{
+				found = true
+				break
+			}
+		}
+		if !found{
+			this.Examples = append(this.Examples, message)
+		}
+	}
 }
 
 func (this *stackAnalyzerNode) String() string {
@@ -212,8 +229,8 @@ func (this *Analyzer) Add(seq Sequence) error {
 				this.levels[i][foundNode.index] = foundNode
 			}
 
-		case token.Type != TokenUnknown && token.Type != TokenLiteral:
-			// If this is a known token type but it's not a literal, it means this
+		case token.Type != TokenUnknown && token.Type != TokenLiteral && token.Type != TokenAlphaOnly:
+			// If this is a known token type but it's not a literal or alpha only, it means this
 			// token could contain different values. In this case, we add it to the
 			// list of token types.
 
@@ -225,8 +242,8 @@ func (this *Analyzer) Add(seq Sequence) error {
 				this.levels[i][foundNode.index] = foundNode
 			}
 
-		case token.Tag == TagUnknown && token.Type == TokenLiteral:
-			// if the tag type is unknown, and the token type is literal, that
+		case token.Tag == TagUnknown && (token.Type == TokenLiteral || token.Type == TokenAlphaOnly) :
+			// if the tag type is unknown, and the token type is literal or plain text, that
 			// means this is some type of string we parsed from the message.
 
 			// If we have gotten here, it means we found a string that we cannot
@@ -700,6 +717,7 @@ func markSequenceKV(seq Sequence) Sequence {
 				vi = vi + 1
 			}
 
+
 			// if the value index is smaller than the last node index, that means
 			// there's a node after the "=". If the node at value index is NOT
 			// already a key, then it's likely a value. Let's mark it.
@@ -714,9 +732,12 @@ func markSequenceKV(seq Sequence) Sequence {
 			}
 
 			// if the key index is greater or equal to 0, which means there's
-			// a token before the "=", if it's a literal, then it's very likely
+			// a token before the "=", if it's a literal or id, then it's very likely
 			// a key, so let's mark that
-			if ki >= 0 && seq[ki].Type == TokenLiteral {
+			if ki >= 0 && (seq[ki].Type == TokenLiteral ||  seq[ki].Type == TokenString  || seq[ki].Type == TokenId) {
+				if seq[ki].Type == TokenString {
+					seq[ki].Type = TokenLiteral
+				}
 				seq[ki].isKey = true
 			}
 		}
@@ -932,7 +953,7 @@ func analyzeSequence(seq Sequence) Sequence {
 	// Step 5: identify the likely tags by their prekeys (literals that usually
 	// exist before non-literals). All values must be within 2 tokens away, not
 	// counting single character non-a-zA-Z tokens.
-	distance := 2
+	distance := 1
 
 LOOP:
 	for i, tok := range seq {

@@ -144,7 +144,7 @@ func analyze(cmd *cobra.Command, args []string) {
 				if !ok {
 					stat = sequence.AnalyzerResult{}
 				}
-				stat.Example = l.Message
+				sequence.AddExampleToAnalyzerResult(&stat, l.Message)
 				stat.ExampleCount++
 				stat.Service = l.Service
 				amap[pat] = stat
@@ -167,7 +167,7 @@ func analyze(cmd *cobra.Command, args []string) {
 		}
 
 		for pat, stat := range amap {
-			fmt.Fprintf(opatfile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.ExampleCount, stat.Example)
+			fmt.Fprintf(opatfile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.ExampleCount, stat.Examples[0])
 		}
 	//}
 
@@ -178,7 +178,8 @@ func analyze(cmd *cobra.Command, args []string) {
 		fmt.Fprintf(ofile, "coloss::patterndb::simple::rule:\n")
 		pattern := sequence.AnalyzerResult{}
 		for pat, stat := range pmap {
-			pattern = sequence.AnalyzerResult{pat, stat.cnt, stat.ex, stat.svc}
+			pattern = sequence.AnalyzerResult{Pattern:pat, ExampleCount: stat.cnt, Service:stat.svc}
+			pattern.Examples = append(pattern.Examples, stat.ex)
 			y := syslog_ng.ConvertToYaml(pattern)
 			//write to the file line by line with a tab in front.
 			s := strings.Split(y,"\n")
@@ -190,7 +191,7 @@ func analyze(cmd *cobra.Command, args []string) {
 			}
 		}
 		for pat, stat := range amap {
-			pattern = sequence.AnalyzerResult{pat, stat.ExampleCount, stat.Example, stat.Service}
+			pattern = sequence.AnalyzerResult{pat, stat.ExampleCount, stat.Examples, stat.Service}
 			//only add patterns with a certain number of examples found
 			if threshold < stat.ExampleCount {
 				y := syslog_ng.ConvertToYaml(pattern)
@@ -215,13 +216,14 @@ func analyze(cmd *cobra.Command, args []string) {
 
 		//existing patterns
 		for pat, stat := range pmap {
-			pattern = sequence.AnalyzerResult{pat, stat.cnt, stat.ex, stat.svc}
+			pattern = sequence.AnalyzerResult{Pattern:pat, ExampleCount: stat.cnt, Service:stat.svc}
+			pattern.Examples = append(pattern.Examples, stat.ex)
 			pattDB = syslog_ng.AddToRuleset(pattern, pattDB)
 
 		}
 		//new patterns
 		for pat, stat := range amap {
-			pattern = sequence.AnalyzerResult{pat, stat.ExampleCount, stat.Example, stat.Service}
+			pattern = sequence.AnalyzerResult{pat, stat.ExampleCount, stat.Examples, stat.Service}
 			if threshold < stat.ExampleCount{
 				pattDB = syslog_ng.AddToRuleset(pattern, pattDB)
 				vals = append(vals, stat.ExampleCount)

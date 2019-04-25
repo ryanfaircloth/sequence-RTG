@@ -66,10 +66,10 @@ func buildRule (result sequence.AnalyzerResult) YRule {
 		log.Fatal(err)
 	}
 	//get the ruleset from the example (first string)
-	s := strings.Fields(result.Example)
+	s := strings.Fields(result.Examples[0])
 	rule.Details.Ruleset =	s[0]
 	rule.Details.Patterns = append(rule.Details.Patterns, replaceTags(result.Pattern))
-	rule.Details.Examples = append(rule.Details.Examples, result.Example)
+	rule.Details.Examples = append(rule.Details.Examples, result.Examples[0])
 	rule.Details.Values.New = true
 	//create a new UUID
 	rule.Details.ID = generateIDFromPattern(result.Pattern)

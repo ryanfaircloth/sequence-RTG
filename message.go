@@ -257,7 +257,7 @@ func (this *Message) tokenStep(i int, r rune) bool {
 				this.state.tokenType = TokenLiteral
 				this.state.tokenStop = true
 			}else{
-				this.state.tokenType = TokenLiteral
+				this.state.tokenType = TokenPath
 			}
 
 		case '"', '\'':
@@ -308,13 +308,18 @@ func (this *Message) tokenStep(i int, r rune) bool {
 			}
 
 		case '\\':
-			this.state.tokenType = TokenLiteral
+			this.state.tokenType = TokenPath
 
 		default:
-			this.state.tokenType = TokenLiteral
-			if !isLiteral(r) {
-				this.state.tokenStop = true
+			if isLetter(r){
+				this.state.tokenType = TokenAlphaOnly
+			}else {
+				this.state.tokenType = TokenLiteral
+				if !isLiteral(r) {
+					this.state.tokenStop = true
+				}
 			}
+
 		}
 
 	case TokenURI:
@@ -339,6 +344,9 @@ func (this *Message) tokenStep(i int, r rune) bool {
 				// if it's /, then it's probably something like http/1.0 or http/1.1,
 				// let's keep it going
 				this.state.tokenType = TokenLiteral
+			} else if i == 1 && isLetter(r){
+				//we probably caught the h or H in the first round
+				this.state.tokenType = TokenAlphaOnly
 			} else if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) {
 				// no longer URL, turn into literal
 				this.state.tokenType = TokenLiteral
@@ -351,19 +359,86 @@ func (this *Message) tokenStep(i int, r rune) bool {
 				}
 			}
 		}
+	case TokenAlphaOnly:
+		switch r {
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			this.state.tokenType = TokenAlphaNum
+		case '/', '\\':
+			this.state.tokenType = TokenPath
+		case '-', '_':
+			this.state.tokenType = TokenId
+
+		default:
+			if isLetter(r) {
+				//do nothing
+			} else if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) {
+				this.state.tokenType = TokenLiteral
+			} else {
+				this.state.tokenStop = true
+			}
+		}
+	case TokenAlphaNum:
+		switch r {
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+		case '/', '\\':
+			this.state.tokenType = TokenPath
+		case '-', '_':
+			this.state.tokenType = TokenId
+		default:
+			if isLetter(r) {
+				this.state.tokenType = TokenAlphaNum
+			} else if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) {
+				this.state.tokenType = TokenLiteral
+			} else {
+				this.state.tokenStop = true
+			}
+		}
+
+	case TokenPath:
+		switch r {
+		case '/', '\\':
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			//numbers allowed
+		default:
+			if isLetter(r) {
+				//letters allowed
+			} else if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) {
+				this.state.tokenType = TokenLiteral
+			} else {
+				this.state.tokenStop = true
+			}
+		}
+	case TokenId:
+		switch r {
+		case '_', '-':
+			// underscore and dash allowed
+		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
+			//numbers allowed
+		default:
+			if isLetter(r) {
+				//letters allowed
+			} else if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) {
+				this.state.tokenType = TokenLiteral
+			} else {
+				this.state.tokenStop = true
+			}
+		}
 
 	case TokenInteger:
 		switch r {
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-			//this.state.tokenType = TokenInteger
-
+			//no need to change type
+		case '_', '-':
+			this.state.tokenType = TokenId
 		case '.':
 			// this should be the ONLY dot this switch case should see
 			this.state.dots++
 			this.state.tokenType = TokenFloat
-
 		default:
-			if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) {
+			//could be alpha numeric
+			if isLetter(r) {
+				this.state.tokenType = TokenAlphaNum
+			} else if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) {
 				// no longer URL, turn into literal
 				this.state.tokenType = TokenLiteral
 			} else {
@@ -598,13 +673,13 @@ func (this *Message) resetHexStates() {
 }
 
 func isLetter(r rune) bool {
-	return 'a' <= r && r <= 'z' || 'A' <= r && r <= 'Z' || r == '_' || r >= 0x80 && unicode.IsLetter(r)
+	return 'a' <= r && r <= 'z' || 'A' <= r && r <= 'Z'
 }
 
 func isLiteral(r rune) bool {
 	//return 'a' <= r && r <= 'z' || 'A' <= r && r <= 'Z' || r >= '0' && r <= '9' || r == '+' || r == '-' || r == '_' || r == '#' || r == '\\' || r == '%' || r == '*' || r == '@' || r == '$' || r == '?' || r == '.' || r == '&' || r == '/'
 	switch r {
-	case '+', '-', '_', '#', '\\', '%', '*', '@', '$', '?', '.', '&', '/':
+	case '+', '-', '_', '#', '\\', '%', '*', '@', '$', '?', '.', '&', '/', '~':
 		return true
 	}
 	return 'a' <= r && r <= 'z' || 'A' <= r && r <= 'Z' || r >= '0' && r <= '9'

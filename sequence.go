@@ -74,6 +74,10 @@ func (this Sequence) String() string {
 				c += ":*"
 			}
 			c = "%" + c + "%"
+			// TODO: Remove when fixed the over tokenisation problem
+			if token.Type == TokenString && !token.isValue{
+				c = token.Value
+			}
 		} else {
 			c = token.Value
 		}
