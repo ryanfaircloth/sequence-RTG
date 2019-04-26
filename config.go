@@ -33,6 +33,7 @@ var (
   		keepSpaces bool
 		matchThresholdType     string
 		matchThresholdValue    string
+		maxBatchSize 		   int64
 	}
 
 	keymaps struct {
@@ -53,6 +54,7 @@ func ReadConfig(file string) error {
 		KeepSpaces 	bool
 		MatchThresholdType     string
 		MatchThresholdValue    string
+		MaxBatchSize		   int64
 
 		Analyzer struct {
 			Prekeys  map[string][]string
@@ -72,6 +74,7 @@ func ReadConfig(file string) error {
 	config.keepSpaces  = configInfo.KeepSpaces
 	config.matchThresholdType  = configInfo.MatchThresholdType
 	config.matchThresholdValue  = configInfo.MatchThresholdValue
+	config.maxBatchSize =  configInfo.MaxBatchSize
 
 	keymaps.keywords = make(map[string]TagType, 30)
 	keymaps.prekeys = make(map[string][]TagType, 30)

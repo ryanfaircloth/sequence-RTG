@@ -1,4 +1,4 @@
-package syslog_ng
+package sequence
 
 import (
 	"bufio"
@@ -63,3 +63,5 @@ func OpenOutputFile(fname string) *os.File {
 
 	return ofile
 }
+
+

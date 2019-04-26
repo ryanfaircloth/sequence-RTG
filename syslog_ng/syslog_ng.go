@@ -3,18 +3,12 @@ package syslog_ng
 import (
 	"crypto/sha1"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"index/suffixarray"
 	"sequence"
 	"sort"
 	"strings"
 )
-
-type LogRecord struct {
-	Service string
-	Message string
-}
 
 var syslog_ng = map[string]string{
 	"%string%"		:   "@ESTRING:: @",
@@ -205,48 +199,11 @@ func generateIDFromPattern(pattern string) string{
 }
 
 
-func ReadLogRecordTxt(fname string) []LogRecord {
-	var lr []LogRecord
-	iscan, ifile := OpenInputFile(fname)
-	defer ifile.Close()
-	for iscan.Scan() {
-		message := iscan.Text()
-		if len(message) == 0 || message[0] == '#' {
-			continue
-		}
-		//the first field is the service, delimited by a space
-		k := strings.Fields(message)
-		s := k[0]
-		//we need to remove the service from the remaining message
-		i := len(s) + 1
-		m := message[i:]
-		r := LogRecord{Service: s, Message: m}
-		lr = append(lr, r)
-	}
-	return lr
-}
 
-//this method expects a json record in the format {"service": "service-name", message: "log message"}
-//eg {"service":"remctld","message":"error receiving initial token: unexpected end of file"}
-func ReadLogRecordJson(fname string) []LogRecord {
-	var lr []LogRecord
-	iscan, ifile := OpenInputFile(fname)
-	defer ifile.Close()
-	for iscan.Scan() {
-		message := iscan.Text()
-		if len(message) == 0 || message[0] == '#' {
-			continue
-		}
-		r := LogRecord{}
-		_ = json.Unmarshal([]byte(message), &r)
-		lr = append(lr, r)
-	}
-	return lr
-}
 
 //this can be used to sort and inspect the records in order
 //useful for checking the patterns against all the examples
-func SortandPrintLogMessages(lr []LogRecord, fname string  ){
+func SortandPrintLogMessages(lr []sequence.LogRecord, fname string  ){
 	sort.Slice(lr, func(i, j int) bool {
 		if lr[i].Service != lr[j].Service {
 			return lr[i].Service < lr[j].Service
@@ -254,7 +211,7 @@ func SortandPrintLogMessages(lr []LogRecord, fname string  ){
 
 		return lr[i].Message < lr[j].Message
 	})
-	ofile := OpenOutputFile(fname)
+	ofile := sequence.OpenOutputFile(fname)
 	defer ofile.Close()
 	for _, r := range lr{
 		fmt.Fprintf(ofile, "%s  %s\n",  r.Service, r.Message )

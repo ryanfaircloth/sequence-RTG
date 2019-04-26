@@ -10,6 +10,11 @@ keepSpaces = true
 matchThresholdType = "percent"
 matchThresholdValue = "0.001"
 
+# This is a upper limit for processing messages
+# If exceeded the file or input will be split into batches.
+# Use to avoid out of memory issues when file size exceeds processing power.
+maxBatchSize = 1000000
+
 timeFormats = [
 	"Mon Jan _2 15:04:05 2006",
 	"Mon Jan _2 15:04:05 MST 2006",

@@ -77,18 +77,19 @@ func analyze(cmd *cobra.Command, args []string) {
 	scanner := sequence.NewScanner()
 
 	//We load the file completely
-	var lr []syslog_ng.LogRecord
+	var lr []sequence.LogRecord
 
 	if informat == "json" {
-		lr = syslog_ng.ReadLogRecordJson(infile)
+		lr = sequence.ReadLogRecordJson(infile)
 	} else{
-		lr = syslog_ng.ReadLogRecordTxt(infile)
+		lr = sequence.ReadLogRecordTxt(infile)
 	}
 
 	// For all the log messages, if we can't parse it, then let's add it to the
 	// analyzer for pattern analysis, this requires the previous pattern file/folder
 	//	to be passed in
 	for _, r := range lr {
+		//TODO Fix this so it doesn't scan twice or parse twice
 		seq := scanMessage(scanner, r.Message)
 		if _, err := parser.Parse(seq); err != nil {
 			analyzer.Add(seq)
@@ -98,7 +99,7 @@ func analyze(cmd *cobra.Command, args []string) {
 
 	//Uncomment this to sort the slice by the service
 	//Useful for debugging
-	//syslog_ng.SortandPrintLogMessages(lr, "C:\\data\\debug.txt")
+	syslog_ng.SortandPrintLogMessages(lr, "C:\\data\\debug.txt")
 
 	//these are existing patterns
 	pmap := make(map[string]struct {
@@ -116,6 +117,7 @@ func analyze(cmd *cobra.Command, args []string) {
 	var vals []int
 
 	for _, l := range lr {
+		//TODO Fix this so it doesn't scan twice or parse twice
 		seq := scanMessage(scanner, l.Message)
 
 		pseq, err := parser.Parse(seq)
@@ -153,7 +155,7 @@ func analyze(cmd *cobra.Command, args []string) {
 		processed++
 	}
 
-	opatfile := syslog_ng.OpenOutputFile("C:\\data\\pattern.txt")
+	opatfile := sequence.OpenOutputFile("C:\\data\\pattern.txt")
 	defer opatfile.Close()
 
 	//get the threshold for including the pattern in the
@@ -171,7 +173,7 @@ func analyze(cmd *cobra.Command, args []string) {
 		}
 	//}
 
-	ofile := syslog_ng.OpenOutputFile(outfile)
+	ofile := sequence.OpenOutputFile(outfile)
 	defer ofile.Close()
 
 	if outformat == "yaml"{
@@ -270,7 +272,7 @@ func buildParser() *sequence.Parser {
 	if fi, err := os.Stat(patfile); err != nil {
 		log.Fatal(err)
 	} else if fi.Mode().IsDir() {
-		files = syslog_ng.GetDirOfFiles(patfile)
+		files = sequence.GetDirOfFiles(patfile)
 	} else {
 		files = append(files, patfile)
 	}
@@ -279,7 +281,7 @@ func buildParser() *sequence.Parser {
 
 	for _, file := range files {
 		// Open pattern file
-		pscan, pfile := syslog_ng.OpenInputFile(file)
+		pscan, pfile := sequence.OpenInputFile(file)
 
 		for pscan.Scan() {
 			line := pscan.Text()
