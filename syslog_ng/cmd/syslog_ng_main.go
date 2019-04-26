@@ -76,8 +76,7 @@ func analyze(cmd *cobra.Command, args []string) {
 	analyzer := sequence.NewAnalyzer()
 	scanner := sequence.NewScanner()
 
-	//We load the file completely so we can sort and sent the messages
-	//from each service together
+	//We load the file completely
 	var lr []syslog_ng.LogRecord
 
 	if informat == "json" {
@@ -87,7 +86,8 @@ func analyze(cmd *cobra.Command, args []string) {
 	}
 
 	// For all the log messages, if we can't parse it, then let's add it to the
-	// analyzer for pattern analysis
+	// analyzer for pattern analysis, this requires the previous pattern file/folder
+	//	to be passed in
 	for _, r := range lr {
 		seq := scanMessage(scanner, r.Message)
 		if _, err := parser.Parse(seq); err != nil {
@@ -158,7 +158,7 @@ func analyze(cmd *cobra.Command, args []string) {
 
 	//get the threshold for including the pattern in the
 	//output files
-	threshold := syslog_ng.GetThreshold(len(lr))
+	threshold := sequence.GetThreshold(len(lr))
 
 	//
 	//if outformat == "text" || outformat == ""{

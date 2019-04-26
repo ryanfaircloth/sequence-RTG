@@ -5,9 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	//"github.com/texttheater/golang-levenshtein/levenshtein"
 	"index/suffixarray"
-	"math"
 	"sequence"
 	"sort"
 	"strings"
@@ -125,6 +123,11 @@ func replaceTags(pattern string) string{
 			}
 		}
 	}
+	// if the pattern ends looking for a space delimiter
+	// remove the space
+	if result[len(result)-3:] == ": @"{
+		result = result[:len(result)-3] + ":@"
+	}
 	return result
 }
 
@@ -201,13 +204,6 @@ func generateIDFromPattern(pattern string) string{
 	return shaStr
 }
 
-func GetThreshold(numTotal int) int {
-	trPercent := 0.001
-	total := float64(numTotal)
-	t := trPercent * total
-	tr := int(math.Floor(t))
-	return tr
-}
 
 func ReadLogRecordTxt(fname string) []LogRecord {
 	var lr []LogRecord
@@ -249,6 +245,7 @@ func ReadLogRecordJson(fname string) []LogRecord {
 }
 
 //this can be used to sort and inspect the records in order
+//useful for checking the patterns against all the examples
 func SortandPrintLogMessages(lr []LogRecord, fname string  ){
 	sort.Slice(lr, func(i, j int) bool {
 		if lr[i].Service != lr[j].Service {
@@ -259,11 +256,8 @@ func SortandPrintLogMessages(lr []LogRecord, fname string  ){
 	})
 	ofile := OpenOutputFile(fname)
 	defer ofile.Close()
-	//var prev = LogRecord{}
 	for _, r := range lr{
-		//distance := levenshtein.DistanceForStrings([]rune(prev.Message), []rune(r.Message), levenshtein.DefaultOptions)
 		fmt.Fprintf(ofile, "%s  %s\n",  r.Service, r.Message )
-		//prev = r
 	}
 }
 

@@ -31,6 +31,8 @@ var (
 		//set to true if spacing matters for your output
 		//format
   		keepSpaces bool
+		matchThresholdType     string
+		matchThresholdValue    string
 	}
 
 	keymaps struct {
@@ -49,6 +51,8 @@ func ReadConfig(file string) error {
 		TimeFormats []string
 		Tags        []string
 		KeepSpaces 	bool
+		MatchThresholdType     string
+		MatchThresholdValue    string
 
 		Analyzer struct {
 			Prekeys  map[string][]string
@@ -66,6 +70,8 @@ func ReadConfig(file string) error {
 	config.tagNames = config.tagNames[:0]
 	config.tagTypes = config.tagTypes[:0]
 	config.keepSpaces  = configInfo.KeepSpaces
+	config.matchThresholdType  = configInfo.MatchThresholdType
+	config.matchThresholdValue  = configInfo.MatchThresholdValue
 
 	keymaps.keywords = make(map[string]TagType, 30)
 	keymaps.prekeys = make(map[string][]TagType, 30)
