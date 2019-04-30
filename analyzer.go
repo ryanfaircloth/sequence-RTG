@@ -15,6 +15,8 @@
 package sequence
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
 	"math"
 	"strconv"
@@ -80,6 +82,7 @@ type Analyzer struct {
 //pattern to be used as the starting block for
 //all conversions
 type AnalyzerResult struct {
+	PatternId string
 	Pattern string
 	ExampleCount int
 	Examples []string
@@ -123,6 +126,17 @@ func AddExampleToAnalyzerResult(this *AnalyzerResult, message string){
 			this.Examples = append(this.Examples, message)
 		}
 	}
+}
+
+//this is so that the same pattern will have the same id
+//in all files and the id is reproducible
+//returns a sha1 hash as the id
+func GenerateIDFromPattern(pattern string) string{
+	h := sha1.New()
+	h.Write([]byte(pattern))
+	sha := h.Sum(nil)  // "sha" is uint8 type, encoded in base16
+	shaStr := hex.EncodeToString(sha)  // String representation
+	return shaStr
 }
 
 func GetThreshold(numTotal int) int {
@@ -358,7 +372,7 @@ func (this *Analyzer) merge() error {
 			}
 
 			// if the number of nodes share at least 1 parent and 1 child is only 1, then
-			// it means it's only the curernt node left. In other words, no other nodes share
+			// it means it's only the current node left. In other words, no other nodes share
 			// at least 1 parent and 1 child with the current node. If so, move on.
 			if mergeSet.Count() > 1 {
 				// Otherwise, we want to merge the nodes that are in the mergeSet
@@ -726,16 +740,6 @@ func markSequenceKV(seq Sequence) Sequence {
 		if seq[i].Value == "=" {
 			ki := i - 1 // key index
 			vi := i + 1 // value index
-
-			//if we keep the spaces we could have key = value.
-			if config.keepSpaces{
-				if vi < l && seq[vi].Value == " "{
-					vi = i + 2
-				}
-				if ki > 1 && seq[ki].Value == " "{
-					ki = i - 2
-				}
-			}
 
 			if vi < l && seq[vi].Type == TokenLiteral &&
 				(seq[vi].Value == "\"" || seq[vi].Value == "'" || seq[vi].Value == "<") {

@@ -1,8 +1,6 @@
 package syslog_ng
 
 import (
-	"crypto/sha1"
-	"encoding/hex"
 	"fmt"
 	"index/suffixarray"
 	"sequence"
@@ -86,6 +84,7 @@ var syslog_ng_string = map[string]string{
 	","			:	"@ESTRING:[fieldname]:,@",
 	";"			:	"@ESTRING:[fieldname]:;@",
 	">"			:	"@ESTRING:[fieldname]:>@",
+	"no-sp"		:	"@ESTRING:[fieldname]:@",
 
 }
 
@@ -119,9 +118,12 @@ func replaceTags(pattern string) string{
 	}
 	// if the pattern ends looking for a space delimiter
 	// remove the space
-	if result[len(result)-3:] == ": @"{
-		result = result[:len(result)-3] + ":@"
+	if len(result) > 6{
+		if result[len(result)-3:] == ": @"{
+			result = result[:len(result)-3] + ":@"
+		}
 	}
+
 	return result
 }
 
@@ -137,9 +139,9 @@ func getSpecial(p string) string {
 	for i, off := range offsets {
 		if i % 2 == 0 && i < len(offsets)-1{
 			//s:= p[off:offsets[i+1]+1]
-			s, pat, fieldname := getWithDelimiters(p, off, offsets[i+1]+1)
-			if pat != ""{
-				if val, ok := syslog_ng_string[pat]; ok {
+			s, del, fieldname := getWithDelimiters(p, off, offsets[i+1]+1)
+			if del != ""{
+				if val, ok := syslog_ng_string[del]; ok {
 					val = strings.Replace(val, "[fieldname]", fieldname, 1)
 					k = strings.Replace(k, s, val, 1)
 				}
@@ -177,8 +179,9 @@ func getWithDelimiters(p string, start, end int ) (string, string, string){
 		after :=  p[end:end+1]
 		if after == ":" || after == "," || after == ";" {
 			return p[start:end+1], after, fieldname
+		} else if after != "%"{
+			return p[start:end], "no-sp", fieldname
 		}
-		return p[start:end], "", fieldname
 	}
 	return p[start:end], "", fieldname
 }
@@ -187,23 +190,21 @@ func checkIfNew(pattern sequence.AnalyzerResult) bool {
 	return false
 }
 
-//this is so that the same pattern will have the same id
-//in all files and the id is reproducible
-//returns a sha1 hash as the id
-func generateIDFromPattern(pattern string) string{
-	h := sha1.New()
-	h.Write([]byte(pattern))
-	sha := h.Sum(nil)  // "sha" is uint8 type, encoded in base16
-	shaStr := hex.EncodeToString(sha)  // String representation
-	return shaStr
+
+func SortLogMessages(lr []sequence.LogRecord) []sequence.LogRecord{
+	sort.Slice(lr, func(i, j int) bool {
+		if lr[i].Service != lr[j].Service {
+			return lr[i].Service < lr[j].Service
+		}
+
+		return lr[i].Message < lr[j].Message
+	})
+	return lr
 }
-
-
-
 
 //this can be used to sort and inspect the records in order
 //useful for checking the patterns against all the examples
-func SortandPrintLogMessages(lr []sequence.LogRecord, fname string  ){
+func SortandSaveLogMessages(lr []sequence.LogRecord, fname string  ){
 	sort.Slice(lr, func(i, j int) bool {
 		if lr[i].Service != lr[j].Service {
 			return lr[i].Service < lr[j].Service

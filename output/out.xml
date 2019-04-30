@@ -1,21 +1,27 @@
 <?xml version='1.0' encoding='UTF-8'?>
-	  <patterndb version="4" pub_date="2019-04-26 14:29:01">
-     <ruleset id="b834f2a9973455bc6cca26f024f63df0e211b4d1" name="crond">
+	  <patterndb version="4" pub_date="2019-04-30 09:43:10">
+     <ruleset id="777185097790d0b1f9b59c9735e276a838bb0e6e" name="crontab">
         <patterns>
-           <pattern>crond</pattern>
+           <pattern>crontab</pattern>
         </patterns>
         <rules>
-           <rule id="9b078c3f203593444458a3a04c51f10a18d33f25">
+           <rule id="c004a3bd5494cc6cd9bcfed048e161d8b9e81c12">
               <patterns>
-                 <pattern>@ESTRING:id: @(crond:@ESTRING:object: @): @ESTRING:status: @to @ESTRING:dstuser: @session: Activation of org.freedesktop.login1 timed out</pattern>
+                 <pattern>@QSTRING:srcuser:()@ LIST @QSTRING:string:()@</pattern>
               </patterns>
               <examples>
                  <example>
-                    <test_message program="crond">pam_systemd(crond:session): Failed to create session: Activation of org.freedesktop.login1 timed out</test_message>
+                    <test_message program="crontab">(root) LIST (riemann)</test_message>
+                 </example>
+                 <example>
+                    <test_message program="crontab">(root) LIST (root)</test_message>
+                 </example>
+                 <example>
+                    <test_message program="crontab">(root) LIST (osadmin)</test_message>
                  </example>
               </examples>
               <values>
-                 <value name="seq-matches">124</value>
+                 <value name="seq-matches">120</value>
                  <value name="seq-new">true</value>
               </values>
            </rule>
@@ -42,236 +48,204 @@
            </rule>
         </rules>
      </ruleset>
-     <ruleset id="b2683937b17d0114872524f03650d95affabadb0" name="lavoisier-cpu">
+     <ruleset id="23adea20019c51b451c41cf70350ff1dde28165d" name="livestatus-resilient-proxy">
         <patterns>
-           <pattern>lavoisier-cpu</pattern>
+           <pattern>livestatus-resilient-proxy</pattern>
         </patterns>
         <rules>
-           <rule id="21251057965f2bbe7760a0741188d3ab74e54d68">
+           <rule id="067e080de968e112983ed04a0bcf19a6de583922">
               <patterns>
-                 <pattern>INFO: Cache has been refresh for @ESTRING:srcuser::@ @ESTRING:id:@</pattern>
+                 <pattern>{&#34;level&#34;:@QSTRING:string:&#34;@,@QSTRING:id:&#34;@:{@QSTRING:id:&#34;@:@NUMBER@,@QSTRING:id:&#34;@:{@QSTRING:string:&#34;@:@ESTRING:duration:,@@QSTRING:id:&#34;@:@NUMBER@,@QSTRING:id:&#34;@:@NUMBER@}},&#34;logger&#34;:{&#34;name&#34;:@QSTRING:id:&#34;@},&#34;msg&#34;:&#34;livestatus I/O proxy completed&#34;,@QSTRING:id:&#34;@:@QSTRING:id:&#34;@,&#34;time&#34;:@QSTRING:msgtime:&#34;@}</pattern>
               </patterns>
               <examples>
                  <example>
-                    <test_message program="lavoisier-cpu">INFO: Cache has been refresh for view: resource_objectives</test_message>
+                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;info&#34;,&#34;livestatus-resilient-api&#34;:{&#34;induced-delay&#34;:1031621,&#34;io-stats&#34;:{&#34;duration&#34;:1097285,&#34;to-client&#34;:95,&#34;to-livestatus&#34;:475}},&#34;logger&#34;:{&#34;name&#34;:&#34;io-proxy&#34;},&#34;msg&#34;:&#34;livestatus I/O proxy completed&#34;,&#34;request-id&#34;:&#34;1d887092-4e3d-4bc4-92dc-26afd8aac9fd&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:24+02:00&#34;}</test_message>
                  </example>
                  <example>
-                    <test_message program="lavoisier-cpu">INFO: Cache has been refresh for view: resource_requests</test_message>
+                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;info&#34;,&#34;livestatus-resilient-api&#34;:{&#34;induced-delay&#34;:2343520,&#34;io-stats&#34;:{&#34;duration&#34;:2385411,&#34;to-client&#34;:8227,&#34;to-livestatus&#34;:1822}},&#34;logger&#34;:{&#34;name&#34;:&#34;io-proxy&#34;},&#34;msg&#34;:&#34;livestatus I/O proxy completed&#34;,&#34;request-id&#34;:&#34;2c9073a4-aaec-4af2-aec8-378e9792a0f8&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:24+02:00&#34;}</test_message>
+                 </example>
+                 <example>
+                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;info&#34;,&#34;livestatus-resilient-api&#34;:{&#34;induced-delay&#34;:3117620,&#34;io-stats&#34;:{&#34;duration&#34;:3147861,&#34;to-client&#34;:19,&#34;to-livestatus&#34;:279}},&#34;logger&#34;:{&#34;name&#34;:&#34;io-proxy&#34;},&#34;msg&#34;:&#34;livestatus I/O proxy completed&#34;,&#34;request-id&#34;:&#34;22bb0331-ea52-4adb-a43b-02842ab5cdba&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:23+02:00&#34;}</test_message>
                  </example>
               </examples>
               <values>
-                 <value name="seq-matches">119</value>
+                 <value name="seq-matches">513</value>
                  <value name="seq-new">true</value>
               </values>
            </rule>
-           <rule id="1a09ce7183c326790b732c41ffa69003a5dc3705">
+           <rule id="9fe0dd214020a4a50fade69c3c77dd2023e32e8f">
               <patterns>
-                 <pattern>@ESTRING:msgtime: @fr.in2p3.lavoisier.engine.view.ViewCached refresh</pattern>
+                 <pattern>{&#34;level&#34;:@QSTRING:string:&#34;@,@QSTRING:string:&#34;@:@QSTRING:string:&#34;@,@QSTRING:id:&#34;@:@QSTRING:id:&#34;@,@QSTRING:string:&#34;@:@QSTRING:msgtime:&#34;@}</pattern>
               </patterns>
               <examples>
                  <example>
-                    <test_message program="lavoisier-cpu">Apr 09, 2019 9:23:00 AM fr.in2p3.lavoisier.engine.view.ViewCached refresh</test_message>
+                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;debug&#34;,&#34;msg&#34;:&#34;registering reader&#34;,&#34;reader-id&#34;:&#34;9eb3bfaa-016e-4060-b0ed-7afcf430dbe3&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:24+02:00&#34;}</test_message>
                  </example>
                  <example>
-                    <test_message program="lavoisier-cpu">Apr 09, 2019 9:21:00 AM fr.in2p3.lavoisier.engine.view.ViewCached refresh</test_message>
+                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;debug&#34;,&#34;msg&#34;:&#34;reader registered&#34;,&#34;reader-id&#34;:&#34;9eb3bfaa-016e-4060-b0ed-7afcf430dbe3&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:24+02:00&#34;}</test_message>
                  </example>
                  <example>
-                    <test_message program="lavoisier-cpu">Apr 09, 2019 9:20:16 AM fr.in2p3.lavoisier.engine.view.ViewCached refresh</test_message>
+                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;debug&#34;,&#34;msg&#34;:&#34;reader registered&#34;,&#34;reader-id&#34;:&#34;2c9073a4-aaec-4af2-aec8-378e9792a0f8&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:24+02:00&#34;}</test_message>
                  </example>
               </examples>
               <values>
-                 <value name="seq-matches">173</value>
+                 <value name="seq-matches">2050</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="b7643540c0eb83b9eca8680c27b42797b455bf16">
+              <patterns>
+                 <pattern>{&#34;level&#34;:@QSTRING:string:&#34;@,@QSTRING:string:&#34;@:{&#34;name&#34;:@QSTRING:id:&#34;@},&#34;msg&#34;:&#34;new livestatus proxy request&#34;,@QSTRING:id:&#34;@:@QSTRING:id:&#34;@,&#34;time&#34;:@QSTRING:msgtime:&#34;@}</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;info&#34;,&#34;logger&#34;:{&#34;name&#34;:&#34;io-proxy&#34;},&#34;msg&#34;:&#34;new livestatus proxy request&#34;,&#34;request-id&#34;:&#34;2c9073a4-aaec-4af2-aec8-378e9792a0f8&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:24+02:00&#34;}</test_message>
+                 </example>
+                 <example>
+                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;info&#34;,&#34;logger&#34;:{&#34;name&#34;:&#34;io-proxy&#34;},&#34;msg&#34;:&#34;new livestatus proxy request&#34;,&#34;request-id&#34;:&#34;1b6806de-2cb8-4b6b-9b15-76916d1e81a7&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:23+02:00&#34;}</test_message>
+                 </example>
+                 <example>
+                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;info&#34;,&#34;logger&#34;:{&#34;name&#34;:&#34;io-proxy&#34;},&#34;msg&#34;:&#34;new livestatus proxy request&#34;,&#34;request-id&#34;:&#34;0e01236a-d1f9-42d9-8df6-1225fd15c00c&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:22+02:00&#34;}</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">509</value>
                  <value name="seq-new">true</value>
               </values>
            </rule>
         </rules>
      </ruleset>
-     <ruleset id="4c98696bf77d742aa280e62ffab3f47a26083609" name="postfix/smtp">
+     <ruleset id="c0fcfd979d066c7c1f16f463076e68551591ff7f" name="ypbind">
         <patterns>
-           <pattern>postfix/smtp</pattern>
+           <pattern>ypbind</pattern>
         </patterns>
         <rules>
-           <rule id="7086c436c7a4acaf4f434098a50795c9bc9577ca">
+           <rule id="ef9d22b3636d3aff5704dca3374b9147389a14cb">
               <patterns>
-                 <pattern>@ESTRING:action: @to @ESTRING:dstuser: @@QSTRING:srcip:[]@:25: Connection refused</pattern>
+                 <pattern>broadcast: RPC: Timed out.</pattern>
               </patterns>
               <examples>
                  <example>
-                    <test_message program="postfix/smtp">connect to ccwtb2sge001.in2p3.fr[134.158.171.89]:25: Connection refused</test_message>
-                 </example>
-                 <example>
-                    <test_message program="postfix/smtp">connect to ccosvm0871.in2p3.fr[172.17.0.111]:25: Connection refused</test_message>
-                 </example>
-                 <example>
-                    <test_message program="postfix/smtp">connect to ccosvm0824.in2p3.fr[172.17.0.64]:25: Connection refused</test_message>
+                    <test_message program="ypbind">broadcast: RPC: Timed out.</test_message>
                  </example>
               </examples>
               <values>
-                 <value name="seq-matches">156</value>
+                 <value name="seq-matches">658</value>
                  <value name="seq-new">true</value>
               </values>
            </rule>
         </rules>
      </ruleset>
-     <ruleset id="482c9f4df75876791be5a64038a66ecaf265f2ab" name="run-parts(/etc/cron.hourly)">
+     <ruleset id="9795cae1022d79b6833618e93ec898bdf0e1fd46" name="ceilometer-polling">
         <patterns>
-           <pattern>run-parts(/etc/cron.hourly)</pattern>
+           <pattern>ceilometer-polling</pattern>
         </patterns>
         <rules>
-           <rule id="8155cba8b39371f28dc848462046d2a9e94f7527">
+           <rule id="4f4c6427d3b8d5c1677ae81177fabae79588c386">
               <patterns>
-                 <pattern>@ESTRING:action: @0yum-hourly.cron</pattern>
+                 <pattern>{ @QSTRING:id:&#34;@:@QSTRING:srchost:&#34;@, @QSTRING:id:&#34;@:@QSTRING:id:&#34;@, @QSTRING:id:&#34;@:&#34;ceilometer.agent.manager&#34;, @QSTRING:id:&#34;@:&#34;-&#34;, @QSTRING:id:&#34;@:@QSTRING:string:&#34;@ }</pattern>
               </patterns>
               <examples>
                  <example>
-                    <test_message program="run-parts(/etc/cron.hourly)">finished 0yum-hourly.cron</test_message>
+                    <test_message program="ceilometer-polling">{ &#34;os_logger&#34;:&#34;manager.py&#34;, &#34;os_logger_f&#34;:&#34;poll_and_notify&#34;, &#34;os_func&#34;:&#34;ceilometer.agent.manager&#34;, &#34;os_instance&#34;:&#34;-&#34;, &#34;os_message&#34;:&#34;Skip pollster disk.write.requests.rate, no resources found this cycle&#34; }</test_message>
                  </example>
                  <example>
-                    <test_message program="run-parts(/etc/cron.hourly)">starting 0yum-hourly.cron</test_message>
+                    <test_message program="ceilometer-polling">{ &#34;os_logger&#34;:&#34;manager.py&#34;, &#34;os_logger_f&#34;:&#34;poll_and_notify&#34;, &#34;os_func&#34;:&#34;ceilometer.agent.manager&#34;, &#34;os_instance&#34;:&#34;-&#34;, &#34;os_message&#34;:&#34;Skip pollster disk.read.bytes, no resources found this cycle&#34; }</test_message>
+                 </example>
+                 <example>
+                    <test_message program="ceilometer-polling">{ &#34;os_logger&#34;:&#34;manager.py&#34;, &#34;os_logger_f&#34;:&#34;poll_and_notify&#34;, &#34;os_func&#34;:&#34;ceilometer.agent.manager&#34;, &#34;os_instance&#34;:&#34;-&#34;, &#34;os_message&#34;:&#34;Skip pollster disk.write.bytes.rate, no resources found this cycle&#34; }</test_message>
                  </example>
               </examples>
               <values>
-                 <value name="seq-matches">116</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="fad88ec82c1452b869d570db9c456db344b1fe58">
-              <patterns>
-                 <pattern>@ESTRING:action: @@ESTRING::@</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="run-parts(/etc/cron.hourly)">finished 0anacron</test_message>
-                 </example>
-                 <example>
-                    <test_message program="run-parts(/etc/cron.hourly)">starting 0anacron</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">302</value>
+                 <value name="seq-matches">348</value>
                  <value name="seq-new">true</value>
               </values>
            </rule>
         </rules>
      </ruleset>
-     <ruleset id="1eec7a132fddf14aac0f757756ba496715733ca4" name="snmpd">
+     <ruleset id="b834f2a9973455bc6cca26f024f63df0e211b4d1" name="crond">
         <patterns>
-           <pattern>snmpd</pattern>
+           <pattern>crond</pattern>
         </patterns>
         <rules>
-           <rule id="f0cc4e8534513b20688522d16365ca38f5d4187c">
+           <rule id="9b078c3f203593444458a3a04c51f10a18d33f25">
               <patterns>
-                 <pattern>@ESTRING:action: @from @ESTRING:protocol::@ @QSTRING:srcip:[]@:@ESTRING:id:&gt;@@QSTRING:dstip:[]@:@NUMBER@</pattern>
+                 <pattern>@ESTRING:id:@(crond:@ESTRING:object: @): @ESTRING:status: @to @ESTRING:dstuser: @session: Activation of org.freedesktop.login1 timed out</pattern>
               </patterns>
               <examples>
                  <example>
-                    <test_message program="snmpd">Connection from UDP: [134.158.69.132]:53505-&gt;[134.158.239.171]:161</test_message>
-                 </example>
-                 <example>
-                    <test_message program="snmpd">Connection from UDP: [134.158.69.132]:58570-&gt;[134.158.239.170]:161</test_message>
-                 </example>
-                 <example>
-                    <test_message program="snmpd">Connection from UDP: [134.158.69.131]:54888-&gt;[134.158.239.170]:161</test_message>
+                    <test_message program="crond">pam_systemd(crond:session): Failed to create session: Activation of org.freedesktop.login1 timed out</test_message>
                  </example>
               </examples>
               <values>
-                 <value name="seq-matches">467</value>
+                 <value name="seq-matches">124</value>
                  <value name="seq-new">true</value>
               </values>
            </rule>
         </rules>
      </ruleset>
-     <ruleset id="7f2169f21250351b86daad841157b13bcc09509d" name="condor_procd">
+     <ruleset id="50fc6de0fcf96b5a355ee45c5882aec592ff7c73" name="influxd">
         <patterns>
-           <pattern>condor_procd</pattern>
+           <pattern>influxd</pattern>
         </patterns>
         <rules>
-           <rule id="d471dc91e7a754c12461477196029f2e30a17831">
+           <rule id="588b725d788f61cca4fe45dd48f742abc4543753">
               <patterns>
-                 <pattern>taking a snapshot...</pattern>
+                 <pattern>[httpd] @IPvANY:srcip@ - @ESTRING:: @@QSTRING:msgtime:[]@ &#34;@ESTRING:action: @/query?db=Error_types&amp;epoch=s&amp;q=@ESTRING:: @@ESTRING:protocol:@&#34; @NUMBER@ @NUMBER@ &#34;-&#34; &#34;Grafana&#34; @ESTRING:id: @@NUMBER@</pattern>
               </patterns>
               <examples>
                  <example>
-                    <test_message program="condor_procd">taking a snapshot...</test_message>
+                    <test_message program="influxd">[httpd] 134.158.239.135 - grafana [09/Apr/2019:09:22:47 +0200] &#34;GET /query?db=Error_types&amp;epoch=s&amp;q=SELECT+max%28%22other%22%29+FROM+%22error_types%22+WHERE+time+%3E+now%28%29+-+10m+GROUP+BY+time%283m%29+fill%28null%29 HTTP/1.1&#34; 200 145 &#34;-&#34; &#34;Grafana&#34; 46a9f2bc-5a98-11e9-b26f-fa163ea926b3 1744</test_message>
+                 </example>
+                 <example>
+                    <test_message program="influxd">[httpd] 134.158.239.135 - grafana [09/Apr/2019:09:21:32 +0200] &#34;GET /query?db=Error_types&amp;epoch=s&amp;q=SELECT+max%28%22other%22%29+FROM+%22error_types%22+WHERE+time+%3E+now%28%29+-+10m+GROUP+BY+time%283m%29+fill%28null%29 HTTP/1.1&#34; 200 147 &#34;-&#34; &#34;Grafana&#34; 19f5d419-5a98-11e9-b25e-fa163ea926b3 1802</test_message>
+                 </example>
+                 <example>
+                    <test_message program="influxd">[httpd] 134.158.239.135 - grafana [09/Apr/2019:09:21:07 +0200] &#34;GET /query?db=Error_types&amp;epoch=s&amp;q=SELECT+max%28%22other%22%29+FROM+%22error_types%22+WHERE+time+%3E+now%28%29+-+10m+GROUP+BY+time%283m%29+fill%28null%29 HTTP/1.1&#34; 200 147 &#34;-&#34; &#34;Grafana&#34; 0b0e9c15-5a98-11e9-b259-fa163ea926b3 2779</test_message>
                  </example>
               </examples>
               <values>
-                 <value name="seq-matches">181</value>
+                 <value name="seq-matches">236</value>
                  <value name="seq-new">true</value>
               </values>
            </rule>
-           <rule id="9170feec5c174f9c27edd9e20672571a2cb3a469">
+           <rule id="4434f8914ffc383499643370162a68520d204903">
               <patterns>
-                 <pattern>ProcAPI: new boottime = @NUMBER@; @ESTRING:id: @= @NUMBER@; @ESTRING:path: @boottime = @NUMBER@; @ESTRING:path: @boottime = @NUMBER@</pattern>
+                 <pattern>ts=@ESTRING:msgtime: @lvl=@ESTRING:: @msg=@QSTRING:string:&#34;@ @ESTRING:id:@=@ESTRING:: @service=@ESTRING:: @query=@QSTRING:string:&#34;@</pattern>
               </patterns>
               <examples>
                  <example>
-                    <test_message program="condor_procd">ProcAPI: new boottime = 1543580315; old_boottime = 1543580315; /proc/stat boottime = 1543580315; /proc/uptime boottime = 1543580315</test_message>
+                    <test_message program="influxd">ts=2019-04-09T07:22:47.858663Z lvl=info msg=&#34;Executing query&#34; log_id=0DhHSjq0000 service=query query=&#34;SELECT max(other) FROM Error_types.autogen.error_types WHERE time &gt; now() - 10m GROUP BY time(3m)&#34;</test_message>
                  </example>
                  <example>
-                    <test_message program="condor_procd">ProcAPI: new boottime = 1543581067; old_boottime = 1543581067; /proc/stat boottime = 1543581067; /proc/uptime boottime = 1543581067</test_message>
+                    <test_message program="influxd">ts=2019-04-09T07:22:43.665692Z lvl=info msg=&#34;Executing query&#34; log_id=0DhHSjq0000 service=query query=&#34;SELECT max(w_64) FROM Times_intervals.autogen.times WHERE (experience =~ /^(Free|admin|ams-clas-qcd|ams-inter|ams-qcd|atlas|baoradio-cms-nantheo|bioaster|cermep-clas-cral-qcd|cms-integral-nantheo|cms-nantheo|compass-indra-virgo-nemo-xmm|compass-virgo-indra|computing_nodes|dchooz-pauger-d0|edelweis-babar|edelweiss|euclid|hep|hess|hess-sdss|integral|km3net|lsst|metadata-manager|metadata_manager|nucifer|nucifer-integral|opera-t2k|pauger-dchooz|planck|snls|snovae-nusol|t2k|t2k-opera|virgo-indra|xmm-nemo-virgo)$/) AND time &gt;= now() - 12h GROUP BY time(3m)&#34;</test_message>
                  </example>
                  <example>
-                    <test_message program="condor_procd">ProcAPI: new boottime = 1541669999; old_boottime = 1541669999; /proc/stat boottime = 1541669999; /proc/uptime boottime = 1541670000</test_message>
+                    <test_message program="influxd">ts=2019-04-09T07:22:43.658781Z lvl=info msg=&#34;Executing query&#34; log_id=0DhHSjq0000 service=query query=&#34;SELECT max(w_16) FROM Times_intervals.autogen.times WHERE (experience =~ /^(Free|admin|ams-clas-qcd|ams-inter|ams-qcd|atlas|baoradio-cms-nantheo|bioaster|cermep-clas-cral-qcd|cms-integral-nantheo|cms-nantheo|compass-indra-virgo-nemo-xmm|compass-virgo-indra|computing_nodes|dchooz-pauger-d0|edelweis-babar|edelweiss|euclid|hep|hess|hess-sdss|integral|km3net|lsst|metadata-manager|metadata_manager|nucifer|nucifer-integral|opera-t2k|pauger-dchooz|planck|snls|snovae-nusol|t2k|t2k-opera|virgo-indra|xmm-nemo-virgo)$/) AND time &gt;= now() - 12h GROUP BY time(3m)&#34;</test_message>
                  </example>
               </examples>
               <values>
-                 <value name="seq-matches">182</value>
+                 <value name="seq-matches">752</value>
                  <value name="seq-new">true</value>
               </values>
            </rule>
-           <rule id="f4734d19f4792fb655c9d1481224715107d5b23c">
+           <rule id="cf1285d733a600d55631543bbdbeb2f6bee0f27b">
               <patterns>
-                 <pattern>...snapshot complete</pattern>
+                 <pattern>[httpd] @IPvANY:srcip@ - @ESTRING:: @@QSTRING:msgtime:[]@ &#34;@ESTRING:action: @/query?db=Times_intervals&amp;epoch=s&amp;q=@ESTRING:: @@ESTRING:protocol:@&#34; @NUMBER@ @NUMBER@ &#34;-&#34; &#34;Grafana&#34; @ESTRING:id: @@NUMBER@</pattern>
               </patterns>
               <examples>
                  <example>
-                    <test_message program="condor_procd">...snapshot complete</test_message>
+                    <test_message program="influxd">[httpd] 134.158.239.135 - grafana [09/Apr/2019:09:22:28 +0200] &#34;GET /query?db=Times_intervals&amp;epoch=s&amp;q=SELECT+max%28%22w_tot%22%29+FROM+%22times%22+WHERE+time+%3E+now%28%29+-+10m+GROUP+BY+time%283m%29+fill%28null%29 HTTP/1.1&#34; 200 137 &#34;-&#34; &#34;Grafana&#34; 3b55eede-5a98-11e9-b263-fa163ea926b3 2131</test_message>
+                 </example>
+                 <example>
+                    <test_message program="influxd">[httpd] 134.158.239.135 - grafana [09/Apr/2019:09:22:07 +0200] &#34;GET /query?db=Times_intervals&amp;epoch=s&amp;q=SELECT+max%28%22w_tot%22%29+FROM+%22times%22+WHERE+time+%3E+now%28%29+-+10m+GROUP+BY+time%283m%29+fill%28null%29 HTTP/1.1&#34; 200 137 &#34;-&#34; &#34;Grafana&#34; 2ed1d37b-5a98-11e9-b261-fa163ea926b3 1968</test_message>
+                 </example>
+                 <example>
+                    <test_message program="influxd">[httpd] 134.158.239.135 - grafana [09/Apr/2019:09:21:25 +0200] &#34;GET /query?db=Times_intervals&amp;epoch=s&amp;q=SELECT+max%28%22w_tot%22%29+FROM+%22times%22+WHERE+time+%3E+now%28%29+-+10m+GROUP+BY+time%283m%29+fill%28null%29 HTTP/1.1&#34; 200 141 &#34;-&#34; &#34;Grafana&#34; 15c8f6f8-5a98-11e9-b25b-fa163ea926b3 1519</test_message>
                  </example>
               </examples>
               <values>
-                 <value name="seq-matches">178</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-        </rules>
-     </ruleset>
-     <ruleset id="90328dc3633ad29a72df2fd08f8e9d810c1b473f" name="sge-query-cmd">
-        <patterns>
-           <pattern>sge-query-cmd</pattern>
-        </patterns>
-        <rules>
-           <rule id="1c5cb6dff288cb96107b681b445268206d3352ea">
-              <patterns>
-                 <pattern>@NUMBER@:@NUMBER@ /opt/sge/bin/lx-amd64/qconf -sp NONE</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="sge-query-cmd">55:55 /opt/sge/bin/lx-amd64/qconf -sp NONE </test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">125</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="9ef6855fd6836f08504fd857b24ceac20930248e">
-              <patterns>
-                 <pattern>@NUMBER@:@NUMBER@ qconf -sq @ESTRING:id:@</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="sge-query-cmd">990:988 qconf -sq pa_medium</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sge-query-cmd">990:988 qconf -sq pa_long</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sge-query-cmd">990:988 qconf -sq pa_longlasting</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">120</value>
+                 <value name="seq-matches">235</value>
                  <value name="seq-new">true</value>
               </values>
            </rule>
@@ -282,6 +256,40 @@
            <pattern>collectd</pattern>
         </patterns>
         <rules>
+           <rule id="db5b5f133f0982cfaba233711161d7464f58e254">
+              <patterns>
+                 <pattern>@ESTRING:id::@ plugin @QSTRING:string:&#34;@ @ESTRING:status: @loaded.</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="collectd">plugin_load: plugin &#34;df&#34; successfully loaded.</test_message>
+                 </example>
+                 <example>
+                    <test_message program="collectd">plugin_load: plugin &#34;disk&#34; successfully loaded.</test_message>
+                 </example>
+                 <example>
+                    <test_message program="collectd">plugin_load: plugin &#34;syslog&#34; successfully loaded.</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">130</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="e10b793debaf78ffa5a52e2be4a0516203c871f5">
+              <patterns>
+                 <pattern>@ESTRING:string::@ Value not found for @ESTRING:srcuser:@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="collectd">elasticsearch : Value not found for indices.store.throttle-time</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">707</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
            <rule id="7ec7e8926f90628a36f0c690403d8a89495002a4">
               <patterns>
                  <pattern>nfs plugin: Unexpected number of fields for @ESTRING:: @server statistics: @NUMBER@.</pattern>
@@ -310,280 +318,30 @@
                  <value name="seq-new">true</value>
               </values>
            </rule>
-           <rule id="32358b85291a909281bf1ff8e4ed1b96907b4a03">
-              <patterns>
-                 <pattern>elasticsearch : Value not found for @ESTRING:srcuser:@</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="collectd">elasticsearch : Value not found for indices.store.throttle-time</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">707</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
         </rules>
      </ruleset>
-     <ruleset id="23adea20019c51b451c41cf70350ff1dde28165d" name="livestatus-resilient-proxy">
+     <ruleset id="1eec7a132fddf14aac0f757756ba496715733ca4" name="snmpd">
         <patterns>
-           <pattern>livestatus-resilient-proxy</pattern>
+           <pattern>snmpd</pattern>
         </patterns>
         <rules>
-           <rule id="09089bd65f424bc2db6256c3069bd6f090b60596">
+           <rule id="ddb1664dea489e15ed61aa4153a9bd9f115f9521">
               <patterns>
-                 <pattern>{&#34;level&#34;:&#34;debug&#34;,&#34;msg&#34;:&#34;reader registered&#34;,@QSTRING:id:&#34;@:@QSTRING:id:&#34;@,&#34;time&#34;:@QSTRING:msgtime:&#34;@}</pattern>
+                 <pattern>@ESTRING:object: @from @ESTRING:protocol::@ @QSTRING:srcip:[]@:@ESTRING:id:&gt;@@QSTRING:dstip:[]@:@NUMBER@</pattern>
               </patterns>
               <examples>
                  <example>
-                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;debug&#34;,&#34;msg&#34;:&#34;reader registered&#34;,&#34;reader-id&#34;:&#34;9eb3bfaa-016e-4060-b0ed-7afcf430dbe3&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:24+02:00&#34;}</test_message>
+                    <test_message program="snmpd">Connection from UDP: [134.158.69.132]:53505-&gt;[134.158.239.171]:161</test_message>
                  </example>
                  <example>
-                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;debug&#34;,&#34;msg&#34;:&#34;reader registered&#34;,&#34;reader-id&#34;:&#34;2c9073a4-aaec-4af2-aec8-378e9792a0f8&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:24+02:00&#34;}</test_message>
+                    <test_message program="snmpd">Connection from UDP: [134.158.69.132]:58570-&gt;[134.158.239.170]:161</test_message>
                  </example>
                  <example>
-                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;debug&#34;,&#34;msg&#34;:&#34;reader registered&#34;,&#34;reader-id&#34;:&#34;22bb0331-ea52-4adb-a43b-02842ab5cdba&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:23+02:00&#34;}</test_message>
+                    <test_message program="snmpd">Connection from UDP: [134.158.69.131]:54888-&gt;[134.158.239.170]:161</test_message>
                  </example>
               </examples>
               <values>
-                 <value name="seq-matches">513</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="39ef72d770118fb7e7a20d5be8e96be5255f6ac7">
-              <patterns>
-                 <pattern>{&#34;level&#34;:&#34;debug&#34;,&#34;msg&#34;:&#34;unregistering reader&#34;,@QSTRING:id:&#34;@:@QSTRING:id:&#34;@,&#34;time&#34;:@QSTRING:msgtime:&#34;@}</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;debug&#34;,&#34;msg&#34;:&#34;unregistering reader&#34;,&#34;reader-id&#34;:&#34;2c9073a4-aaec-4af2-aec8-378e9792a0f8&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:24+02:00&#34;}</test_message>
-                 </example>
-                 <example>
-                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;debug&#34;,&#34;msg&#34;:&#34;unregistering reader&#34;,&#34;reader-id&#34;:&#34;9eb3bfaa-016e-4060-b0ed-7afcf430dbe3&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:24+02:00&#34;}</test_message>
-                 </example>
-                 <example>
-                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;debug&#34;,&#34;msg&#34;:&#34;unregistering reader&#34;,&#34;reader-id&#34;:&#34;fdbb70b1-7134-4674-91e6-191f16a184df&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:23+02:00&#34;}</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">513</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="89e561f077e17e1047f4209e14d7163df133a1ea">
-              <patterns>
-                 <pattern>{&#34;level&#34;:&#34;debug&#34;,&#34;msg&#34;:&#34;registering reader&#34;,@QSTRING:id:&#34;@:@QSTRING:id:&#34;@,&#34;time&#34;:@QSTRING:msgtime:&#34;@}</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;debug&#34;,&#34;msg&#34;:&#34;registering reader&#34;,&#34;reader-id&#34;:&#34;9eb3bfaa-016e-4060-b0ed-7afcf430dbe3&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:24+02:00&#34;}</test_message>
-                 </example>
-                 <example>
-                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;debug&#34;,&#34;msg&#34;:&#34;registering reader&#34;,&#34;reader-id&#34;:&#34;1d887092-4e3d-4bc4-92dc-26afd8aac9fd&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:24+02:00&#34;}</test_message>
-                 </example>
-                 <example>
-                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;debug&#34;,&#34;msg&#34;:&#34;registering reader&#34;,&#34;reader-id&#34;:&#34;22bb0331-ea52-4adb-a43b-02842ab5cdba&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:23+02:00&#34;}</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">514</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="d222a9eca55ea7bcdd838d340ac121d20777f01e">
-              <patterns>
-                 <pattern>{&#34;level&#34;:&#34;debug&#34;,&#34;msg&#34;:&#34;reader unregistered&#34;,@QSTRING:id:&#34;@:@QSTRING:id:&#34;@,&#34;time&#34;:@QSTRING:msgtime:&#34;@}</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;debug&#34;,&#34;msg&#34;:&#34;reader unregistered&#34;,&#34;reader-id&#34;:&#34;42c8efda-b883-470b-a85b-cab36cbb0832&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:23+02:00&#34;}</test_message>
-                 </example>
-                 <example>
-                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;debug&#34;,&#34;msg&#34;:&#34;reader unregistered&#34;,&#34;reader-id&#34;:&#34;fdbb70b1-7134-4674-91e6-191f16a184df&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:23+02:00&#34;}</test_message>
-                 </example>
-                 <example>
-                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;debug&#34;,&#34;msg&#34;:&#34;reader unregistered&#34;,&#34;reader-id&#34;:&#34;1b6806de-2cb8-4b6b-9b15-76916d1e81a7&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:23+02:00&#34;}</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">510</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="7c28bb8ac9e4dc211b2791ad9e4ff3c70444cd0c">
-              <patterns>
-                 <pattern>{&#34;level&#34;:&#34;info&#34;,&#34;logger&#34;:{&#34;name&#34;:@QSTRING:id:&#34;@},&#34;msg&#34;:&#34;new livestatus proxy request&#34;,@QSTRING:id:&#34;@:@QSTRING:id:&#34;@,&#34;time&#34;:@QSTRING:msgtime:&#34;@}</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;info&#34;,&#34;logger&#34;:{&#34;name&#34;:&#34;io-proxy&#34;},&#34;msg&#34;:&#34;new livestatus proxy request&#34;,&#34;request-id&#34;:&#34;2c9073a4-aaec-4af2-aec8-378e9792a0f8&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:24+02:00&#34;}</test_message>
-                 </example>
-                 <example>
-                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;info&#34;,&#34;logger&#34;:{&#34;name&#34;:&#34;io-proxy&#34;},&#34;msg&#34;:&#34;new livestatus proxy request&#34;,&#34;request-id&#34;:&#34;1b6806de-2cb8-4b6b-9b15-76916d1e81a7&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:23+02:00&#34;}</test_message>
-                 </example>
-                 <example>
-                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;info&#34;,&#34;logger&#34;:{&#34;name&#34;:&#34;io-proxy&#34;},&#34;msg&#34;:&#34;new livestatus proxy request&#34;,&#34;request-id&#34;:&#34;0e01236a-d1f9-42d9-8df6-1225fd15c00c&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:22+02:00&#34;}</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">509</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="7613c741a100be39824b4438631a6abbe3c7e80f">
-              <patterns>
-                 <pattern>{&#34;level&#34;:&#34;info&#34;,@QSTRING:id:&#34;@:{@QSTRING:id:&#34;@:@NUMBER@,@QSTRING:id:&#34;@:{&#34;duration&#34;:@ESTRING:duration:,@@QSTRING:id:&#34;@:@NUMBER@,@QSTRING:id:&#34;@:@NUMBER@}},&#34;logger&#34;:{&#34;name&#34;:@QSTRING:id:&#34;@},&#34;msg&#34;:&#34;livestatus I/O proxy completed&#34;,@QSTRING:id:&#34;@:@QSTRING:id:&#34;@,&#34;time&#34;:@QSTRING:msgtime:&#34;@}</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;info&#34;,&#34;livestatus-resilient-api&#34;:{&#34;induced-delay&#34;:1031621,&#34;io-stats&#34;:{&#34;duration&#34;:1097285,&#34;to-client&#34;:95,&#34;to-livestatus&#34;:475}},&#34;logger&#34;:{&#34;name&#34;:&#34;io-proxy&#34;},&#34;msg&#34;:&#34;livestatus I/O proxy completed&#34;,&#34;request-id&#34;:&#34;1d887092-4e3d-4bc4-92dc-26afd8aac9fd&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:24+02:00&#34;}</test_message>
-                 </example>
-                 <example>
-                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;info&#34;,&#34;livestatus-resilient-api&#34;:{&#34;induced-delay&#34;:2343520,&#34;io-stats&#34;:{&#34;duration&#34;:2385411,&#34;to-client&#34;:8227,&#34;to-livestatus&#34;:1822}},&#34;logger&#34;:{&#34;name&#34;:&#34;io-proxy&#34;},&#34;msg&#34;:&#34;livestatus I/O proxy completed&#34;,&#34;request-id&#34;:&#34;2c9073a4-aaec-4af2-aec8-378e9792a0f8&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:24+02:00&#34;}</test_message>
-                 </example>
-                 <example>
-                    <test_message program="livestatus-resilient-proxy">{&#34;level&#34;:&#34;info&#34;,&#34;livestatus-resilient-api&#34;:{&#34;induced-delay&#34;:3117620,&#34;io-stats&#34;:{&#34;duration&#34;:3147861,&#34;to-client&#34;:19,&#34;to-livestatus&#34;:279}},&#34;logger&#34;:{&#34;name&#34;:&#34;io-proxy&#34;},&#34;msg&#34;:&#34;livestatus I/O proxy completed&#34;,&#34;request-id&#34;:&#34;22bb0331-ea52-4adb-a43b-02842ab5cdba&#34;,&#34;time&#34;:&#34;2019-04-09T09:22:23+02:00&#34;}</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">513</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-        </rules>
-     </ruleset>
-     <ruleset id="b7e84945703b3a7486cc646ce389ceb65b01d70a" name="[sssd[ldap_child[20815]]]">
-        <patterns>
-           <pattern>[sssd[ldap_child[20815]]]</pattern>
-        </patterns>
-        <rules>
-           <rule id="43db929f9df469d96d65c44666e17e32d7ae0c99">
-              <patterns>
-                 <pattern>Realm not local to @ESTRING:dstuser:@</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="[sssd[ldap_child[20815]]]">Realm not local to KDC</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">175</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-        </rules>
-     </ruleset>
-     <ruleset id="5cacb1c30c69d3e152c99c1c4d90e6376449825f" name="systemd">
-        <patterns>
-           <pattern>systemd</pattern>
-        </patterns>
-        <rules>
-           <rule id="6611b6170cb2a74f7282c25b55f0fdb88e4a79f3">
-              <patterns>
-                 <pattern>@ESTRING:action: @@ESTRING:object: @@NUMBER@ of user @ESTRING:srcuser:@</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="systemd">Started Session 28553 of user root.</test_message>
-                 </example>
-                 <example>
-                    <test_message program="systemd">Started Session 28552 of user root.</test_message>
-                 </example>
-                 <example>
-                    <test_message program="systemd">Started Session 62023 of user root.</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">1678</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="bd67d87bd4f3e675798c549fbcf2e48938eb71bd">
-              <patterns>
-                 <pattern>@ESTRING:action: @User Slice of root.</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="systemd">Stopping User Slice of root.</test_message>
-                 </example>
-                 <example>
-                    <test_message program="systemd">Starting User Slice of root.</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">664</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="00f0237fd43369696baac6f4a121ed8d928e40a7">
-              <patterns>
-                 <pattern>@ESTRING:action: @slice user-0.slice.</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="systemd">Removed slice user-0.slice.</test_message>
-                 </example>
-                 <example>
-                    <test_message program="systemd">Created slice user-0.slice.</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">215</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="851640bbf1bbea8522e2e60cf9332c52ccdf1c65">
-              <patterns>
-                 <pattern>@ESTRING:action: @slice User Slice of root.</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="systemd">Created slice User Slice of root.</test_message>
-                 </example>
-                 <example>
-                    <test_message program="systemd">Removed slice User Slice of root.</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">2033</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="bcd7702da2932c7961f8c8bd50f1cfe25786bcf0">
-              <patterns>
-                 <pattern>@ESTRING:action: @user-0.slice.</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="systemd">Stopping user-0.slice.</test_message>
-                 </example>
-                 <example>
-                    <test_message program="systemd">Starting user-0.slice.</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">178</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="89c78edb469d56f84acc693f8e3d89333a4e5f09">
-              <patterns>
-                 <pattern>@ESTRING:action: @@ESTRING:object: @@ESTRING:: @of user @ESTRING:srcuser:@</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="systemd">Started Session c482750 of user root.</test_message>
-                 </example>
-                 <example>
-                    <test_message program="systemd">Started Session c529610 of user root.</test_message>
-                 </example>
-                 <example>
-                    <test_message program="systemd">Starting Session c529610 of user root.</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">1112</value>
+                 <value name="seq-matches">467</value>
                  <value name="seq-new">true</value>
               </values>
            </rule>
@@ -676,6 +434,496 @@
            </rule>
         </rules>
      </ruleset>
+     <ruleset id="980a047f2126b28402a019cd3b6eacdc432727c9" name="puppet">
+        <patterns>
+           <pattern>puppet</pattern>
+        </patterns>
+        <rules>
+           <rule id="574870b62cf9dd7ab34be32229455d8488bf168e">
+              <patterns>
+                 <pattern>from @ESTRING:: @@ESTRING:: @in `@ESTRING:: @&#39;</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="puppet">from /opt/puppetlabs/puppet/lib/ruby/vendor_ruby/puppet/agent.rb:87:in `fork&#39;</test_message>
+                 </example>
+                 <example>
+                    <test_message program="puppet">from /opt/puppetlabs/puppet/lib/ruby/vendor_ruby/puppet/application.rb:375:in `run&#39;</test_message>
+                 </example>
+                 <example>
+                    <test_message program="puppet">from /opt/puppetlabs/puppet/lib/ruby/vendor_ruby/puppet/application/agent.rb:378:in `main&#39;</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">108</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+        </rules>
+     </ruleset>
+     <ruleset id="f8ae6afd74812bc21d77b25f54a47b6f5a0f95e2" name="nova-compute">
+        <patterns>
+           <pattern>nova-compute</pattern>
+        </patterns>
+        <rules>
+           <rule id="f8442665f91aec1d7ad88a86fd2d343c448f7c56">
+              <patterns>
+                 <pattern>{ @QSTRING:id:&#34;@:@QSTRING:string:&#34;@, @QSTRING:id:&#34;@:@QSTRING:string:&#34;@, @QSTRING:id:&#34;@:@QSTRING:string:&#34;@, @QSTRING:id:&#34;@:@QSTRING:string:&#34;@, @QSTRING:id:&#34;@:&#34;-&#34;, @QSTRING:id:&#34;@:@QSTRING:string:&#34;@ }</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="nova-compute">{ &#34;os_logger&#34;:&#34;resource_tracker.py&#34;, &#34;os_logger_f&#34;:&#34;_report_final_resource_view&#34;, &#34;os_func&#34;:&#34;nova.compute.resource_tracker&#34;, &#34;os_user&#34;:&#34;- -&#34;, &#34;os_instance&#34;:&#34;-&#34;, &#34;os_message&#34;:&#34;Total usable vcpus: 16, total allocated vcpus: 0&#34; }</test_message>
+                 </example>
+                 <example>
+                    <test_message program="nova-compute">{ &#34;os_logger&#34;:&#34;resource_tracker.py&#34;, &#34;os_logger_f&#34;:&#34;_report_final_resource_view&#34;, &#34;os_func&#34;:&#34;nova.compute.resource_tracker&#34;, &#34;os_user&#34;:&#34;- -&#34;, &#34;os_instance&#34;:&#34;-&#34;, &#34;os_message&#34;:&#34;Final resource view: name=ccosndli0098.in2p3.fr phys_ram=49014MB used_ram=512MB phys_disk=300GB used_disk=0GB total_vcpus=16 used_vcpus=0 pci_stats=[]&#34; }</test_message>
+                 </example>
+                 <example>
+                    <test_message program="nova-compute">{ &#34;os_logger&#34;:&#34;resource_tracker.py&#34;, &#34;os_logger_f&#34;:&#34;_update_available_resource&#34;, &#34;os_func&#34;:&#34;nova.compute.resource_tracker&#34;, &#34;os_user&#34;:&#34;- -&#34;, &#34;os_instance&#34;:&#34;-&#34;, &#34;os_message&#34;:&#34;Compute_service record updated for ccosndli0098:ccosndli0098.in2p3.fr&#34; }</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">194</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+        </rules>
+     </ruleset>
+     <ruleset id="b2683937b17d0114872524f03650d95affabadb0" name="lavoisier-cpu">
+        <patterns>
+           <pattern>lavoisier-cpu</pattern>
+        </patterns>
+        <rules>
+           <rule id="1a09ce7183c326790b732c41ffa69003a5dc3705">
+              <patterns>
+                 <pattern>@ESTRING:msgtime: @fr.in2p3.lavoisier.engine.view.ViewCached refresh</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="lavoisier-cpu">Apr 09, 2019 9:23:00 AM fr.in2p3.lavoisier.engine.view.ViewCached refresh</test_message>
+                 </example>
+                 <example>
+                    <test_message program="lavoisier-cpu">Apr 09, 2019 9:21:00 AM fr.in2p3.lavoisier.engine.view.ViewCached refresh</test_message>
+                 </example>
+                 <example>
+                    <test_message program="lavoisier-cpu">Apr 09, 2019 9:20:16 AM fr.in2p3.lavoisier.engine.view.ViewCached refresh</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">173</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="5a4ee74d498f58f03006ff49c75f2f1e9eaee785">
+              <patterns>
+                 <pattern>@ESTRING:string::@ Cache has been refresh for @ESTRING:srcuser::@ @ESTRING:id:@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="lavoisier-cpu">INFO: Cache has been refresh for view: resource_objectives</test_message>
+                 </example>
+                 <example>
+                    <test_message program="lavoisier-cpu">INFO: Cache has been refresh for view: resource_requests</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">119</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+        </rules>
+     </ruleset>
+     <ruleset id="90328dc3633ad29a72df2fd08f8e9d810c1b473f" name="sge-query-cmd">
+        <patterns>
+           <pattern>sge-query-cmd</pattern>
+        </patterns>
+        <rules>
+           <rule id="6430adb30341c619fc18d55180014f9a2d2b50e5">
+              <patterns>
+                 <pattern>@NUMBER@:@NUMBER@ @ESTRING:: @-su @ESTRING::@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="sge-query-cmd">990:988 qconf -su SubmitForbidden</test_message>
+                 </example>
+                 <example>
+                    <test_message program="sge-query-cmd">990:988 qconf -su SpawnForbidden</test_message>
+                 </example>
+                 <example>
+                    <test_message program="sge-query-cmd">990:988 qconf -su UsersBlocked</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">102</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="92ce8665cd98ae87ba44ce9bfd3de8c60f56df94">
+              <patterns>
+                 <pattern>@NUMBER@:@NUMBER@ @ESTRING:: @-sq @ESTRING:id:@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="sge-query-cmd">55:55 /opt/sge/bin/lx-amd64/qconf -sq mc_long </test_message>
+                 </example>
+                 <example>
+                    <test_message program="sge-query-cmd">55:55 /opt/sge/bin/lx-amd64/qconf -sq mc_long_t2 </test_message>
+                 </example>
+                 <example>
+                    <test_message program="sge-query-cmd">55:55 /opt/sge/bin/lx-amd64/qconf -sq mc_huge </test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">179</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="f8be4891f919ad7cb860748511c286cb6042409f">
+              <patterns>
+                 <pattern>@NUMBER@:@NUMBER@ @ESTRING:: @@ESTRING::@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="sge-query-cmd">55:55 /opt/sge/bin/lx-amd64/qconf -ssconf </test_message>
+                 </example>
+                 <example>
+                    <test_message program="sge-query-cmd">55:55 /opt/sge/bin/lx-amd64/qconf -sconf </test_message>
+                 </example>
+                 <example>
+                    <test_message program="sge-query-cmd">990:988 qconf -sql</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">119</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="bcc8df4fbd5265f2907a06afe48dad73c9d87611">
+              <patterns>
+                 <pattern>@NUMBER@:@NUMBER@ @ESTRING:: @-sp @ESTRING::@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="sge-query-cmd">55:55 /opt/sge/bin/lx-amd64/qconf -sp multicores </test_message>
+                 </example>
+                 <example>
+                    <test_message program="sge-query-cmd">55:55 /opt/sge/bin/lx-amd64/qconf -sp NONE </test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">169</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="c51fb45fc1aa856ae3d45ae32913297677c781c9">
+              <patterns>
+                 <pattern>@NUMBER@:@NUMBER@ @ESTRING:: @-sq @ESTRING::@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="sge-query-cmd">55:55 /opt/sge/bin/lx-amd64/qconf -sq huge </test_message>
+                 </example>
+                 <example>
+                    <test_message program="sge-query-cmd">55:55 /opt/sge/bin/lx-amd64/qconf -sq long </test_message>
+                 </example>
+                 <example>
+                    <test_message program="sge-query-cmd">55:55 /opt/sge/bin/lx-amd64/qconf -sq atlasufd </test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">197</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+        </rules>
+     </ruleset>
+     <ruleset id="4c98696bf77d742aa280e62ffab3f47a26083609" name="postfix/smtp">
+        <patterns>
+           <pattern>postfix/smtp</pattern>
+        </patterns>
+        <rules>
+           <rule id="335f4ec4128eec11a30dfad880dc62e084e29b0e">
+              <patterns>
+                 <pattern>@ESTRING:alphanum::@ to=@QSTRING:dstuser:&lt;&gt;@, @ESTRING:id:@=@QSTRING:string:&lt;&gt;@, relay=@ESTRING:string:,@ delay=@NUMBER@, delays=@ESTRING:string:,@ dsn=@ESTRING:string:,@ status=@ESTRING:: @(@ESTRING:object: @to @ESTRING:string:@@QSTRING:srcip:[]@:25: Connection refused)</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="postfix/smtp">D0278D69: to=&lt;root@ccosvm0824.in2p3.fr&gt;, orig_to=&lt;root&gt;, relay=none, delay=17166, delays=17166/0.02/0/0, dsn=4.4.1, status=deferred (connect to ccosvm0824.in2p3.fr[172.17.0.64]:25: Connection refused)</test_message>
+                 </example>
+                 <example>
+                    <test_message program="postfix/smtp">C5AE7CB7: to=&lt;root@ccosvms0039.in2p3.fr&gt;, orig_to=&lt;root&gt;, relay=none, delay=363858, delays=363857/0.16/0.01/0, dsn=4.4.1, status=deferred (connect to ccosvms0039.in2p3.fr[134.158.239.39]:25: Connection refused)</test_message>
+                 </example>
+                 <example>
+                    <test_message program="postfix/smtp">54852C77: to=&lt;root@ccdcalitest02.in2p3.fr&gt;, orig_to=&lt;root&gt;, relay=none, delay=364545, delays=364545/0.08/0.01/0, dsn=4.4.1, status=deferred (connect to ccdcalitest02.in2p3.fr[172.17.0.36]:25: Connection refused)</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">104</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="55a19fb955cb479abc3baf3e230124224cd46595">
+              <patterns>
+                 <pattern>@ESTRING:object: @to @ESTRING:dstuser:@@QSTRING:srcip:[]@:25: Connection refused</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="postfix/smtp">connect to ccwtb2sge001.in2p3.fr[134.158.171.89]:25: Connection refused</test_message>
+                 </example>
+                 <example>
+                    <test_message program="postfix/smtp">connect to ccosvm0871.in2p3.fr[172.17.0.111]:25: Connection refused</test_message>
+                 </example>
+                 <example>
+                    <test_message program="postfix/smtp">connect to ccosvm0824.in2p3.fr[172.17.0.64]:25: Connection refused</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">156</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+        </rules>
+     </ruleset>
+     <ruleset id="7f2169f21250351b86daad841157b13bcc09509d" name="condor_procd">
+        <patterns>
+           <pattern>condor_procd</pattern>
+        </patterns>
+        <rules>
+           <rule id="f4734d19f4792fb655c9d1481224715107d5b23c">
+              <patterns>
+                 <pattern>...snapshot complete</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="condor_procd">...snapshot complete</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">178</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="9170feec5c174f9c27edd9e20672571a2cb3a469">
+              <patterns>
+                 <pattern>ProcAPI: new boottime = @NUMBER@; @ESTRING:id: @= @NUMBER@; @ESTRING:path: @boottime = @NUMBER@; @ESTRING:path: @boottime = @NUMBER@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="condor_procd">ProcAPI: new boottime = 1543580315; old_boottime = 1543580315; /proc/stat boottime = 1543580315; /proc/uptime boottime = 1543580315</test_message>
+                 </example>
+                 <example>
+                    <test_message program="condor_procd">ProcAPI: new boottime = 1543581067; old_boottime = 1543581067; /proc/stat boottime = 1543581067; /proc/uptime boottime = 1543581067</test_message>
+                 </example>
+                 <example>
+                    <test_message program="condor_procd">ProcAPI: new boottime = 1541669999; old_boottime = 1541669999; /proc/stat boottime = 1541669999; /proc/uptime boottime = 1541670000</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">182</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="d471dc91e7a754c12461477196029f2e30a17831">
+              <patterns>
+                 <pattern>taking a snapshot...</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="condor_procd">taking a snapshot...</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">181</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+        </rules>
+     </ruleset>
+     <ruleset id="2e4ea459e8e61b28c54e39f1884e3dde2426d4d3" name="[sssd[ldap_child[21044]]]">
+        <patterns>
+           <pattern>[sssd[ldap_child[21044]]]</pattern>
+        </patterns>
+        <rules>
+           <rule id="43db929f9df469d96d65c44666e17e32d7ae0c99">
+              <patterns>
+                 <pattern>Realm not local to @ESTRING:dstuser:@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="[sssd[ldap_child[21044]]]">Realm not local to KDC</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">175</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="06314913bd6889b4301b9f14ff15ab10ef4db6d2">
+              <patterns>
+                 <pattern>@ESTRING:status: @to @ESTRING:dstuser: @credentials using keytab [@ESTRING:object::@/etc/krb5.keytab]: Realm not local to KDC. Unable to @ESTRING:action: @@ESTRING:id: @LDAP connection.</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="[sssd[ldap_child[21044]]]">Failed to initialize credentials using keytab [MEMORY:/etc/krb5.keytab]: Realm not local to KDC. Unable to create GSSAPI-encrypted LDAP connection.</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">175</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+        </rules>
+     </ruleset>
+     <ruleset id="482c9f4df75876791be5a64038a66ecaf265f2ab" name="run-parts(/etc/cron.hourly)">
+        <patterns>
+           <pattern>run-parts(/etc/cron.hourly)</pattern>
+        </patterns>
+        <rules>
+           <rule id="a889a7d91393ce908a6095dbecf25bc3254d5134">
+              <patterns>
+                 <pattern>@ESTRING:action: @@ESTRING::@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="run-parts(/etc/cron.hourly)">Stopping user-0.slice.</test_message>
+                 </example>
+                 <example>
+                    <test_message program="run-parts(/etc/cron.hourly)">Starting user-0.slice.</test_message>
+                 </example>
+                 <example>
+                    <test_message program="run-parts(/etc/cron.hourly)">Stopping user-284.slice.</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">370</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="fad88ec82c1452b869d570db9c456db344b1fe58">
+              <patterns>
+                 <pattern>@ESTRING:action: @@ESTRING::@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="run-parts(/etc/cron.hourly)">finished 0anacron</test_message>
+                 </example>
+                 <example>
+                    <test_message program="run-parts(/etc/cron.hourly)">starting 0anacron</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">302</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+        </rules>
+     </ruleset>
+     <ruleset id="5cacb1c30c69d3e152c99c1c4d90e6376449825f" name="systemd">
+        <patterns>
+           <pattern>systemd</pattern>
+        </patterns>
+        <rules>
+           <rule id="89c78edb469d56f84acc693f8e3d89333a4e5f09">
+              <patterns>
+                 <pattern>@ESTRING:action: @@ESTRING:object: @@ESTRING:: @of user @ESTRING:srcuser:@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="systemd">Started Session c482750 of user root.</test_message>
+                 </example>
+                 <example>
+                    <test_message program="systemd">Started Session c529610 of user root.</test_message>
+                 </example>
+                 <example>
+                    <test_message program="systemd">Starting Session c529610 of user root.</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">1112</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="6611b6170cb2a74f7282c25b55f0fdb88e4a79f3">
+              <patterns>
+                 <pattern>@ESTRING:action: @@ESTRING:object: @@NUMBER@ of user @ESTRING:srcuser:@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="systemd">Started Session 28553 of user root.</test_message>
+                 </example>
+                 <example>
+                    <test_message program="systemd">Started Session 28552 of user root.</test_message>
+                 </example>
+                 <example>
+                    <test_message program="systemd">Started Session 62023 of user root.</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">1678</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="2ba21ac723912cd59c3c53935bb43855c685b605">
+              <patterns>
+                 <pattern>@ESTRING:action: @User Slice of @ESTRING::@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="systemd">Stopping User Slice of root.</test_message>
+                 </example>
+                 <example>
+                    <test_message program="systemd">Starting User Slice of root.</test_message>
+                 </example>
+                 <example>
+                    <test_message program="systemd">Stopping User Slice of hpss.</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">689</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="51aa90f49ce3ce16dcc2135977adb537685538d8">
+              <patterns>
+                 <pattern>@ESTRING:action: @slice @ESTRING::@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="systemd">Removed slice user-0.slice.</test_message>
+                 </example>
+                 <example>
+                    <test_message program="systemd">Created slice user-0.slice.</test_message>
+                 </example>
+                 <example>
+                    <test_message program="systemd">Removed slice user-284.slice.</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">219</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="104469e43849e1db997d4ca7a99cd56138568fc6">
+              <patterns>
+                 <pattern>@ESTRING:action: @slice User Slice of @ESTRING::@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="systemd">Created slice User Slice of root.</test_message>
+                 </example>
+                 <example>
+                    <test_message program="systemd">Removed slice User Slice of root.</test_message>
+                 </example>
+                 <example>
+                    <test_message program="systemd">Created slice User Slice of md.</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">2141</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+        </rules>
+     </ruleset>
      <ruleset id="444844c131fd096aeddd60e12f493b48084f76f2" name="puppet-agent">
         <patterns>
            <pattern>puppet-agent</pattern>
@@ -701,9 +949,9 @@
                  <value name="seq-new">true</value>
               </values>
            </rule>
-           <rule id="a181e1e8ce188b80a06033e80474327187e2b054">
+           <rule id="b293e8b7db2f58409a0547ed5c5be56a76339b37">
               <patterns>
-                 <pattern>@ESTRING:id: @@QSTRING:id:()@ = @ESTRING::@</pattern>
+                 <pattern>@ESTRING:id:@( @ESTRING:id:@) = @ESTRING::@</pattern>
               </patterns>
               <examples>
                  <example>
@@ -721,24 +969,258 @@
                  <value name="seq-new">true</value>
               </values>
            </rule>
-        </rules>
-     </ruleset>
-     <ruleset id="c0fcfd979d066c7c1f16f463076e68551591ff7f" name="ypbind">
-        <patterns>
-           <pattern>ypbind</pattern>
-        </patterns>
-        <rules>
-           <rule id="ef9d22b3636d3aff5704dca3374b9147389a14cb">
+           <rule id="cb1955f289b3aa8b22fc04fd26792f37ecb58f09">
               <patterns>
-                 <pattern>broadcast: RPC: Timed out.</pattern>
+                 <pattern>@ESTRING:string:@() @QSTRING:alphanum:()@</pattern>
               </patterns>
               <examples>
                  <example>
-                    <test_message program="ypbind">broadcast: RPC: Timed out.</test_message>
+                    <test_message program="puppet-agent"> ~libsyslog-ng-3.7.so.0()(64bit)</test_message>
+                 </example>
+                 <example>
+                    <test_message program="puppet-agent"> libsyslog-ng-3.9.so.0()(64bit)</test_message>
+                 </example>
+                 <example>
+                    <test_message program="puppet-agent"> ~libsyslog-ng-3.6.so.0()(64bit)</test_message>
                  </example>
               </examples>
               <values>
-                 <value name="seq-matches">658</value>
+                 <value name="seq-matches">189</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="fc76bce13c5a0e9c07d08103c498c0575452270d">
+              <patterns>
+                 <pattern>@ESTRING:string::@ @ESTRING:: @@QSTRING:string:()@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="puppet-agent"> Available: syslog-ng-3.6.4-1.el7.centos.x86_64 (vendor)</test_message>
+                 </example>
+                 <example>
+                    <test_message program="puppet-agent"> Available: syslog-ng-3.7.2-2.el7.centos.x86_64 (vendor)</test_message>
+                 </example>
+                 <example>
+                    <test_message program="puppet-agent"> Available: syslog-ng-3.5.6-3.el7.x86_64 (epel)</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">442</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+        </rules>
+     </ruleset>
+     <ruleset id="b058c6f88a497393ffa89ff248c1b1cfbeba73e2" name="sshd">
+        <patterns>
+           <pattern>sshd</pattern>
+        </patterns>
+        <rules>
+           <rule id="b58edc5c43fc161d880049ce72105dcd0b49b7f6">
+              <patterns>
+                 <pattern>reprocess config line @NUMBER@: Deprecated option @ESTRING::@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="sshd">reprocess config line 26: Deprecated option RSAAuthentication</test_message>
+                 </example>
+                 <example>
+                    <test_message program="sshd">reprocess config line 27: Deprecated option RhostsRSAAuthentication</test_message>
+                 </example>
+                 <example>
+                    <test_message program="sshd">reprocess config line 28: Deprecated option RSAAuthentication</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">2400</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="e43681a3ab8f02eee60d8e3717fdf02bdaa29331">
+              <patterns>
+                 <pattern>PAM @NUMBER@ more @ESTRING:action: @@ESTRING:status:;@ logname= uid=@ESTRING:srcuid: @euid=@NUMBER@ tty=@ESTRING:: @ruser= rhost=@IPvANY:srcip@ user=@ESTRING:srcuser:@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="sshd">PAM 2 more authentication failures; logname= uid=0 euid=0 tty=ssh ruser= rhost=58.242.83.28 user=root</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">260</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="3ada67fc9a5eac5a71232497b88f43805e4385f6">
+              <patterns>
+                 <pattern>Received @ESTRING:action: @from @IPvANY:srcip@ port @ESTRING:srcport::@11: Bye Bye [preauth]</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="sshd">Received disconnect from 186.147.34.238 port 18913:11: Bye Bye [preauth]</test_message>
+                 </example>
+                 <example>
+                    <test_message program="sshd">Received disconnect from 118.25.191.125 port 43604:11: Bye Bye [preauth]</test_message>
+                 </example>
+                 <example>
+                    <test_message program="sshd">Received disconnect from 89.216.113.174 port 47742:11: Bye Bye [preauth]</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">121</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="87ad66840b3e16e07d1d589c33302e9a85bdf3fe">
+              <patterns>
+                 <pattern>@ESTRING:object: @@ESTRING:action: @by @IPvANY:srcip@ port @NUMBER:srcport@ [preauth]</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="sshd">Connection closed by 134.175.176.219 port 38874 [preauth]</test_message>
+                 </example>
+                 <example>
+                    <test_message program="sshd">Connection closed by 134.175.176.219 port 38546 [preauth]</test_message>
+                 </example>
+                 <example>
+                    <test_message program="sshd">Connection closed by 134.175.176.219 port 38384 [preauth]</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">811</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="1944189386bf25f0f8a15bfa917547fe24851ad6">
+              <patterns>
+                 <pattern>@ESTRING:status::@ Could not load host key: /etc/ssh/ssh_host_dsa_key</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="sshd">error: Could not load host key: /etc/ssh/ssh_host_dsa_key</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">1029</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="18de3ddd668c5bc8ffe8ba142fff27d01f4aaa78">
+              <patterns>
+                 <pattern>rexec line @NUMBER@: Deprecated option @ESTRING::@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="sshd">rexec line 28: Deprecated option ServerKeyBits</test_message>
+                 </example>
+                 <example>
+                    <test_message program="sshd">rexec line 33: Deprecated option UseLogin</test_message>
+                 </example>
+                 <example>
+                    <test_message program="sshd">rexec line 35: Deprecated option UseLogin</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">4872</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="123315aa27da3d8e4bc5179b0c17c0ee983f338f">
+              <patterns>
+                 <pattern>User @ESTRING:: @from @IPvANY:srcip@ not @ESTRING:action: @because none of user&#39;@ESTRING:srcuser:@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="sshd">User root from 58.242.83.28 not allowed because none of user&#39;s groups are listed in AllowGroups</test_message>
+                 </example>
+                 <example>
+                    <test_message program="sshd">User root from 200.69.250.253 not allowed because none of user&#39;s groups are listed in AllowGroups</test_message>
+                 </example>
+                 <example>
+                    <test_message program="sshd">User tcpdump from 206.81.8.171 not allowed because none of user&#39;s groups are listed in AllowGroups</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">134</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="278f4da6e357d7fdc8d82aa20bb90568160bfe54">
+              <patterns>
+                 <pattern>@ESTRING:action: @from @IPvANY:srcip@ port @NUMBER:srcport@ [preauth]</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="sshd">Disconnected from 89.216.113.174 port 37794 [preauth]</test_message>
+                 </example>
+                 <example>
+                    <test_message program="sshd">Disconnected from 58.242.83.28 port 45105 [preauth]</test_message>
+                 </example>
+                 <example>
+                    <test_message program="sshd">Disconnected from 58.242.83.28 port 37135 [preauth]</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">406</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="3d62e8cf73d14543c1f5fc683723c9149ec6db05">
+              <patterns>
+                 <pattern>@ESTRING:id::@ invalid user @ESTRING:srcuser: @[preauth]</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="sshd">input_userauth_request: invalid user root [preauth]</test_message>
+                 </example>
+                 <example>
+                    <test_message program="sshd">input_userauth_request: invalid user xr [preauth]</test_message>
+                 </example>
+                 <example>
+                    <test_message program="sshd">input_userauth_request: invalid user postgres [preauth]</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">257</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="36fc95ee257b1c0b0d355f3c2da71993bc540a34">
+              <patterns>
+                 <pattern>@ESTRING:id:@(sshd:auth): requirement @QSTRING:string:&#34;@ not met by user @QSTRING:srcuser:&#34;@</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="sshd">pam_succeed_if(sshd:auth): requirement &#34;uid &gt;= 1000&#34; not met by user &#34;root&#34;</test_message>
+                 </example>
+                 <example>
+                    <test_message program="sshd">pam_succeed_if(sshd:auth): requirement &#34;uid &gt;= 300&#34; not met by user &#34;root&#34;</test_message>
+                 </example>
+                 <example>
+                    <test_message program="sshd">pam_succeed_if(sshd:auth): requirement &#34;uid &gt;= 300&#34; not met by user &#34;tcpdump&#34;</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">1591</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
+           <rule id="3d6ceeb4120cc50dd270d1ca04ab0bd71797764d">
+              <patterns>
+                 <pattern>Received @ESTRING:action: @from @IPvANY:srcip@ port @ESTRING:srcport::@11: [preauth]</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="sshd">Received disconnect from 58.242.83.28 port 45105:11: [preauth]</test_message>
+                 </example>
+                 <example>
+                    <test_message program="sshd">Received disconnect from 58.242.83.28 port 37135:11: [preauth]</test_message>
+                 </example>
+                 <example>
+                    <test_message program="sshd">Received disconnect from 58.242.83.28 port 13993:11: [preauth]</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">271</value>
                  <value name="seq-new">true</value>
               </values>
            </rule>
@@ -791,424 +1273,28 @@
            </rule>
         </rules>
      </ruleset>
-     <ruleset id="24b42e9433f7d04e1f7546115b621a9e67073fc9" name="nscd">
+     <ruleset id="dbe6b2a5e744f9d4522ee189ae2c058898f1c337" name="cvmfs2">
         <patterns>
-           <pattern>nscd</pattern>
+           <pattern>cvmfs2</pattern>
         </patterns>
         <rules>
-           <rule id="de329d3e6c481b81a95079fb17ac6b8cac952e88">
+           <rule id="eda4bb0468f47697e6c729c87f13a3732d16b536">
               <patterns>
-                 <pattern>@NUMBER@ monitoring @ESTRING:object: @@QSTRING:path:`@ (@NUMBER@)</pattern>
+                 <pattern>@QSTRING:string:()@ switching @ESTRING:: @from @ESTRING:object: @to @ESTRING:uri:@</pattern>
               </patterns>
               <examples>
                  <example>
-                    <test_message program="nscd">5298 monitoring file `/etc/group` (13)</test_message>
+                    <test_message program="cvmfs2">(km3net.egi.eu) switching host from http://cccvmfsli02.in2p3.fr/cvmfs/km3net.egi.eu to http://cvmfs-egi.gridpp.rl.ac.uk/cvmfs/km3net.egi.eu</test_message>
                  </example>
                  <example>
-                    <test_message program="nscd">5298 monitoring file `/etc/passwd` (12)</test_message>
+                    <test_message program="cvmfs2">(config-egi.egi.eu) switching proxy from http://134.158.238.4:3128 to http://128.142.168.202:3126</test_message>
                  </example>
                  <example>
-                    <test_message program="nscd">5298 monitoring directory `/etc` (2)</test_message>
+                    <test_message program="cvmfs2">(config-egi.egi.eu) switching proxy from http://134.158.238.3:3128 to http://134.158.108.135:3128</test_message>
                  </example>
               </examples>
               <values>
-                 <value name="seq-matches">2618</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="4123d6f3ee8fda4cef9746b02b75796fe15c0c5c">
-              <patterns>
-                 <pattern>@NUMBER@ monitored @ESTRING:object: @@QSTRING:path:`@ was written to</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="nscd">5298 monitored file `/etc/passwd` was written to</test_message>
-                 </example>
-                 <example>
-                    <test_message program="nscd">5298 monitored file `/etc/group` was written to</test_message>
-                 </example>
-                 <example>
-                    <test_message program="nscd">1669 monitored file `/etc/passwd` was written to</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">2099</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-        </rules>
-     </ruleset>
-     <ruleset id="50fc6de0fcf96b5a355ee45c5882aec592ff7c73" name="influxd">
-        <patterns>
-           <pattern>influxd</pattern>
-        </patterns>
-        <rules>
-           <rule id="4434f8914ffc383499643370162a68520d204903">
-              <patterns>
-                 <pattern>ts=@ESTRING:msgtime: @lvl=@ESTRING:: @msg=@QSTRING:string:&#34;@ @ESTRING:id: @=@ESTRING:: @service=@ESTRING:: @query=@QSTRING:string:&#34;@</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="influxd">ts=2019-04-09T07:22:47.858663Z lvl=info msg=&#34;Executing query&#34; log_id=0DhHSjq0000 service=query query=&#34;SELECT max(other) FROM Error_types.autogen.error_types WHERE time &gt; now() - 10m GROUP BY time(3m)&#34;</test_message>
-                 </example>
-                 <example>
-                    <test_message program="influxd">ts=2019-04-09T07:22:43.665692Z lvl=info msg=&#34;Executing query&#34; log_id=0DhHSjq0000 service=query query=&#34;SELECT max(w_64) FROM Times_intervals.autogen.times WHERE (experience =~ /^(Free|admin|ams-clas-qcd|ams-inter|ams-qcd|atlas|baoradio-cms-nantheo|bioaster|cermep-clas-cral-qcd|cms-integral-nantheo|cms-nantheo|compass-indra-virgo-nemo-xmm|compass-virgo-indra|computing_nodes|dchooz-pauger-d0|edelweis-babar|edelweiss|euclid|hep|hess|hess-sdss|integral|km3net|lsst|metadata-manager|metadata_manager|nucifer|nucifer-integral|opera-t2k|pauger-dchooz|planck|snls|snovae-nusol|t2k|t2k-opera|virgo-indra|xmm-nemo-virgo)$/) AND time &gt;= now() - 12h GROUP BY time(3m)&#34;</test_message>
-                 </example>
-                 <example>
-                    <test_message program="influxd">ts=2019-04-09T07:22:43.658781Z lvl=info msg=&#34;Executing query&#34; log_id=0DhHSjq0000 service=query query=&#34;SELECT max(w_16) FROM Times_intervals.autogen.times WHERE (experience =~ /^(Free|admin|ams-clas-qcd|ams-inter|ams-qcd|atlas|baoradio-cms-nantheo|bioaster|cermep-clas-cral-qcd|cms-integral-nantheo|cms-nantheo|compass-indra-virgo-nemo-xmm|compass-virgo-indra|computing_nodes|dchooz-pauger-d0|edelweis-babar|edelweiss|euclid|hep|hess|hess-sdss|integral|km3net|lsst|metadata-manager|metadata_manager|nucifer|nucifer-integral|opera-t2k|pauger-dchooz|planck|snls|snovae-nusol|t2k|t2k-opera|virgo-indra|xmm-nemo-virgo)$/) AND time &gt;= now() - 12h GROUP BY time(3m)&#34;</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">752</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="c887aa945fe242f6800f29655b974093cad41258">
-              <patterns>
-                 <pattern>[httpd] @IPvANY:srcip@ - grafana @QSTRING:msgtime:[]@ &#34;@ESTRING:action: @/query?db=Times_intervals&amp;epoch=s&amp;q=@ESTRING:: @@ESTRING:protocol: @&#34; @NUMBER@ @NUMBER@ &#34;-&#34; &#34;Grafana&#34; @ESTRING:id: @@NUMBER@</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="influxd">[httpd] 134.158.239.135 - grafana [09/Apr/2019:09:22:28 +0200] &#34;GET /query?db=Times_intervals&amp;epoch=s&amp;q=SELECT+max%28%22w_tot%22%29+FROM+%22times%22+WHERE+time+%3E+now%28%29+-+10m+GROUP+BY+time%283m%29+fill%28null%29 HTTP/1.1&#34; 200 137 &#34;-&#34; &#34;Grafana&#34; 3b55eede-5a98-11e9-b263-fa163ea926b3 2131</test_message>
-                 </example>
-                 <example>
-                    <test_message program="influxd">[httpd] 134.158.239.135 - grafana [09/Apr/2019:09:22:07 +0200] &#34;GET /query?db=Times_intervals&amp;epoch=s&amp;q=SELECT+max%28%22w_tot%22%29+FROM+%22times%22+WHERE+time+%3E+now%28%29+-+10m+GROUP+BY+time%283m%29+fill%28null%29 HTTP/1.1&#34; 200 137 &#34;-&#34; &#34;Grafana&#34; 2ed1d37b-5a98-11e9-b261-fa163ea926b3 1968</test_message>
-                 </example>
-                 <example>
-                    <test_message program="influxd">[httpd] 134.158.239.135 - grafana [09/Apr/2019:09:21:25 +0200] &#34;GET /query?db=Times_intervals&amp;epoch=s&amp;q=SELECT+max%28%22w_tot%22%29+FROM+%22times%22+WHERE+time+%3E+now%28%29+-+10m+GROUP+BY+time%283m%29+fill%28null%29 HTTP/1.1&#34; 200 141 &#34;-&#34; &#34;Grafana&#34; 15c8f6f8-5a98-11e9-b25b-fa163ea926b3 1519</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">235</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="adf378e900780622cce9a109b111a0b59c9e5b07">
-              <patterns>
-                 <pattern>[httpd] @IPvANY:srcip@ - grafana @QSTRING:msgtime:[]@ &#34;@ESTRING:action: @/query?db=Error_types&amp;epoch=s&amp;q=@ESTRING:: @@ESTRING:protocol: @&#34; @NUMBER@ @NUMBER@ &#34;-&#34; &#34;Grafana&#34; @ESTRING:id: @@NUMBER@</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="influxd">[httpd] 134.158.239.135 - grafana [09/Apr/2019:09:22:47 +0200] &#34;GET /query?db=Error_types&amp;epoch=s&amp;q=SELECT+max%28%22other%22%29+FROM+%22error_types%22+WHERE+time+%3E+now%28%29+-+10m+GROUP+BY+time%283m%29+fill%28null%29 HTTP/1.1&#34; 200 145 &#34;-&#34; &#34;Grafana&#34; 46a9f2bc-5a98-11e9-b26f-fa163ea926b3 1744</test_message>
-                 </example>
-                 <example>
-                    <test_message program="influxd">[httpd] 134.158.239.135 - grafana [09/Apr/2019:09:21:32 +0200] &#34;GET /query?db=Error_types&amp;epoch=s&amp;q=SELECT+max%28%22other%22%29+FROM+%22error_types%22+WHERE+time+%3E+now%28%29+-+10m+GROUP+BY+time%283m%29+fill%28null%29 HTTP/1.1&#34; 200 147 &#34;-&#34; &#34;Grafana&#34; 19f5d419-5a98-11e9-b25e-fa163ea926b3 1802</test_message>
-                 </example>
-                 <example>
-                    <test_message program="influxd">[httpd] 134.158.239.135 - grafana [09/Apr/2019:09:21:07 +0200] &#34;GET /query?db=Error_types&amp;epoch=s&amp;q=SELECT+max%28%22other%22%29+FROM+%22error_types%22+WHERE+time+%3E+now%28%29+-+10m+GROUP+BY+time%283m%29+fill%28null%29 HTTP/1.1&#34; 200 147 &#34;-&#34; &#34;Grafana&#34; 0b0e9c15-5a98-11e9-b259-fa163ea926b3 2779</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">236</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-        </rules>
-     </ruleset>
-     <ruleset id="b058c6f88a497393ffa89ff248c1b1cfbeba73e2" name="sshd">
-        <patterns>
-           <pattern>sshd</pattern>
-        </patterns>
-        <rules>
-           <rule id="e8641399de7669a6c9e45c6161b1c4c91a9e3a54">
-              <patterns>
-                 <pattern>@ESTRING:id: @(sshd:auth): requirement &#34;uid &gt;= 300&#34; not met by user @QSTRING:srcuser:&#34;@</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="sshd">pam_succeed_if(sshd:auth): requirement &#34;uid &gt;= 300&#34; not met by user &#34;root&#34;</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">pam_succeed_if(sshd:auth): requirement &#34;uid &gt;= 300&#34; not met by user &#34;tcpdump&#34;</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">390</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="f739a187db9f2a4229b4491038ebed8386af38d9">
-              <patterns>
-                 <pattern>rexec line @NUMBER@: Deprecated option RhostsRSAAuthentication</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="sshd">rexec line 27: Deprecated option RhostsRSAAuthentication</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">rexec line 29: Deprecated option RhostsRSAAuthentication</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">rexec line 33: Deprecated option RhostsRSAAuthentication</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">1220</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="2bf5531dc75371bb3abc4606ef22edd90104e84e">
-              <patterns>
-                 <pattern>reprocess config line @NUMBER@: Deprecated option RhostsRSAAuthentication</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="sshd">reprocess config line 27: Deprecated option RhostsRSAAuthentication</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">reprocess config line 29: Deprecated option RhostsRSAAuthentication</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">reprocess config line 33: Deprecated option RhostsRSAAuthentication</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">1200</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="0400cecd005f7d24d80afb3899f306b92a222b38">
-              <patterns>
-                 <pattern>rexec line @NUMBER@: Deprecated option UseLogin</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="sshd">rexec line 33: Deprecated option UseLogin</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">rexec line 35: Deprecated option UseLogin</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">rexec line 39: Deprecated option UseLogin</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">1221</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="7208adb8ec23457be47f3545fea7ade02b5f5a4c">
-              <patterns>
-                 <pattern>reprocess config line @NUMBER@: Deprecated option RSAAuthentication</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="sshd">reprocess config line 26: Deprecated option RSAAuthentication</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">reprocess config line 28: Deprecated option RSAAuthentication</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">reprocess config line 32: Deprecated option RSAAuthentication</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">1200</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="5bdf76828e048708c63dab783b4d94831c13d687">
-              <patterns>
-                 <pattern>User root from @IPvANY:srcip@ not @ESTRING:action: @because none of user&#39;@ESTRING:srcuser:@</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="sshd">User root from 58.242.83.28 not allowed because none of user&#39;s groups are listed in AllowGroups</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">User root from 200.69.250.253 not allowed because none of user&#39;s groups are listed in AllowGroups</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">131</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="3d6ceeb4120cc50dd270d1ca04ab0bd71797764d">
-              <patterns>
-                 <pattern>Received @ESTRING:action: @from @IPvANY:srcip@ port @ESTRING:srcport::@11: [preauth]</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="sshd">Received disconnect from 58.242.83.28 port 45105:11: [preauth]</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">Received disconnect from 58.242.83.28 port 37135:11: [preauth]</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">Received disconnect from 58.242.83.28 port 13993:11: [preauth]</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">271</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="1944189386bf25f0f8a15bfa917547fe24851ad6">
-              <patterns>
-                 <pattern>@ESTRING:status::@ Could not load host key: /etc/ssh/ssh_host_dsa_key</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="sshd">error: Could not load host key: /etc/ssh/ssh_host_dsa_key</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">1029</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="da296d46941202976a457d184de40c88a41b37dc">
-              <patterns>
-                 <pattern>@ESTRING:action: @closed by @IPvANY:srcip@ port @NUMBER:srcport@ [preauth]</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="sshd">Connection closed by 134.175.176.219 port 38874 [preauth]</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">Connection closed by 134.175.176.219 port 38546 [preauth]</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">Connection closed by 134.175.176.219 port 38384 [preauth]</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">811</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="3d62e8cf73d14543c1f5fc683723c9149ec6db05">
-              <patterns>
-                 <pattern>@ESTRING:id::@ invalid user @ESTRING:srcuser: @[preauth]</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="sshd">input_userauth_request: invalid user root [preauth]</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">input_userauth_request: invalid user xr [preauth]</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">input_userauth_request: invalid user postgres [preauth]</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">257</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="278f4da6e357d7fdc8d82aa20bb90568160bfe54">
-              <patterns>
-                 <pattern>@ESTRING:action: @from @IPvANY:srcip@ port @NUMBER:srcport@ [preauth]</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="sshd">Disconnected from 89.216.113.174 port 37794 [preauth]</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">Disconnected from 58.242.83.28 port 45105 [preauth]</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">Disconnected from 58.242.83.28 port 37135 [preauth]</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">406</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="e43681a3ab8f02eee60d8e3717fdf02bdaa29331">
-              <patterns>
-                 <pattern>PAM @NUMBER@ more @ESTRING:action: @@ESTRING:status:;@ logname= uid=@ESTRING:srcuid: @euid=@NUMBER@ tty=@ESTRING:: @ruser= rhost=@IPvANY:srcip@ user=@ESTRING:srcuser:@</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="sshd">PAM 2 more authentication failures; logname= uid=0 euid=0 tty=ssh ruser= rhost=58.242.83.28 user=root</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">260</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="c7945d7df32cd1992351ea6ba220720ec2072b89">
-              <patterns>
-                 <pattern>@ESTRING:id: @(sshd:auth): requirement &#34;uid &gt;= 1000&#34; not met by user @QSTRING:srcuser:&#34;@</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="sshd">pam_succeed_if(sshd:auth): requirement &#34;uid &gt;= 1000&#34; not met by user &#34;root&#34;</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">pam_succeed_if(sshd:auth): requirement &#34;uid &gt;= 1000&#34; not met by user &#34;ftp&#34;</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">pam_succeed_if(sshd:auth): requirement &#34;uid &gt;= 1000&#34; not met by user &#34;operator&#34;</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">1201</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="06a5a4da433ee007a0497ac62f1347923a3ca771">
-              <patterns>
-                 <pattern>rexec line @NUMBER@: Deprecated option ServerKeyBits</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="sshd">rexec line 28: Deprecated option ServerKeyBits</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">rexec line 30: Deprecated option ServerKeyBits</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">rexec line 34: Deprecated option ServerKeyBits</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">1215</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="5f23621fe41ee7f90d0d33e215163c7b3d9bbc30">
-              <patterns>
-                 <pattern>rexec line @NUMBER@: Deprecated option RSAAuthentication</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="sshd">rexec line 26: Deprecated option RSAAuthentication</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">rexec line 28: Deprecated option RSAAuthentication</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">rexec line 32: Deprecated option RSAAuthentication</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">1216</value>
-                 <value name="seq-new">true</value>
-              </values>
-           </rule>
-           <rule id="3ada67fc9a5eac5a71232497b88f43805e4385f6">
-              <patterns>
-                 <pattern>Received @ESTRING:action: @from @IPvANY:srcip@ port @ESTRING:srcport::@11: Bye Bye [preauth]</pattern>
-              </patterns>
-              <examples>
-                 <example>
-                    <test_message program="sshd">Received disconnect from 186.147.34.238 port 18913:11: Bye Bye [preauth]</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">Received disconnect from 118.25.191.125 port 43604:11: Bye Bye [preauth]</test_message>
-                 </example>
-                 <example>
-                    <test_message program="sshd">Received disconnect from 89.216.113.174 port 47742:11: Bye Bye [preauth]</test_message>
-                 </example>
-              </examples>
-              <values>
-                 <value name="seq-matches">121</value>
+                 <value name="seq-matches">94</value>
                  <value name="seq-new">true</value>
               </values>
            </rule>
@@ -1219,6 +1305,20 @@
            <pattern>globus-gridftp-server</pattern>
         </patterns>
         <rules>
+           <rule id="ed3182db7c333160bcd84ea5348a5d630fffeac5">
+              <patterns>
+                 <pattern>@ESTRING:id:@(): voms plugin succeeded</pattern>
+              </patterns>
+              <examples>
+                 <example>
+                    <test_message program="globus-gridftp-server">&#x9;lcas_plugin_voms-plugin_confirm_authorization_from_x509(): voms plugin succeeded</test_message>
+                 </example>
+              </examples>
+              <values>
+                 <value name="seq-matches">130</value>
+                 <value name="seq-new">true</value>
+              </values>
+           </rule>
            <rule id="9d6a3f789a16fcd03dd68e6cf98eebf3b7f5ae1c">
               <patterns>
                  <pattern>lcas_userban.mod-plugin_confirm_authorization(): checking banned users in /etc/lcas/ban_users.db</pattern>
@@ -1235,7 +1335,7 @@
            </rule>
            <rule id="758729d9b0e4bda2a6ebfcb65705bd7c04e0febb">
               <patterns>
-                 <pattern>Callout to @QSTRING:dstuser:&#34;@ returned local user (@ESTRING:srcuser: @@ESTRING:object: @): &#34;@ESTRING::@</pattern>
+                 <pattern>Callout to @QSTRING:dstuser:&#34;@ returned local user (@ESTRING:srcuser: @@ESTRING:object:@): &#34;@ESTRING::@</pattern>
               </patterns>
               <examples>
                  <example>
@@ -1253,38 +1353,50 @@
                  <value name="seq-new">true</value>
               </values>
            </rule>
-           <rule id="ed3182db7c333160bcd84ea5348a5d630fffeac5">
+        </rules>
+     </ruleset>
+     <ruleset id="24b42e9433f7d04e1f7546115b621a9e67073fc9" name="nscd">
+        <patterns>
+           <pattern>nscd</pattern>
+        </patterns>
+        <rules>
+           <rule id="0c9fc45d32125ec8dfc15752251530b89e62dd59">
               <patterns>
-                 <pattern>@ESTRING:id: @(): voms plugin succeeded</pattern>
+                 <pattern>@NUMBER@ @ESTRING:: @@ESTRING:object: @@QSTRING:path:`@ (@NUMBER@)</pattern>
               </patterns>
               <examples>
                  <example>
-                    <test_message program="globus-gridftp-server">&#x9;lcas_plugin_voms-plugin_confirm_authorization_from_x509(): voms plugin succeeded</test_message>
+                    <test_message program="nscd">5298 monitoring file `/etc/group` (13)</test_message>
+                 </example>
+                 <example>
+                    <test_message program="nscd">5298 monitoring file `/etc/passwd` (12)</test_message>
+                 </example>
+                 <example>
+                    <test_message program="nscd">5298 monitoring directory `/etc` (2)</test_message>
                  </example>
               </examples>
               <values>
-                 <value name="seq-matches">130</value>
+                 <value name="seq-matches">2618</value>
                  <value name="seq-new">true</value>
               </values>
            </rule>
-        </rules>
-     </ruleset>
-     <ruleset id="35c332d7f86c4daa7dce593b89ecbb4de88fe951" name="[sssd[ldap_child[20816]]]">
-        <patterns>
-           <pattern>[sssd[ldap_child[20816]]]</pattern>
-        </patterns>
-        <rules>
-           <rule id="06314913bd6889b4301b9f14ff15ab10ef4db6d2">
+           <rule id="62ce0a8ad5b66678b8b36ab2f26148c65b90545c">
               <patterns>
-                 <pattern>@ESTRING:status: @to @ESTRING:dstuser: @credentials using keytab [@ESTRING:object::@/etc/krb5.keytab]: Realm not local to KDC. Unable to @ESTRING:action: @@ESTRING:id: @LDAP connection.</pattern>
+                 <pattern>@NUMBER@ @ESTRING:: @@ESTRING:object: @@QSTRING:path:`@ was written to</pattern>
               </patterns>
               <examples>
                  <example>
-                    <test_message program="[sssd[ldap_child[20816]]]">Failed to initialize credentials using keytab [MEMORY:/etc/krb5.keytab]: Realm not local to KDC. Unable to create GSSAPI-encrypted LDAP connection.</test_message>
+                    <test_message program="nscd">5298 monitored file `/etc/passwd` was written to</test_message>
+                 </example>
+                 <example>
+                    <test_message program="nscd">5298 monitored file `/etc/group` was written to</test_message>
+                 </example>
+                 <example>
+                    <test_message program="nscd">1669 monitored file `/etc/passwd` was written to</test_message>
                  </example>
               </examples>
               <values>
-                 <value name="seq-matches">175</value>
+                 <value name="seq-matches">2099</value>
                  <value name="seq-new">true</value>
               </values>
            </rule>

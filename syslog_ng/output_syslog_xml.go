@@ -133,13 +133,13 @@ func buildRuleXML (result sequence.AnalyzerResult) XRule {
 	rule.Patterns = append(rule.Patterns, p)
 
 	//create a new UUID
-	rule.ID = generateIDFromPattern(result.Pattern)
+	rule.ID = result.PatternId
 	return rule
 }
 
 func buildRulesetXML (rsName string) XRuleset {
 	rs := XRuleset{Name:rsName}
-	rs.ID = generateIDFromPattern(rsName)
+	rs.ID = sequence.GenerateIDFromPattern(rsName)
 	var p = XPattern{Pattern:rsName}
 	rs.Patterns = append(rs.Patterns, p)
 	return rs

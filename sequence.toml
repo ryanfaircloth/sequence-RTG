@@ -1,6 +1,8 @@
 version = "0.1"
 
-keepSpaces = true
+# This flag is to mark the spaces during analysis for reconstruction of the pattern with spaces where they were
+# in the original message, the default parser for sequence has this set to false, for syslog-ng set to true.
+markSpaces = true
 
 # Match Threshold is the number of matches for a pattern before the pattern is included in the output pattern file.
 # Types supported are "percent" and "count"
@@ -9,11 +11,6 @@ keepSpaces = true
 
 matchThresholdType = "percent"
 matchThresholdValue = "0.001"
-
-# This is a upper limit for processing messages
-# If exceeded the file or input will be split into batches.
-# Use to avoid out of memory issues when file size exceeds processing power.
-maxBatchSize = 1000000
 
 timeFormats = [
 	"Mon Jan _2 15:04:05 2006",
@@ -57,7 +54,8 @@ timeFormats = [
 	"2006-01-02",
 	"15:04:05",
 	"2006-01-02T15:04:05.999999Z",
-	"02/Jan/2006:15:04:05.999"
+	"02/Jan/2006:15:04:05.999",
+	"2006-01-02T15:04:05"
 ]
 
 tags = [

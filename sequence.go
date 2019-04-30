@@ -33,11 +33,6 @@ type Sequence []Token
 // String returns a single line string that represents the pattern for the Sequence
 func (this Sequence) String() string {
 	var p string
-	var space = " "
-	//if the spaces have been kept we don't need to add them when rebuilding
-	if config.keepSpaces{
-		space = ""
-	}
 	for _, token := range this {
 		var c string
 
@@ -74,17 +69,23 @@ func (this Sequence) String() string {
 				c += ":*"
 			}
 			c = "%" + c + "%"
-			// TODO: Remove when fixed the over tokenisation problem
-			if token.Type == TokenString && !token.isValue{
-				c = token.Value
-			}
+			// This prevents the generic "string" type from over tokenising the patterns
+			//if token.Type == TokenString && !token.isValue{
+				//c = token.Value
+			//}
 		} else {
 			c = token.Value
 		}
-
-		p += c + space
+		//if the spaces are marked on the token
+		//if we need one before isSpaceBefore will be set to true
+		if !config.markSpaces{
+			p += c + " "
+		}else if token.isSpaceBefore{
+			p += " " + c
+		}else{
+			p += c
+		}
 	}
-
 	return strings.TrimSpace(p)
 }
 

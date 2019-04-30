@@ -131,11 +131,25 @@ func (this *Scanner) Scan(s string) (Sequence, error) {
 		tok Token
 	)
 
+	spaceBefore := false
 	for tok, err = this.msg.Tokenize(); err == nil; tok, err = this.msg.Tokenize() {
+
 		//convert the alpha only tokens to literal token type
 		if tok.Type == TokenAlphaOnly{
 			tok.Type = TokenLiteral
 		}
+
+		//ignore space tokens but mark the token before as needing a space
+		if config.markSpaces{
+			if tok.Value == " "{
+				spaceBefore = true
+				continue
+			} else{
+				tok.isSpaceBefore = spaceBefore
+				spaceBefore = false
+			}
+		}
+
 		this.insertToken(tok)
 
 		// special case for %r, or request, token in apache logs, which is comprised

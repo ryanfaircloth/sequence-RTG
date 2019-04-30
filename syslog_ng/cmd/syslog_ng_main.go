@@ -99,7 +99,7 @@ func analyze(cmd *cobra.Command, args []string) {
 
 	//Uncomment this to sort the slice by the service
 	//Useful for debugging
-	syslog_ng.SortandPrintLogMessages(lr, "C:\\data\\debug.txt")
+	syslog_ng.SortLogMessages(lr)
 
 	//these are existing patterns
 	pmap := make(map[string]struct {
@@ -147,6 +147,7 @@ func analyze(cmd *cobra.Command, args []string) {
 					stat = sequence.AnalyzerResult{}
 				}
 				sequence.AddExampleToAnalyzerResult(&stat, l.Message)
+				stat.PatternId = sequence.GenerateIDFromPattern(pat)
 				stat.ExampleCount++
 				stat.Service = l.Service
 				amap[pat] = stat
@@ -193,7 +194,7 @@ func analyze(cmd *cobra.Command, args []string) {
 			}
 		}
 		for pat, stat := range amap {
-			pattern = sequence.AnalyzerResult{pat, stat.ExampleCount, stat.Examples, stat.Service}
+			pattern = sequence.AnalyzerResult{stat.PatternId, pat, stat.ExampleCount, stat.Examples, stat.Service}
 			//only add patterns with a certain number of examples found
 			if threshold < stat.ExampleCount {
 				y := syslog_ng.ConvertToYaml(pattern)
@@ -225,7 +226,7 @@ func analyze(cmd *cobra.Command, args []string) {
 		}
 		//new patterns
 		for pat, stat := range amap {
-			pattern = sequence.AnalyzerResult{pat, stat.ExampleCount, stat.Examples, stat.Service}
+			pattern = sequence.AnalyzerResult{stat.PatternId, pat, stat.ExampleCount, stat.Examples, stat.Service}
 			if threshold < stat.ExampleCount{
 				pattDB = syslog_ng.AddToRuleset(pattern, pattDB)
 				vals = append(vals, stat.ExampleCount)

@@ -64,7 +64,7 @@ const (
 func (this *Message) Tokenize() (Token, error) {
 	if this.state.start < this.state.end {
 
-		if !config.keepSpaces{
+		if !config.markSpaces{
 			// Number of spaces skipped
 			nss := this.skipSpace(this.Data[this.state.start:])
 			this.state.start += nss
@@ -106,13 +106,12 @@ func (this *Message) Tokenize() (Token, error) {
 
 		// remove any trailing spaces
 		s := 0 // trail space count
-		if !config.keepSpaces{
+		if !config.markSpaces{
 			for this.Data[this.state.start+l-1] == ' ' && l > 0 {
 				l--
 				s++
 			}
 		}
-
 
 		tok := Token{Tag: TagUnknown, Type: t, Value: this.Data[this.state.start : this.state.start+l]}
 		this.state.tokCount++

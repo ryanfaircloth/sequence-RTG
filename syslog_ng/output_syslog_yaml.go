@@ -72,7 +72,7 @@ func buildRule (result sequence.AnalyzerResult) YRule {
 	rule.Details.Examples = append(rule.Details.Examples, result.Examples[0])
 	rule.Details.Values.New = true
 	//create a new UUID
-	rule.Details.ID = generateIDFromPattern(result.Pattern)
+	rule.Details.ID = result.PatternId
 	return rule
 }
 

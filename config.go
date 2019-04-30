@@ -30,10 +30,9 @@ var (
 		//keep the spaces during tokenization
 		//set to true if spacing matters for your output
 		//format
-  		keepSpaces bool
+  		markSpaces bool
 		matchThresholdType     string
 		matchThresholdValue    string
-		maxBatchSize 		   int64
 	}
 
 	keymaps struct {
@@ -51,10 +50,9 @@ func ReadConfig(file string) error {
 		Version     string
 		TimeFormats []string
 		Tags        []string
-		KeepSpaces 	bool
+		MarkSpaces 	bool
 		MatchThresholdType     string
 		MatchThresholdValue    string
-		MaxBatchSize		   int64
 
 		Analyzer struct {
 			Prekeys  map[string][]string
@@ -71,10 +69,9 @@ func ReadConfig(file string) error {
 	config.tagIDs = make(map[string]TagType, 30)
 	config.tagNames = config.tagNames[:0]
 	config.tagTypes = config.tagTypes[:0]
-	config.keepSpaces  = configInfo.KeepSpaces
+	config.markSpaces  = configInfo.MarkSpaces
 	config.matchThresholdType  = configInfo.MatchThresholdType
 	config.matchThresholdValue  = configInfo.MatchThresholdValue
-	config.maxBatchSize =  configInfo.MaxBatchSize
 
 	keymaps.keywords = make(map[string]TagType, 30)
 	keymaps.prekeys = make(map[string][]TagType, 30)
