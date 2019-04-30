@@ -124,6 +124,8 @@ func scan(cmd *cobra.Command, args []string) {
 func analyze(cmd *cobra.Command, args []string) {
 	readConfig()
 
+	startTime := time.Now()
+
 	if infile == "" {
 		log.Fatal("Invalid input file specified")
 	}
@@ -225,6 +227,8 @@ func analyze(cmd *cobra.Command, args []string) {
 	}
 
 	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new.", n, len(pmap)+len(amap), len(amap))
+	anTime := time.Since(startTime)
+	fmt.Printf("Analysed in: %s\n", anTime)
 }
 
 func parse(cmd *cobra.Command, args []string) {

@@ -76,6 +76,8 @@ func analyze(cmd *cobra.Command, args []string) {
 	analyzer := sequence.NewAnalyzer()
 	scanner := sequence.NewScanner()
 
+	startTime := time.Now()
+
 	//We load the file completely
 	var lr []sequence.LogRecord
 
@@ -238,7 +240,9 @@ func analyze(cmd *cobra.Command, args []string) {
 		fmt.Fprintf(ofile, "\t%s\n", y)
 	}
 
-	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d passed the threshold and were added to the xml/yaml file, %d messages errored", len(lr), len(pmap)+len(amap), len(amap), len(vals), err_count)
+	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d passed the threshold and were added to the xml/yaml file, %d messages errored\n", len(lr), len(pmap)+len(amap), len(amap), len(vals), err_count)
+	anTime := time.Since(startTime)
+	fmt.Printf("Analysed in: %s\n", anTime)
 }
 
 func analyzebyservice(cmd *cobra.Command, args []string) {
