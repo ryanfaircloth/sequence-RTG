@@ -241,6 +241,132 @@ func analyze(cmd *cobra.Command, args []string) {
 	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d passed the threshold and were added to the xml/yaml file, %d messages errored", len(lr), len(pmap)+len(amap), len(amap), len(vals), err_count)
 }
 
+func analyzebyservice(cmd *cobra.Command, args []string) {
+	readConfig()
+	t := time.Duration(797313459800)
+
+	fmt.Printf("%s", t.String() )
+	if infile == "" {
+		log.Fatal("Invalid input file specified")
+	}
+	profile()
+	parser := buildParser()
+	analyzer := sequence.NewAnalyzer()
+	scanner := sequence.NewScanner()
+
+	startTime := time.Now()
+
+	//We load the file completely
+	var lrMap = make(map[string]sequence.LogRecordCollection)
+	if informat == "json" {
+		lrMap = sequence.ReadLogRecordJsonAsMap(infile)
+	} else{
+		lrMap = sequence.ReadLogRecordTxtAsMap(infile)
+	}
+
+	//Here we group by service and process
+	//We lose the cross service patterns but we get better
+	//within service patterns
+	err_count := 0
+	processed := 0
+	amap := make(map[string]sequence.AnalyzerResult)
+	for _, lrc := range lrMap{
+		// For all the log messages, if we can't parse it, then let's add it to the
+		// analyzer for pattern analysis, this requires the previous pattern file/folder
+		//	to be passed in
+		analyzer = sequence.NewAnalyzer()
+		for _, l := range lrc.Records {
+			//TODO Fix this so it doesn't scan twice or parse twice
+			seq := scanMessage(scanner, l.Message)
+			if _, err := parser.Parse(seq); err != nil {
+				analyzer.Add(seq)
+			}
+		}
+		analyzer.Finalize()
+
+		for _, l := range lrc.Records {
+			seq := scanMessage(scanner, l.Message)
+			aseq, err := analyzer.Analyze(seq)
+			if err != nil {
+				log.Printf("Error analyzing: %s", l.Message)
+				err_count++
+			} else {
+				pat := strings.TrimSpace(aseq.String())
+				stat, ok := amap[pat]
+				if !ok {
+					stat = sequence.AnalyzerResult{}
+				}
+				sequence.AddExampleToAnalyzerResult(&stat, l.Message)
+				stat.PatternId = sequence.GenerateIDFromPattern(pat)
+				stat.ExampleCount++
+				stat.Service = l.Service
+				amap[pat] = stat
+			}
+			processed++
+		}
+		fmt.Printf("Processed: %d\n", processed)
+	}
+	anTime := time.Since(startTime)
+	fmt.Printf("Analysed in: %d\n", anTime)
+
+	var vals []int
+
+
+	opatfile := sequence.OpenOutputFile("C:\\data\\pattern.txt")
+	defer opatfile.Close()
+
+	//get the threshold for including the pattern in the
+	//output files
+	threshold := sequence.GetThreshold(processed)
+
+	for pat, stat := range amap {
+		fmt.Fprintf(opatfile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.ExampleCount, stat.Examples[0])
+	}
+
+	ofile := sequence.OpenOutputFile(outfile)
+	defer ofile.Close()
+
+	if outformat == "yaml"{
+		fmt.Fprintf(ofile, "coloss::patterndb::simple::rule:\n")
+		pattern := sequence.AnalyzerResult{}
+		for pat, stat := range amap {
+			pattern = sequence.AnalyzerResult{stat.PatternId, pat,stat.ExampleCount, stat.Examples, stat.Service}
+			//only add patterns with a certain number of examples found
+			if threshold < stat.ExampleCount {
+				y := syslog_ng.ConvertToYaml(pattern)
+				//write to the file line by line with a tab in front.
+				s := strings.Split(y,"\n")
+				for _, v := range s {
+					if len(v)>0{
+						fmt.Fprintf(ofile, "\t%s\n", v)
+					}
+				}
+				vals = append(vals, stat.ExampleCount)
+			}
+		}
+	}
+
+	if outformat == "xml"{
+		fmt.Fprintf(ofile, "<?xml version='1.0' encoding='UTF-8'?>\n")
+		pattDB := syslog_ng.PatternDB{Version:"4", Pubdate:time.Now().Format("2006-01-02 15:04:05")}
+		pattern := sequence.AnalyzerResult{}
+		//new patterns
+		for pat, stat := range amap {
+			pattern = sequence.AnalyzerResult{stat.PatternId, pat,stat.ExampleCount, stat.Examples, stat.Service}
+			if threshold < stat.ExampleCount{
+				pattDB = syslog_ng.AddToRuleset(pattern, pattDB)
+				vals = append(vals, stat.ExampleCount)
+			}
+		}
+
+		//write to the file
+		y := syslog_ng.ConvertToXml(pattDB)
+		fmt.Fprintf(ofile, "\t%s\n", y)
+	}
+
+	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d passed the threshold, %d messages errored, time taken: %s", processed, len(amap), len(amap), len(vals), err_count, time.Since(startTime))
+}
+
 func scanMessage(scanner *sequence.Scanner, data string) sequence.Sequence {
 	var (
 		seq sequence.Sequence
@@ -340,6 +466,11 @@ func main() {
 			Use:   "analyze",
 			Short: "analyzes a log file and output a list of patterns that will match all the log messages",
 		}
+
+		analyzeByServiceCmd = &cobra.Command{
+			Use:   "analyzebyservice",
+			Short: "analyzes a log file and output a list of patterns that will match all the log messages",
+		}
 	)
 
 	sequenceCmd.PersistentFlags().StringVarP(&cfgfile, "config", "", "", "TOML-formatted configuration file, default checks ./sequence.toml, then sequence.toml in the same directory as program")
@@ -351,8 +482,10 @@ func main() {
 	sequenceCmd.PersistentFlags().StringVarP(&informat, "in-format", "k", "", "format of the input data, can be JSON or text, if empty it uses text, used by analyze")
 
 	analyzeCmd.Run = analyze
+	analyzeByServiceCmd.Run = analyzebyservice
 
 	sequenceCmd.AddCommand(analyzeCmd)
+	sequenceCmd.AddCommand(analyzeByServiceCmd)
 
 	sequenceCmd.Execute()
 }
