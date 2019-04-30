@@ -1,6 +1,8 @@
 version = "0.1"
 
-keepSpaces = true
+# This flag is to mark the spaces during analysis for reconstruction of the pattern with spaces where they were
+# in the original message, the default parser for sequence has this set to false, for syslog-ng set to true.
+markSpaces = true
 
 timeFormats = [
 	"Mon Jan _2 15:04:05 2006",

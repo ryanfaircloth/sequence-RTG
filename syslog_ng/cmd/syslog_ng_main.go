@@ -243,9 +243,7 @@ func analyze(cmd *cobra.Command, args []string) {
 
 func analyzebyservice(cmd *cobra.Command, args []string) {
 	readConfig()
-	t := time.Duration(797313459800)
 
-	fmt.Printf("%s", t.String() )
 	if infile == "" {
 		log.Fatal("Invalid input file specified")
 	}
@@ -307,7 +305,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 		fmt.Printf("Processed: %d\n", processed)
 	}
 	anTime := time.Since(startTime)
-	fmt.Printf("Analysed in: %d\n", anTime)
+	fmt.Printf("Analysed in: %s\n", anTime)
 
 	var vals []int
 

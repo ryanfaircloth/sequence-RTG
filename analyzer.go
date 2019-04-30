@@ -658,7 +658,8 @@ func (this *Analyzer) analyzeMessage(seq Sequence) ([]*analyzerNode, error) {
 		// For each of the child for the current node, we test to see if they should
 		// be added to the stack for visiting.
 		for i, e := cur.node.children.NextSet(0); e && i < uint(len(this.levels[cur.node.level+1])); i, e = cur.node.children.NextSet(i + 1) {
-                        node := this.levels[cur.node.level+1][i]
+
+             node := this.levels[cur.node.level+1][i]
 
 			if node != nil {
 				// Anything other than these 3 conditions are considered no match.
@@ -741,17 +742,17 @@ func markSequenceKV(seq Sequence) Sequence {
 			ki := i - 1 // key index
 			vi := i + 1 // value index
 
-			if vi < l && seq[vi].Type == TokenLiteral &&
-				(seq[vi].Value == "\"" || seq[vi].Value == "'" || seq[vi].Value == "<") {
-				vi = vi + 1
+			//sometimes there are double demlimiters or double equals signs
+			for vi < l && seq[vi].Type == TokenLiteral &&
+				(seq[vi].Value == "\"" || seq[vi].Value == "'" || seq[vi].Value == "<" || seq[vi].Value == "[" || seq[vi].Value == "="){
+					vi = vi + 1
 			}
-
 
 			// if the value index is smaller than the last node index, that means
 			// there's a node after the "=". If the node at value index is NOT
 			// already a key, then it's likely a value. Let's mark it.
 			if vi < l && !seq[vi].isKey &&
-				!(seq[vi].Value == "\"" || seq[vi].Value == "'" || seq[vi].Value == "<") {
+				!(seq[vi].Value == "\"" || seq[vi].Value == "'" || seq[vi].Value == ">" || seq[vi].Value == "*") {
 
 				seq[vi].isValue = true
 

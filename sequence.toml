@@ -13,8 +13,10 @@ matchThresholdType = "percent"
 matchThresholdValue = "0.001"
 
 timeFormats = [
+
 	"Mon Jan _2 15:04:05 2006",
 	"Mon Jan _2 15:04:05 MST 2006",
+	"Mon Jan 02 15:04:05 CEST 2006",
 	"Mon Jan 02 15:04:05 -0700 2006",
 	"02 Jan 06 15:04 MST",
 	"02 Jan 06 15:04 -0700",

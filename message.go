@@ -237,7 +237,7 @@ func (this *Message) scanToken(data string) (int, TokenType, error) {
 }
 
 func (this *Message) tokenStep(i int, r rune) bool {
-	// glog.Debugf("1. i=%d, r=%c, tokenStop=%t, tokenType=%s", i, r, this.state.tokenStop, this.state.tokenType)
+	//fmt.Printf("r=%c\n", r, )
 	switch this.state.tokenType {
 	case TokenUnknown:
 		switch r {
@@ -312,11 +312,10 @@ func (this *Message) tokenStep(i int, r rune) bool {
 		default:
 			if isLetter(r){
 				this.state.tokenType = TokenAlphaOnly
-			}else {
+			}else if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) {
 				this.state.tokenType = TokenLiteral
-				if !isLiteral(r) {
-					this.state.tokenStop = true
-				}
+			} else {
+				this.state.tokenStop = true
 			}
 
 		}
@@ -395,7 +394,7 @@ func (this *Message) tokenStep(i int, r rune) bool {
 
 	case TokenPath:
 		switch r {
-		case '/', '\\':
+		case '/', '\\', '_', '.', '-':
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 			//numbers allowed
 		default:
@@ -413,6 +412,8 @@ func (this *Message) tokenStep(i int, r rune) bool {
 			// underscore and dash allowed
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 			//numbers allowed
+		case '/', '\\':
+			this.state.tokenType = TokenPath
 		default:
 			if isLetter(r) {
 				//letters allowed

@@ -139,6 +139,11 @@ func (this *Scanner) Scan(s string) (Sequence, error) {
 			tok.Type = TokenLiteral
 		}
 
+		//convert the alphanum tokens to string token type
+		if tok.Type == TokenAlphaNum || tok.Type == TokenId{
+			tok.Type = TokenLiteral
+		}
+
 		//ignore space tokens but mark the token before as needing a space
 		if config.markSpaces{
 			if tok.Value == " "{
@@ -147,10 +152,12 @@ func (this *Scanner) Scan(s string) (Sequence, error) {
 			} else{
 				tok.isSpaceBefore = spaceBefore
 				spaceBefore = false
+				this.insertToken(tok)
 			}
+		}else{
+			this.insertToken(tok)
 		}
 
-		this.insertToken(tok)
 
 		// special case for %r, or request, token in apache logs, which is comprised
 		// of method, url, and protocol like "GET http://blah HTTP/1.0"
