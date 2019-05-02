@@ -79,13 +79,7 @@ func analyze(cmd *cobra.Command, args []string) {
 	startTime := time.Now()
 
 	//We load the file completely
-	var lr []sequence.LogRecord
-
-	if informat == "json" {
-		lr = sequence.ReadLogRecordJson(infile)
-	} else{
-		lr = sequence.ReadLogRecordTxt(infile)
-	}
+	lr := sequence.ReadLogRecord(infile, informat)
 
 	//get the threshold for including the pattern in the
 	//output files
@@ -162,24 +156,18 @@ func analyze(cmd *cobra.Command, args []string) {
 		processed++
 	}
 
-	opatfile := sequence.OpenOutputFile("C:\\data\\pattern.txt")
-	defer opatfile.Close()
+	ofile := sequence.OpenOutputFile(outfile)
+	defer ofile.Close()
 
-
-
-	//
-	//if outformat == "text" || outformat == ""{
+	if outformat == "text" || outformat == ""{
 		for pat, stat := range pmap {
-			fmt.Fprintf(opatfile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.cnt, stat.ex)
+			fmt.Fprintf(ofile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.cnt, stat.ex)
 		}
 
 		for pat, stat := range amap {
-			fmt.Fprintf(opatfile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.ExampleCount, stat.Examples[0])
+			fmt.Fprintf(ofile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.ExampleCount, stat.Examples[0])
 		}
-	//}
-
-	ofile := sequence.OpenOutputFile(outfile)
-	defer ofile.Close()
+	}
 
 	if outformat == "yaml"{
 		fmt.Fprintf(ofile, "coloss::patterndb::simple::rule:\n")
@@ -261,13 +249,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 	startTime := time.Now()
 
 	//We load the file completely
-	var lrMap = make(map[string]sequence.LogRecordCollection)
-	total := 0
-	if informat == "json" {
-		total, lrMap = sequence.ReadLogRecordJsonAsMap(infile)
-	} else{
-		total, lrMap = sequence.ReadLogRecordTxtAsMap(infile)
-	}
+	total, lrMap := sequence.ReadLogRecordAsMap(infile, informat)
 
 	//get the threshold for including the pattern in the
 	//output files
@@ -313,25 +295,26 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 			}
 			processed++
 		}
-		fmt.Printf("Processed: %d\n", processed)
+		//fmt.Printf("Processed: %d\n", processed)
 	}
 	anTime := time.Since(startTime)
 	fmt.Printf("Analysed in: %s\n", anTime)
 
 	var vals []int
 
-
-	opatfile := sequence.OpenOutputFile("C:\\data\\pattern.txt")
-	defer opatfile.Close()
-
-	for pat, stat := range amap {
-		fmt.Fprintf(opatfile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.ExampleCount, stat.Examples[0])
-	}
-
 	ofile := sequence.OpenOutputFile(outfile)
 	defer ofile.Close()
 
-	btfile := sequence.OpenOutputFile("C:\\data\\underthreshold.txt")
+	if outformat == "text" || outformat == "" {
+		for pat, stat := range amap {
+			//only add patterns with a certain number of examples found
+			if stat.ThresholdReached {
+				fmt.Fprintf(ofile, "%s\n s\n %d log messages matched\n %s\n\n", stat.PatternId, pat, stat.ExampleCount, stat.Examples[0])
+			}
+		}
+	}
+
+	btfile := sequence.OpenOutputFile(sequence.GetBelowThresholdPath())
 	defer btfile.Close()
 
 	if outformat == "yaml"{

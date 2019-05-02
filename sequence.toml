@@ -1,7 +1,4 @@
 version = "0.1"
-
-
-
 # This flag is to mark the spaces during analysis for reconstruction of the pattern with spaces where they were
 # in the original message, the default parser for sequence has this set to false, for syslog-ng set to true.
 markSpaces = true
@@ -13,6 +10,7 @@ markSpaces = true
 
 matchThresholdType = "percent"
 matchThresholdValue = "0.001"
+
 # if using a threshold, you can save the messages for the patterns do not reach the threshold
 # to process later or general interest. If the path is empty, the save functionality will be turned off.
 belowThresholdPath = "C:\\data\\underthreshold.txt"

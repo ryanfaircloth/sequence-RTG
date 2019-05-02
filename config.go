@@ -130,6 +130,10 @@ func ReadConfig(file string) error {
 	return nil
 }
 
+func GetBelowThresholdPath() string{
+	return config.belowThresholdPath
+}
+
 func predefineAnalyzerTags(f string, t TagType) {
 	switch f {
 	case "msgid":

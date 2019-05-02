@@ -26,9 +26,16 @@ func GetDirOfFiles(path string) []string {
 
 func OpenInputFile(fname string) (*bufio.Scanner, *os.File) {
 	var s *bufio.Scanner
-	f, err := os.Open(fname)
-	if err != nil {
-		log.Fatal(err)
+	var f *os.File
+	var err error
+	//this determines the input is from the stdin
+	if fname == "-"{
+		f = os.Stdin
+	} else{
+		f, err = os.Open(fname)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	if strings.HasSuffix(fname, ".gz") {
@@ -52,7 +59,7 @@ func OpenOutputFile(fname string) *os.File {
 	)
 
 	if fname == "" {
-		ofile = os.Stdin
+		ofile = os.Stdout
 	} else {
 		// Open output file
 		ofile, err = os.OpenFile(fname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
@@ -63,5 +70,6 @@ func OpenOutputFile(fname string) *os.File {
 
 	return ofile
 }
+
 
 
