@@ -18,6 +18,7 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"math"
 	"strconv"
 	"strings"
@@ -87,6 +88,7 @@ type AnalyzerResult struct {
 	ExampleCount int
 	Examples []string
 	Service string
+	ThresholdReached bool
 }
 
 
@@ -111,21 +113,44 @@ type stackAnalyzerNode struct {
 	score int
 }
 
-func AddExampleToAnalyzerResult(this *AnalyzerResult, message string){
-	//cap this at 3 TODO:Maybe check for sameness/differentness and select the best examples
-	var found bool
-	if len(this.Examples) < 3{
-		//don't add if one already the same
-		for _, ex := range this.Examples{
-			if ex == message{
+func AddExampleToAnalyzerResult(this *AnalyzerResult, message string, threshold int){
+	if this.ThresholdReached{
+		//nothing to here
+		return
+	}
+	if len(this.Examples) > threshold{
+		//truncate the messages to three different ones
+		TruncateExamples(this)
+		this.ThresholdReached = true
+	}else{
+		this.Examples = append(this.Examples, message)
+	}
+}
+
+func TruncateExamples(this *AnalyzerResult){
+	var keep []string
+	var found = false
+	for i, ex := range this.Examples{
+		//append the first one
+		if i==0 {
+			keep = append(keep, ex)
+			continue
+		}
+		for _, k := range keep{
+			if k == ex{
 				found = true
 				break
 			}
 		}
 		if !found{
-			this.Examples = append(this.Examples, message)
+			keep = append(keep, ex)
+		}
+		//cap this at 3 TODO:Maybe check for sameness/differentness and select the best examples
+		if len(keep) == 3{
+			break
 		}
 	}
+	this.Examples = keep
 }
 
 //this is so that the same pattern will have the same id
@@ -137,6 +162,10 @@ func GenerateIDFromPattern(pattern string) string{
 	sha := h.Sum(nil)  // "sha" is uint8 type, encoded in base16
 	shaStr := hex.EncodeToString(sha)  // String representation
 	return shaStr
+}
+
+func LogAnalysisFailed(lr LogRecord){
+	log.Printf("Error analyzing: %s", lr.Message)
 }
 
 func GetThreshold(numTotal int) int {

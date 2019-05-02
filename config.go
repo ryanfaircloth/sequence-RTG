@@ -33,6 +33,7 @@ var (
   		markSpaces bool
 		matchThresholdType     string
 		matchThresholdValue    string
+		belowThresholdPath     string
 	}
 
 	keymaps struct {
@@ -53,6 +54,7 @@ func ReadConfig(file string) error {
 		MarkSpaces 	bool
 		MatchThresholdType     string
 		MatchThresholdValue    string
+		BelowThresholdPath	   string
 
 		Analyzer struct {
 			Prekeys  map[string][]string
@@ -72,6 +74,7 @@ func ReadConfig(file string) error {
 	config.markSpaces  = configInfo.MarkSpaces
 	config.matchThresholdType  = configInfo.MatchThresholdType
 	config.matchThresholdValue  = configInfo.MatchThresholdValue
+	config.belowThresholdPath = configInfo.BelowThresholdPath
 
 	keymaps.keywords = make(map[string]TagType, 30)
 	keymaps.prekeys = make(map[string][]TagType, 30)

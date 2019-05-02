@@ -58,8 +58,9 @@ func ReadLogRecordJson(fname string) []LogRecord {
 
 //this method expects a json record in the format {"service": "service-name", message: "log message"}
 //eg {"service":"remctld","message":"error receiving initial token: unexpected end of file"}
-func ReadLogRecordTxtAsMap(fname string) map[string] LogRecordCollection {
+func ReadLogRecordTxtAsMap(fname string) (int, map[string] LogRecordCollection) {
 	var lr LogRecordCollection
+	var count = 0
 	var smap = make(map[string] LogRecordCollection)
 	iscan, ifile := OpenInputFile(fname)
 	defer ifile.Close()
@@ -84,12 +85,14 @@ func ReadLogRecordTxtAsMap(fname string) map[string] LogRecordCollection {
 			lr.Records = append(lr.Records, r)
 			smap[r.Service] = lr
 		}
+		count++
 	}
-	return smap
+	return count, smap
 }
 
-func ReadLogRecordJsonAsMap(fname string) map[string] LogRecordCollection {
+func ReadLogRecordJsonAsMap(fname string) (int, map[string] LogRecordCollection){
 	var lr LogRecordCollection
+	var count = 0
 	var smap = make(map[string] LogRecordCollection)
 	iscan, ifile := OpenInputFile(fname)
 	defer ifile.Close()
@@ -110,6 +113,7 @@ func ReadLogRecordJsonAsMap(fname string) map[string] LogRecordCollection {
 			lr.Records = append(lr.Records, r)
 			smap[r.Service] = lr
 		}
+		count++
 	}
-	return smap
+	return count, smap
 }
