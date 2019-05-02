@@ -300,86 +300,9 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 	anTime := time.Since(startTime)
 	fmt.Printf("Analysed in: %s\n", anTime)
 
-	var vals []int
+	val := syslog_ng.SaveToOutputFiles(informat, outformat, outfile, amap)
 
-	var txtFile *os.File
-	var xmlFile *os.File
-	var yamlFile *os.File
-	var pattDB syslog_ng.PatternDB
-
-	//open the below threshold file
-	btfile := sequence.OpenOutputFile(sequence.GetBelowThresholdPath())
-	defer btfile.Close()
-
-	outformats := strings.Split(outformat, "|")
-	//open the output files for saving data and add any headers
-	for _, fmat := range outformats{
-		if fmat == "" || fmat == "txt"{
-			//open the file for the text output
-			fname :=  outfile  + ".txt"
-			txtFile = sequence.OpenOutputFile(fname)
-			defer txtFile.Close()
-		}
-		if fmat == "yaml" {
-			//open the file for the xml output and write the header
-			fname :=  outfile  + ".yaml"
-			yamlFile = sequence.OpenOutputFile(fname)
-			defer xmlFile.Close()
-			fmt.Fprintf(yamlFile, "coloss::patterndb::simple::rule:\n")
-		}
-		if fmat == "xml" {
-			//open the file for the xml output and write the header
-			fname :=  outfile  + ".xml"
-			xmlFile = sequence.OpenOutputFile(fname)
-			defer xmlFile.Close()
-			fmt.Fprintf(xmlFile, "<?xml version='1.0' encoding='UTF-8'?>\n")
-			pattDB = syslog_ng.PatternDB{Version:"4", Pubdate:time.Now().Format("2006-01-02 15:04:05")}
-		}
-	}
-	//add the patterns and examples
-	for pat, result := range amap {
-		//only add patterns with a certain number of examples found
-		if result.ThresholdReached {
-			vals = append(vals, result.ExampleCount)
-			for _, fmat := range outformats {
-				if fmat == "" || fmat == "txt"{
-					fmt.Fprintf(txtFile, " %s\n %s\n %d log messages matched\n %s\n\n", result.PatternId, pat, result.ExampleCount, result.Examples[0])
-				}
-				if fmat == "yaml" {
-					result.Pattern = pat
-					y := syslog_ng.ConvertToYaml(result)
-					//write to the file line by line with a tab in front.
-					s := strings.Split(y,"\n")
-					for _, v := range s {
-						if len(v)>0{
-							fmt.Fprintf(yamlFile, "\t%s\n", v)
-						}
-					}
-				}
-				if fmat == "xml" {
-					result.Pattern = pat
-					pattDB = syslog_ng.AddToRuleset(result, pattDB)
-				}
-			}
-			//TODO: Make sure this below threshold logging can be turned off
-		// save the below threshold messages for processing later or as a log
-		}else{
-			for _, ex := range result.Examples{
-				fmt.Fprintf(btfile, "%s  %s\n",  result.Service, ex )
-			}
-		}
-	}
-
-	//finalise the files
-	for _, fmat := range outformats{
-		if fmat == "xml" {
-			//write to the file
-			y := syslog_ng.ConvertToXml(pattDB)
-			fmt.Fprintf(xmlFile, "\t%s\n", y)
-		}
-	}
-
-	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d passed the threshold, %d messages errored, time taken: %s", processed, len(amap), len(amap), len(vals), err_count, time.Since(startTime))
+	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d passed the threshold, %d messages errored, time taken: %s", processed, len(amap), len(amap), val, err_count, time.Since(startTime))
 }
 
 func scanMessage(scanner *sequence.Scanner, data string) sequence.Sequence {

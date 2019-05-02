@@ -6,8 +6,8 @@ import (
 )
 
 type LogRecord struct {
-	Service string
-	Message string
+	Service string `json:"service"`
+	Message string `json:"message"`
 }
 
 type LogRecordCollection struct {
