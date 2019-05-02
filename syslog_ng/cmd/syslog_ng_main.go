@@ -302,65 +302,81 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 
 	var vals []int
 
-	ofile := sequence.OpenOutputFile(outfile)
-	defer ofile.Close()
+	var txtFile *os.File
+	var xmlFile *os.File
+	var yamlFile *os.File
+	var pattDB syslog_ng.PatternDB
 
-	if outformat == "text" || outformat == "" {
-		for pat, stat := range amap {
-			//only add patterns with a certain number of examples found
-			if stat.ThresholdReached {
-				fmt.Fprintf(ofile, "%s\n s\n %d log messages matched\n %s\n\n", stat.PatternId, pat, stat.ExampleCount, stat.Examples[0])
-			}
-		}
-	}
-
+	//open the below threshold file
 	btfile := sequence.OpenOutputFile(sequence.GetBelowThresholdPath())
 	defer btfile.Close()
 
-	if outformat == "yaml"{
-		fmt.Fprintf(ofile, "coloss::patterndb::simple::rule:\n")
-		pattern := sequence.AnalyzerResult{}
-		for pat, stat := range amap {
-			pattern = stat
-			pattern.Pattern = pat
-			//only add patterns with a certain number of examples found
-			if stat.ThresholdReached {
-				y := syslog_ng.ConvertToYaml(pattern)
-				//write to the file line by line with a tab in front.
-				s := strings.Split(y,"\n")
-				for _, v := range s {
-					if len(v)>0{
-						fmt.Fprintf(ofile, "\t%s\n", v)
+	outformats := strings.Split(outformat, "|")
+	//open the output files for saving data and add any headers
+	for _, fmat := range outformats{
+		if fmat == "" || fmat == "txt"{
+			//open the file for the text output
+			fname :=  outfile  + ".txt"
+			txtFile = sequence.OpenOutputFile(fname)
+			defer txtFile.Close()
+		}
+		if fmat == "yaml" {
+			//open the file for the xml output and write the header
+			fname :=  outfile  + ".yaml"
+			yamlFile = sequence.OpenOutputFile(fname)
+			defer xmlFile.Close()
+			fmt.Fprintf(yamlFile, "coloss::patterndb::simple::rule:\n")
+		}
+		if fmat == "xml" {
+			//open the file for the xml output and write the header
+			fname :=  outfile  + ".xml"
+			xmlFile = sequence.OpenOutputFile(fname)
+			defer xmlFile.Close()
+			fmt.Fprintf(xmlFile, "<?xml version='1.0' encoding='UTF-8'?>\n")
+			pattDB = syslog_ng.PatternDB{Version:"4", Pubdate:time.Now().Format("2006-01-02 15:04:05")}
+		}
+	}
+	//add the patterns and examples
+	for pat, result := range amap {
+		//only add patterns with a certain number of examples found
+		if result.ThresholdReached {
+			vals = append(vals, result.ExampleCount)
+			for _, fmat := range outformats {
+				if fmat == "" || fmat == "txt"{
+					fmt.Fprintf(txtFile, " %s\n %s\n %d log messages matched\n %s\n\n", result.PatternId, pat, result.ExampleCount, result.Examples[0])
+				}
+				if fmat == "yaml" {
+					result.Pattern = pat
+					y := syslog_ng.ConvertToYaml(result)
+					//write to the file line by line with a tab in front.
+					s := strings.Split(y,"\n")
+					for _, v := range s {
+						if len(v)>0{
+							fmt.Fprintf(yamlFile, "\t%s\n", v)
+						}
 					}
 				}
-				vals = append(vals, stat.ExampleCount)
+				if fmat == "xml" {
+					result.Pattern = pat
+					pattDB = syslog_ng.AddToRuleset(result, pattDB)
+				}
+			}
+			//TODO: Make sure this below threshold logging can be turned off
+		// save the below threshold messages for processing later or as a log
+		}else{
+			for _, ex := range result.Examples{
+				fmt.Fprintf(btfile, "%s  %s\n",  result.Service, ex )
 			}
 		}
 	}
 
-	if outformat == "xml"{
-		fmt.Fprintf(ofile, "<?xml version='1.0' encoding='UTF-8'?>\n")
-		pattDB := syslog_ng.PatternDB{Version:"4", Pubdate:time.Now().Format("2006-01-02 15:04:05")}
-		pattern := sequence.AnalyzerResult{}
-		//new patterns
-		for pat, stat := range amap {
-			pattern = stat
-			pattern.Pattern = pat
-			//only add patterns with a certain number of examples found
-			if stat.ThresholdReached {
-				pattDB = syslog_ng.AddToRuleset(pattern, pattDB)
-				vals = append(vals, stat.ExampleCount)
-				//TODO: Make sure this below threshold logging can be turned off
-			}else{
-				for _, ex := range stat.Examples{
-					fmt.Fprintf(btfile, "%s  %s\n",  stat.Service, ex )
-				}
-			}
+	//finalise the files
+	for _, fmat := range outformats{
+		if fmat == "xml" {
+			//write to the file
+			y := syslog_ng.ConvertToXml(pattDB)
+			fmt.Fprintf(xmlFile, "\t%s\n", y)
 		}
-
-		//write to the file
-		y := syslog_ng.ConvertToXml(pattDB)
-		fmt.Fprintf(ofile, "\t%s\n", y)
 	}
 
 	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d passed the threshold, %d messages errored, time taken: %s", processed, len(amap), len(amap), len(vals), err_count, time.Since(startTime))
@@ -475,9 +491,9 @@ func main() {
 	sequenceCmd.PersistentFlags().StringVarP(&cfgfile, "config", "", "", "TOML-formatted configuration file, default checks ./sequence.toml, then sequence.toml in the same directory as program")
 	sequenceCmd.PersistentFlags().StringVarP(&format, "format", "", "", "format of the message to tokenize, can be 'json' or leave empty")
 	sequenceCmd.PersistentFlags().StringVarP(&infile, "input", "i", "", "input file, required, if - then stdin")
-	sequenceCmd.PersistentFlags().StringVarP(&outfile, "output", "o", "", "output file, if omitted, to stdout")
+	sequenceCmd.PersistentFlags().StringVarP(&outfile, "output", "o", "", "output file, if omitted, to stdout, if multiple out-formats will use the same file name with diff extensions")
 	sequenceCmd.PersistentFlags().StringVarP(&patfile, "patterns", "p", "", "existing patterns text file, can be a file or directory")
-	sequenceCmd.PersistentFlags().StringVarP(&outformat, "out-format", "f", "", "format of the output file, can be YAML or text, if empty it uses text, used by analyze")
+	sequenceCmd.PersistentFlags().StringVarP(&outformat, "out-format", "f", "", "format of the output file, can be YAML, XML or txt or a combo pipe separated eg txt|xml, if empty it uses text, used by analyze")
 	sequenceCmd.PersistentFlags().StringVarP(&informat, "in-format", "k", "", "format of the input data, can be JSON or text, if empty it uses text, used by analyze")
 
 	analyzeCmd.Run = analyze
