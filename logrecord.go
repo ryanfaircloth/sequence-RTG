@@ -24,7 +24,7 @@ func ReadLogRecord(fname string, format string) []LogRecord {
 	var r LogRecord
 	for iscan.Scan() {
 		message := iscan.Text()
-		if message == "q"{
+		if len(message) == 0 {
 			break
 		}
 		if len(message) == 0 || message[0] == '#' {
@@ -63,11 +63,10 @@ func ReadLogRecordAsMap(fname string, format string) (int, map[string] LogRecord
 	var r LogRecord
 	for iscan.Scan() {
 		message := iscan.Text()
-		// this is for the stdin to halt.
-		if message == "q"{
+		if len(message) == 0 {
 			break
 		}
-		if len(message) == 0 || message[0] == '#' {
+		if message[0] == '#' {
 			continue
 		}
 		if format == "json"{

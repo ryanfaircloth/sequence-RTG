@@ -229,12 +229,16 @@ func SaveToOutputFiles(informat string, outformat string, outfile string, amap m
 	var txtFile *os.File
 	var xmlFile *os.File
 	var yamlFile *os.File
+	var btFile *os.File
 	var pattDB PatternDB
 	var vals []int
 
-	//open the below threshold file
-	btfile := sequence.OpenOutputFile(sequence.GetBelowThresholdPath())
-	defer btfile.Close()
+	saveBT := len(sequence.GetBelowThresholdPath()) > 0
+	//open the below threshold file if it has a value
+	if saveBT{
+		btFile = sequence.OpenOutputFile(sequence.GetBelowThresholdPath())
+		defer btFile.Close()
+	}
 
 	outformats := strings.Split(outformat, "|")
 	//open the output files for saving data and add any headers
@@ -288,18 +292,16 @@ func SaveToOutputFiles(informat string, outformat string, outfile string, amap m
 			}
 			//TODO: Make sure this below threshold logging can be turned off
 			// save the below threshold messages for processing later or as a log
-		}else{
+		}else if saveBT{
 			for _, ex := range result.Examples{
 				if informat == "json"{
-					//output as json
 					lr := &sequence.LogRecord{Service:result.Service, Message:ex}
 					out, err := json.Marshal(lr)
 					if err == nil{
-						fmt.Fprintf(btfile, "%s\n", out)
+						fmt.Fprintf(btFile, "%s\n", out)
 					}
-					//fmt.Fprintf(btfile, "{\"service\":\"%s\",\"message\":\"%s\"}\n",  result.Service, ex )
 				}else{
-					fmt.Fprintf(btfile, "%s %s\n",  result.Service, ex )
+					fmt.Fprintf(btFile, "%s %s\n",  result.Service, ex )
 				}
 			}
 		}
