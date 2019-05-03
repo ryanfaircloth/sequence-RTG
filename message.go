@@ -118,7 +118,9 @@ func (this *Message) Tokenize() (Token, error) {
 		this.state.prevToken = tok
 		this.state.start += l + s
 
-		//this.state.start += this.skipSpace(this.Data[this.state.start:])
+		if tok.Type == TokenAlphaOnly{
+			tok.Type = TokenLiteral
+		}
 
 		return tok, nil
 	}
@@ -315,6 +317,7 @@ func (this *Message) tokenStep(i int, r rune) bool {
 			}else if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) {
 				this.state.tokenType = TokenLiteral
 			} else {
+				this.state.tokenType = TokenLiteral
 				this.state.tokenStop = true
 			}
 
@@ -372,6 +375,7 @@ func (this *Message) tokenStep(i int, r rune) bool {
 			} else if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) {
 				this.state.tokenType = TokenLiteral
 			} else {
+				this.state.tokenType = TokenLiteral
 				this.state.tokenStop = true
 			}
 		}

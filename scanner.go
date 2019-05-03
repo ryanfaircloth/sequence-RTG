@@ -134,11 +134,6 @@ func (this *Scanner) Scan(s string) (Sequence, error) {
 	spaceBefore := false
 	for tok, err = this.msg.Tokenize(); err == nil; tok, err = this.msg.Tokenize() {
 
-		//convert the alpha only tokens to literal token type
-		if tok.Type == TokenAlphaOnly{
-			tok.Type = TokenLiteral
-		}
-
 		//convert the alphanum tokens to string token type
 		if tok.Type == TokenAlphaNum || tok.Type == TokenId{
 			tok.Type = TokenLiteral
@@ -239,6 +234,11 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 		// glog.Debugln(keys)
 		// glog.Debugln(arrs)
 
+		//ignore space tokens completely for now, unsure if needed to be marked for json
+		if config.markSpaces && tok.Value == " "{
+			continue
+		}
+
 		switch state {
 		case jsonStart:
 			switch tok.Value {
@@ -276,7 +276,7 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 				state = jsonObjectEnd
 
 			default:
-				if tok.Type == TokenLiteral {
+				if tok.Type == TokenLiteral || tok.Type == TokenId{
 					//glog.Debugf("depth=%d, keys=%v", len(keys), keys)
 					switch len(keys) {
 					case 0:
@@ -291,6 +291,7 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 
 					tok.Value = keys[len(keys)-1]
 					tok.isKey = true
+					tok.Type = TokenLiteral
 					this.insertToken(tok)
 					state = jsonObjectKey
 
