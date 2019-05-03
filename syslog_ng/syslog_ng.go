@@ -240,7 +240,7 @@ func SaveToOutputFiles(informat string, outformat string, outfile string, amap m
 		defer btFile.Close()
 	}
 
-	outformats := strings.Split(outformat, ";")
+	outformats := strings.Split(outformat, ",")
 	//open the output files for saving data and add any headers
 	for _, fmat := range outformats{
 		if fmat == "" || fmat == "txt"{
