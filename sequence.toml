@@ -15,6 +15,10 @@ matchThresholdValue = "0.001"
 # to process later or general interest. If the path is empty, the save functionality will be turned off.
 belowThresholdPath = "C:\\data\\underthreshold.txt"
 
+# if using a threshold, and you save the messages for the patterns do not reach the threshold
+# this flag allows you to use them in the next run
+inclBelThresholdRecs = true
+
 timeFormats = [
 
 	"Mon Jan _2 15:04:05 2006",

@@ -79,7 +79,8 @@ func analyze(cmd *cobra.Command, args []string) {
 	startTime := time.Now()
 
 	//We load the file completely
-	lr := sequence.ReadLogRecord(infile, informat)
+	var lr []sequence.LogRecord
+	lr = sequence.ReadLogRecord(infile, informat, lr)
 
 	//get the threshold for including the pattern in the
 	//output files
@@ -114,7 +115,6 @@ func analyze(cmd *cobra.Command, args []string) {
 	// to determine the unique patterns
 	err_count := 0
 	processed := 0
-	var vals []int
 
 	for _, l := range lr {
 		//TODO Fix this so it doesn't scan twice or parse twice
@@ -146,91 +146,18 @@ func analyze(cmd *cobra.Command, args []string) {
 				if !ok {
 					stat = sequence.AnalyzerResult{}
 				}
-				sequence.AddExampleToAnalyzerResult(&stat, l.Message, threshold)
+				sequence.AddExampleToAnalyzerResult(&stat, l, threshold)
 				stat.PatternId = sequence.GenerateIDFromPattern(pat)
 				stat.ExampleCount++
-				stat.Service = l.Service
 				amap[pat] = stat
 			}
 		}
 		processed++
 	}
 
-	ofile := sequence.OpenOutputFile(outfile)
-	defer ofile.Close()
+	val := syslog_ng.SaveToOutputFiles(informat, outformat, outfile, amap)
 
-	if outformat == "text" || outformat == ""{
-		for pat, stat := range pmap {
-			fmt.Fprintf(ofile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.cnt, stat.ex)
-		}
-
-		for pat, stat := range amap {
-			fmt.Fprintf(ofile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.ExampleCount, stat.Examples[0])
-		}
-	}
-
-	if outformat == "yaml"{
-		fmt.Fprintf(ofile, "coloss::patterndb::simple::rule:\n")
-		pattern := sequence.AnalyzerResult{}
-		for pat, stat := range pmap {
-			pattern = sequence.AnalyzerResult{Pattern:pat, ExampleCount: stat.cnt, Service:stat.svc}
-			pattern.Examples = append(pattern.Examples, stat.ex)
-			y := syslog_ng.ConvertToYaml(pattern)
-			//write to the file line by line with a tab in front.
-			s := strings.Split(y,"\n")
-			for _, v := range s {
-				if len(v)>0{
-					fmt.Fprintf(ofile, "\t%s\n", v)
-				}
-
-			}
-		}
-		for pat, stat := range amap {
-			pattern = sequence.AnalyzerResult{stat.PatternId, pat, stat.ExampleCount, stat.Examples, stat.Service, false}
-			//only add patterns with a certain number of examples found
-			if threshold < stat.ExampleCount {
-				y := syslog_ng.ConvertToYaml(pattern)
-				//write to the file line by line with a tab in front.
-				s := strings.Split(y,"\n")
-				for _, v := range s {
-					if len(v)>0{
-						fmt.Fprintf(ofile, "\t%s\n", v)
-					}
-
-				}
-				vals = append(vals, stat.ExampleCount)
-			}
-
-		}
-	}
-
-	if outformat == "xml"{
-		fmt.Fprintf(ofile, "<?xml version='1.0' encoding='UTF-8'?>\n")
-		pattDB := syslog_ng.PatternDB{Version:"4", Pubdate:time.Now().Format("2006-01-02 15:04:05")}
-		pattern := sequence.AnalyzerResult{}
-
-		//existing patterns
-		for pat, stat := range pmap {
-			pattern = sequence.AnalyzerResult{Pattern:pat, ExampleCount: stat.cnt, Service:stat.svc}
-			pattern.Examples = append(pattern.Examples, stat.ex)
-			pattDB = syslog_ng.AddToRuleset(pattern, pattDB)
-
-		}
-		//new patterns
-		for pat, stat := range amap {
-			pattern = sequence.AnalyzerResult{stat.PatternId, pat, stat.ExampleCount, stat.Examples, stat.Service, false}
-			if threshold < stat.ExampleCount{
-				pattDB = syslog_ng.AddToRuleset(pattern, pattDB)
-				vals = append(vals, stat.ExampleCount)
-			}
-		}
-
-		//write to the file
-		y := syslog_ng.ConvertToXml(pattDB)
-		fmt.Fprintf(ofile, "\t%s\n", y)
-	}
-
-	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d passed the threshold and were added to the xml/yaml file, %d messages errored\n", len(lr), len(pmap)+len(amap), len(amap), len(vals), err_count)
+	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d passed the threshold and were added to the xml/yaml file, %d messages errored\n", len(lr), len(pmap)+len(amap), len(amap), val, err_count)
 	anTime := time.Since(startTime)
 	fmt.Printf("Analysed in: %s\n", anTime)
 }
@@ -247,9 +174,16 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 	scanner := sequence.NewScanner()
 
 	startTime := time.Now()
-
+	lrMap := make(map[string] sequence.LogRecordCollection)
+	var total = 0
 	//We load the file completely
-	total, lrMap := sequence.ReadLogRecordAsMap(infile, informat)
+	total, lrMap = sequence.ReadLogRecordAsMap(infile, informat, lrMap)
+
+	if sequence.GetIncludeBelowThreshold() && len(sequence.GetBelowThresholdPath()) > 0{
+		var reused = 0
+		reused, lrMap = sequence.ReadLogRecordAsMap(sequence.GetBelowThresholdPath(), informat, lrMap)
+		total += reused
+	}
 
 	//get the threshold for including the pattern in the
 	//output files
@@ -283,15 +217,14 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 				err_count++
 			} else {
 				pat := strings.TrimSpace(aseq.String())
-				stat, ok := amap[pat]
+				ar, ok := amap[pat]
 				if !ok {
-					stat = sequence.AnalyzerResult{}
+					ar = sequence.AnalyzerResult{}
 				}
-				sequence.AddExampleToAnalyzerResult(&stat, l.Message, threshold)
-				stat.PatternId = sequence.GenerateIDFromPattern(pat)
-				stat.ExampleCount++
-				stat.Service = l.Service
-				amap[pat] = stat
+				sequence.AddExampleToAnalyzerResult(&ar, l, threshold)
+				ar.PatternId = sequence.GenerateIDFromPattern(pat)
+				ar.ExampleCount++
+				amap[pat] = ar
 			}
 			processed++
 		}

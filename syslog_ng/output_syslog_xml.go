@@ -82,7 +82,7 @@ func AddToRuleset(pattern sequence.AnalyzerResult, document PatternDB) PatternDB
 	rule := buildRuleXML(pattern)
 	//get the ruleset name for the example
 	//it will be the service value
-	rsName := pattern.Service
+	rsName := pattern.Examples[0].Service
 	found := false
 	//look in the ruleset if it exists already
 	for i, rls := range document.Rulesets {
@@ -124,8 +124,8 @@ func buildRuleXML (result sequence.AnalyzerResult) XRule {
 	var t XTestMessage
 	for _, ex := range result.Examples{
 		e = XExample{}
-		t.TestMessage = ex
-		t.Program = result.Service
+		t.TestMessage = ex.Message
+		t.Program = ex.Service
 		e.TestMessage = t
 		rule.Examples.Examples = append(rule.Examples.Examples, e)
 	}

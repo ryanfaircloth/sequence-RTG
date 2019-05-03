@@ -34,6 +34,7 @@ var (
 		matchThresholdType     string
 		matchThresholdValue    string
 		belowThresholdPath     string
+		inclBelThresholdRecs   bool
 	}
 
 	keymaps struct {
@@ -55,6 +56,7 @@ func ReadConfig(file string) error {
 		MatchThresholdType     string
 		MatchThresholdValue    string
 		BelowThresholdPath	   string
+		InclBelThresholdRecs   bool
 
 		Analyzer struct {
 			Prekeys  map[string][]string
@@ -75,6 +77,7 @@ func ReadConfig(file string) error {
 	config.matchThresholdType  = configInfo.MatchThresholdType
 	config.matchThresholdValue  = configInfo.MatchThresholdValue
 	config.belowThresholdPath = configInfo.BelowThresholdPath
+	config.inclBelThresholdRecs = configInfo.InclBelThresholdRecs
 
 	keymaps.keywords = make(map[string]TagType, 30)
 	keymaps.prekeys = make(map[string][]TagType, 30)
@@ -132,6 +135,10 @@ func ReadConfig(file string) error {
 
 func GetBelowThresholdPath() string{
 	return config.belowThresholdPath
+}
+
+func GetIncludeBelowThreshold() bool{
+	return config.inclBelThresholdRecs
 }
 
 func predefineAnalyzerTags(f string, t TagType) {

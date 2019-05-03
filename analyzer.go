@@ -86,8 +86,7 @@ type AnalyzerResult struct {
 	PatternId string
 	Pattern string
 	ExampleCount int
-	Examples []string
-	Service string
+	Examples []LogRecord
 	ThresholdReached bool
 }
 
@@ -113,7 +112,7 @@ type stackAnalyzerNode struct {
 	score int
 }
 
-func AddExampleToAnalyzerResult(this *AnalyzerResult, message string, threshold int){
+func AddExampleToAnalyzerResult(this *AnalyzerResult, lr LogRecord, threshold int){
 	if this.ThresholdReached{
 		//nothing to here
 		return
@@ -123,12 +122,12 @@ func AddExampleToAnalyzerResult(this *AnalyzerResult, message string, threshold 
 		TruncateExamples(this)
 		this.ThresholdReached = true
 	}else{
-		this.Examples = append(this.Examples, message)
+		this.Examples = append(this.Examples, lr)
 	}
 }
 
 func TruncateExamples(this *AnalyzerResult){
-	var keep []string
+	var keep []LogRecord
 	var found = false
 	for i, ex := range this.Examples{
 		//append the first one
@@ -137,7 +136,7 @@ func TruncateExamples(this *AnalyzerResult){
 			continue
 		}
 		for _, k := range keep{
-			if k == ex{
+			if k.Message == ex.Message{
 				found = true
 				break
 			}

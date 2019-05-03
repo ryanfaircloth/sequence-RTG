@@ -3,11 +3,13 @@ package sequence
 import (
 	"encoding/json"
 	"strings"
+	"time"
 )
 
 type LogRecord struct {
 	Service string `json:"service"`
 	Message string `json:"message"`
+	DateFirstAnalysed time.Time `json:"dateFirstAnalyzed"`
 }
 
 type LogRecordCollection struct {
@@ -17,8 +19,7 @@ type LogRecordCollection struct {
 
 //if json, this method expects record in the format {"service": "service-name", message: "log message"}
 //eg {"service":"remctld","message":"error receiving initial token: unexpected end of file"}
-func ReadLogRecord(fname string, format string) []LogRecord {
-	var lr []LogRecord
+func ReadLogRecord(fname string, format string, lr []LogRecord) []LogRecord {
 	iscan, ifile := OpenInputFile(fname)
 	defer ifile.Close()
 	var r LogRecord
@@ -54,10 +55,9 @@ func ReadLogRecord(fname string, format string) []LogRecord {
 
 //if json, this method expects record in the format {"service": "service-name", message: "log message"}
 //eg {"service":"remctld","message":"error receiving initial token: unexpected end of file"}
-func ReadLogRecordAsMap(fname string, format string) (int, map[string] LogRecordCollection){
+func ReadLogRecordAsMap(fname string, format string, smap map[string] LogRecordCollection) (int, map[string] LogRecordCollection){
 	var lr LogRecordCollection
 	var count = 0
-	var smap = make(map[string] LogRecordCollection)
 	iscan, ifile := OpenInputFile(fname)
 	defer ifile.Close()
 	var r LogRecord
@@ -72,6 +72,9 @@ func ReadLogRecordAsMap(fname string, format string) (int, map[string] LogRecord
 		if format == "json"{
 			r = LogRecord{}
 			_ = json.Unmarshal([]byte(message), &r)
+			if r.DateFirstAnalysed.IsZero(){
+				r.DateFirstAnalysed = time.Now()
+			}
 			//check for an empty service and set it to none
 			if r.Service == ""{
 				r.Service = "none"

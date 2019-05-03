@@ -240,7 +240,7 @@ func SaveToOutputFiles(informat string, outformat string, outfile string, amap m
 		defer btFile.Close()
 	}
 
-	outformats := strings.Split(outformat, "|")
+	outformats := strings.Split(outformat, ";")
 	//open the output files for saving data and add any headers
 	for _, fmat := range outformats{
 		if fmat == "" || fmat == "txt"{
@@ -272,7 +272,7 @@ func SaveToOutputFiles(informat string, outformat string, outfile string, amap m
 			vals = append(vals, result.ExampleCount)
 			for _, fmat := range outformats {
 				if fmat == "" || fmat == "txt"{
-					fmt.Fprintf(txtFile, " %s\n %s\n %d log messages matched\n %s\n\n", result.PatternId, pat, result.ExampleCount, result.Examples[0])
+					fmt.Fprintf(txtFile, " %s\n %s\n %d log messages matched\n %s\n\n", result.PatternId, pat, result.ExampleCount, result.Examples[0].Message)
 				}
 				if fmat == "yaml" {
 					result.Pattern = pat
@@ -293,15 +293,14 @@ func SaveToOutputFiles(informat string, outformat string, outfile string, amap m
 			//TODO: Make sure this below threshold logging can be turned off
 			// save the below threshold messages for processing later or as a log
 		}else if saveBT{
-			for _, ex := range result.Examples{
+			for _, lr := range result.Examples{
 				if informat == "json"{
-					lr := &sequence.LogRecord{Service:result.Service, Message:ex}
 					out, err := json.Marshal(lr)
 					if err == nil{
 						fmt.Fprintf(btFile, "%s\n", out)
 					}
 				}else{
-					fmt.Fprintf(btFile, "%s %s\n",  result.Service, ex )
+					fmt.Fprintf(btFile, "%s %s\n",  lr.Service, lr.Message)
 				}
 			}
 		}
