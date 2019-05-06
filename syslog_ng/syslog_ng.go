@@ -242,23 +242,30 @@ func SaveToOutputFiles(informat string, outformat string, outfile string, amap m
 
 	outformats := strings.Split(outformat, ",")
 	//open the output files for saving data and add any headers
+	var fname string
 	for _, fmat := range outformats{
 		if fmat == "" || fmat == "txt"{
 			//open the file for the text output
-			fname :=  outfile  + ".txt"
+			if outfile != ""{
+				fname =  outfile  + ".txt"
+			}
 			txtFile = sequence.OpenOutputFile(fname)
 			defer txtFile.Close()
 		}
 		if fmat == "yaml" {
 			//open the file for the xml output and write the header
-			fname :=  outfile  + ".yaml"
+			if outfile != ""{
+				fname =  outfile  + ".yaml"
+			}
 			yamlFile = sequence.OpenOutputFile(fname)
 			defer xmlFile.Close()
 			fmt.Fprintf(yamlFile, "coloss::patterndb::simple::rule:\n")
 		}
 		if fmat == "xml" {
 			//open the file for the xml output and write the header
-			fname :=  outfile  + ".xml"
+			if outfile != ""{
+				fname =  outfile  + ".xml"
+			}
 			xmlFile = sequence.OpenOutputFile(fname)
 			defer xmlFile.Close()
 			fmt.Fprintf(xmlFile, "<?xml version='1.0' encoding='UTF-8'?>\n")

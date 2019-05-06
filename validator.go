@@ -30,5 +30,12 @@ func ValidateOutformat(outformat string) string {
 }
 
 //
+func ValidateOutFormatWithFile(outfile string, outformat string) string {
+	outformats := strings.Split(outformat, ",")
+	if len(outformats) > 1 && outfile == ""{
+		return "Stdout can only supported one output format type, please select only one."
+	}
+	return ""
+}
 
 

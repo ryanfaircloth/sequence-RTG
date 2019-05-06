@@ -68,19 +68,7 @@ func profile() {
 
 func analyze(cmd *cobra.Command, args []string) {
 	readConfig()
-	if infile == "" {
-		log.Fatal("Invalid input file specified")
-	}
-	informat = strings.ToLower(informat)
-	err := sequence.ValidateInformat(informat)
-	if err != "" {
-		log.Fatal(err)
-	}
-	outformat = strings.ToLower(outformat)
-	err = sequence.ValidateOutformat(outformat)
-	if err != "" {
-		log.Fatal(err)
-	}
+	validateInputs("analyze")
 	profile()
 	parser := buildParser()
 	analyzer := sequence.NewAnalyzer()
@@ -174,19 +162,7 @@ func analyze(cmd *cobra.Command, args []string) {
 
 func analyzebyservice(cmd *cobra.Command, args []string) {
 	readConfig()
-	if infile == "" {
-		log.Fatal("Invalid input file specified")
-	}
-	informat = strings.ToLower(informat)
-	err := sequence.ValidateInformat(informat)
-	if err != "" {
-		log.Fatal(err)
-	}
-	outformat = strings.ToLower(outformat)
-	err = sequence.ValidateOutformat(outformat)
-	if err != "" {
-		log.Fatal(err)
-	}
+    validateInputs("analyze")
 	profile()
 	parser := buildParser()
 	analyzer := sequence.NewAnalyzer()
@@ -256,6 +232,37 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 
 	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d passed the threshold, %d messages errored, time taken: %s", processed, len(amap), len(amap), val, err_count, time.Since(startTime))
 }
+
+func validateInputs(commandType string) {
+	var errors string
+	switch commandType{
+	case "analyze":
+		//set the formats to lower before we start
+		informat = strings.ToLower(informat)
+		outformat = strings.ToLower(outformat)
+
+		//validate input file
+		if infile == "" {
+			errors = errors + "Invalid input file specified\n"
+		}
+		err := sequence.ValidateInformat(informat)
+		if err != "" {
+			errors = errors + err + "\n"
+		}
+		err = sequence.ValidateOutformat(outformat)
+		if err != "" {
+			errors = errors + err + "\n"
+		}
+		err = sequence.ValidateOutFormatWithFile(outfile, outformat)
+		if err != "" {
+			errors = errors + err + "\n"
+		}
+	}
+	if errors != ""{
+		log.Fatal(errors)
+	}
+}
+
 
 func scanMessage(scanner *sequence.Scanner, data string) sequence.Sequence {
 	var (
