@@ -4,82 +4,97 @@ import (
 	"gopkg.in/yaml.v3"
 	"log"
 	"sequence"
-	"strings"
+	"time"
 )
 
-type YRule struct{
-	Details YRuleDetails `yaml:"details"`
+type YPatternDB struct{
+	Rules map[string]YRule `yaml:"coloss::patterndb::simple::rule"`
+	Rulesets map[string]YRuleset `yaml:"coloss::patterndb::simple::ruleset"`
 }
 
 //This represents a rule section in the sys-log ng yaml file
-type YRuleDetails struct{
-	Ruleset  string      `yaml:"ruleset"`
-	Patterns []string    `yaml:"patterns"`
-	Examples []string    `yaml:"examples"`
-	Values   YRuleValues `yaml:"values"`
-	ID       string      `yaml:"id,omitempty"`
+type YRule struct{
+	Ruleset  string      		`yaml:"ruleset"`
+	Patterns []string    		`yaml:"patterns"`
+	Examples []YRuleExample   	`yaml:"examples"`
+	Values   YRuleValues 		`yaml:"values"`
+	ID       string      		`yaml:"id,omitempty"`
 }
 
 type YRuleValues struct {
-	Seqmatches int `yaml:"seq-matches"`
-	New bool `yaml:"seq-new"`
+	Seqmatches int 				`yaml:"seq-matches"`
+	New bool 					`yaml:"seq-new"`
+	DateCreated string 			`yaml:"seq-created"`
+	DateLastMatched string 		`yaml:"seq-last-match"`
 }
 
 //This represents a ruleset section in the sys-log ng yaml file
 type YRuleset struct{
-	ID string
 	Pubdate string
-	Parser int
+	ID string					`yaml:"id,omitempty"`
+	Parser string
+	Patterns []string    		`yaml:"patterns"`
 }
 
-//This method takes the path to the file output by the analyzer as in and
-//converts it to Yaml and saves in the out path.
-func ConvertToYaml(pattern sequence.AnalyzerResult) string {
+type YRuleExample struct {
+	Program string 				`yaml:"program"`
+	TestMessage string 			`yaml:"test-message"`
+}
+
+func ConvertToYaml(db YPatternDB) string {
 	//check if the pattern exists
-	var rule YRule
-	if !checkIfNew(pattern){
-		rule = buildRule(pattern)
-	}
 	// turn the rule into YAML format
-	y, _ := yaml.Marshal(rule)
-	//add the id field
-	x := AddIdField(string(y), rule.Details.ID)
-	return x
+	y, _ := yaml.Marshal(db)
+	return string(y)
 }
 
-//for syslog-ng we need to customise how the rule id
-//is represented, easier to modify this small part than
-//to build a complete custom Marshal function
-func AddIdField(y string, id string) string{
-	//s := strings.Split(y,"\n")
-	//remove the id: qualifier
-	//remove the details header
-	y = strings.Replace(y, "details", id, 1)
-	return y
+func AddToYaml(pattern sequence.AnalyzerResult, db YPatternDB) YPatternDB{
+	//every pattern should be unique
+	r := buildRule(pattern)
+	db.Rules[r.ID] = r
+
+	//look in the ruleset if it exists already
+	rsName := pattern.Examples[0].Service
+	_, ok := db.Rulesets[rsName]
+	if !ok {
+		rs := buildRuleset(pattern)
+		db.Rulesets[rsName] = rs
+	}
+	return db
 }
 
 func buildRule (result sequence.AnalyzerResult) YRule {
 	var err error
 	rule := YRule{}
-	rule.Details.Values.Seqmatches = result.ExampleCount
+	rule.Values.Seqmatches = result.ExampleCount
 	if err != nil {
 		log.Fatal(err)
 	}
-	//get the ruleset from the example (first string)
-	s := strings.Fields(result.Examples[0].Message)
-	rule.Details.Ruleset =	s[0]
-	rule.Details.Patterns = append(rule.Details.Patterns, replaceTags(result.Pattern))
-	rule.Details.Examples = append(rule.Details.Examples, result.Examples[0].Message)
-	rule.Details.Values.New = true
+	//get the ruleset from the example (service)
+	rule.Ruleset =	result.Examples[0].Service
+	rule.Patterns = append(rule.Patterns, replaceTags(result.Pattern))
+	for _, ex := range result.Examples {
+		example := YRuleExample{ex.Service, ex.Message}
+		rule.Examples = append(rule.Examples, example)
+	}
+	rule.Values.New = true
+	rule.Values.DateCreated = time.Now().Format("2006-01-02")
+	rule.Values.DateLastMatched = time.Now().Format("2006-01-02")
 	//create a new UUID
-	rule.Details.ID = result.PatternId
+	rule.ID = result.PatternId
 	return rule
 }
 
+func buildRuleset (result sequence.AnalyzerResult) YRuleset {
+	rs := YRuleset{}
+	rs.Pubdate = time.Now().Format("2006-01-02")
+	//get the ruleset from the example (service)
+	rs.Parser =	"sequence"
+	rsName := result.Examples[0].Service
+	rs.Patterns = append(rs.Patterns, rsName)
+	//create a new UUID
+	rs.ID = sequence.GenerateIDFromPattern(rsName)
+	return rs
+}
 
-
-//convert each pattern, check if it exists, ignore if yes, add if no
-//do a formatting check
-//if ok save a new file, else rename _old and send alert
-//auto check in to repo ?
 

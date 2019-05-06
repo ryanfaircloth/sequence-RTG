@@ -5,10 +5,11 @@ import (
 	"log"
 	"sequence"
 	"strconv"
+	"time"
 )
 
 //This represents a ruleset section in the sys-log ng yaml file
-type PatternDB struct{
+type XPatternDB struct{
 	XMLName  xml.Name `xml:"patterndb"`
 	Version string `xml:"version,attr"`
 	Pubdate string `xml:"pub_date,attr"`
@@ -71,13 +72,13 @@ type XRuleValue struct {
 
 //This method takes the path to the file output by the analyzer as in and
 //converts it to Yaml and saves in the out path.
-func ConvertToXml(document PatternDB) string {
+func ConvertToXml(document XPatternDB) string {
 	// turn the document into XML format
 	y, _ := xml.MarshalIndent(document, "  ", "   ")
 	return string(y)
 }
 
-func AddToRuleset(pattern sequence.AnalyzerResult, document PatternDB) PatternDB {
+func AddToRuleset(pattern sequence.AnalyzerResult, document XPatternDB) XPatternDB {
 	//build the rule as XML
 	rule := buildRuleXML(pattern)
 	//get the ruleset name for the example
@@ -116,6 +117,10 @@ func buildRuleXML (result sequence.AnalyzerResult) XRule {
 	rule.Values.Values = append(rule.Values.Values, count)
 	new := XRuleValue{Name:"seq-new", Value: "true"}
 	rule.Values.Values = append(rule.Values.Values, new)
+	dc := XRuleValue{Name:"seq-created", Value: time.Now().Format("2006-01-02")}
+	rule.Values.Values = append(rule.Values.Values, dc)
+	dlm := XRuleValue{Name:"seq-last-match", Value: time.Now().Format("2006-01-02")}
+	rule.Values.Values = append(rule.Values.Values, dlm)
 	if err != nil {
 		log.Fatal(err)
 	}

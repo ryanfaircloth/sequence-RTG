@@ -230,7 +230,8 @@ func SaveToOutputFiles(informat string, outformat string, outfile string, amap m
 	var xmlFile *os.File
 	var yamlFile *os.File
 	var btFile *os.File
-	var pattDB PatternDB
+	var xPattDB XPatternDB
+	var yPattDB YPatternDB
 	var vals []int
 
 	saveBT := len(sequence.GetBelowThresholdPath()) > 0
@@ -258,8 +259,10 @@ func SaveToOutputFiles(informat string, outformat string, outfile string, amap m
 				fname =  outfile  + ".yaml"
 			}
 			yamlFile = sequence.OpenOutputFile(fname)
-			defer xmlFile.Close()
-			fmt.Fprintf(yamlFile, "coloss::patterndb::simple::rule:\n")
+			defer yamlFile.Close()
+			yPattDB = YPatternDB{}
+			yPattDB.Rulesets = make(map[string]YRuleset)
+			yPattDB.Rules = make(map[string]YRule)
 		}
 		if fmat == "xml" {
 			//open the file for the xml output and write the header
@@ -269,7 +272,7 @@ func SaveToOutputFiles(informat string, outformat string, outfile string, amap m
 			xmlFile = sequence.OpenOutputFile(fname)
 			defer xmlFile.Close()
 			fmt.Fprintf(xmlFile, "<?xml version='1.0' encoding='UTF-8'?>\n")
-			pattDB = PatternDB{Version:"4", Pubdate:time.Now().Format("2006-01-02 15:04:05")}
+			xPattDB = XPatternDB{Version: "4", Pubdate:time.Now().Format("2006-01-02 15:04:05")}
 		}
 	}
 	//add the patterns and examples
@@ -283,18 +286,11 @@ func SaveToOutputFiles(informat string, outformat string, outfile string, amap m
 				}
 				if fmat == "yaml" {
 					result.Pattern = pat
-					y := ConvertToYaml(result)
-					//write to the file line by line with a tab in front.
-					s := strings.Split(y,"\n")
-					for _, v := range s {
-						if len(v)>0{
-							fmt.Fprintf(yamlFile, "\t%s\n", v)
-						}
-					}
+					yPattDB = AddToYaml(result, yPattDB)
 				}
 				if fmat == "xml" {
 					result.Pattern = pat
-					pattDB = AddToRuleset(result, pattDB)
+					xPattDB = AddToRuleset(result, xPattDB)
 				}
 			}
 		}else if saveBT{
@@ -313,10 +309,15 @@ func SaveToOutputFiles(informat string, outformat string, outfile string, amap m
 
 	//finalise the files
 	for _, fmat := range outformats{
+		if fmat == "yaml" {
+			//write to the file
+			y := ConvertToYaml(yPattDB)
+			fmt.Fprintf(yamlFile, "%s", y)
+		}
 		if fmat == "xml" {
 			//write to the file
-			y := ConvertToXml(pattDB)
-			fmt.Fprintf(xmlFile, "\t%s\n", y)
+			x := ConvertToXml(xPattDB)
+			fmt.Fprintf(xmlFile, "%s", x)
 		}
 	}
 
