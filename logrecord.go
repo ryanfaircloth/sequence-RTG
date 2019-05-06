@@ -85,8 +85,12 @@ func ReadLogRecordAsMap(fname string, format string, smap map[string] LogRecordC
 			s := k[0]
 			//we need to remove the service from the remaining message
 			i := len(s) + 1
-			m := message[i:]
-			r = LogRecord{Service: s, Message: m}
+			if i < len(message){
+				m := message[i:]
+				r = LogRecord{Service: s, Message: m}
+			} else{
+				r = LogRecord{Service: s, Message: ""}
+			}
 		}
 		//look for the service in the map
 		if val, ok := smap[r.Service]; ok {
