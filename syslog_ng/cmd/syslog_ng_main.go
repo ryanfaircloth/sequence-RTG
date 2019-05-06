@@ -71,6 +71,16 @@ func analyze(cmd *cobra.Command, args []string) {
 	if infile == "" {
 		log.Fatal("Invalid input file specified")
 	}
+	informat = strings.ToLower(informat)
+	err := sequence.ValidateInformat(informat)
+	if err != "" {
+		log.Fatal(err)
+	}
+	outformat = strings.ToLower(outformat)
+	err = sequence.ValidateOutformat(outformat)
+	if err != "" {
+		log.Fatal(err)
+	}
 	profile()
 	parser := buildParser()
 	analyzer := sequence.NewAnalyzer()
@@ -164,9 +174,18 @@ func analyze(cmd *cobra.Command, args []string) {
 
 func analyzebyservice(cmd *cobra.Command, args []string) {
 	readConfig()
-
 	if infile == "" {
 		log.Fatal("Invalid input file specified")
+	}
+	informat = strings.ToLower(informat)
+	err := sequence.ValidateInformat(informat)
+	if err != "" {
+		log.Fatal(err)
+	}
+	outformat = strings.ToLower(outformat)
+	err = sequence.ValidateOutformat(outformat)
+	if err != "" {
+		log.Fatal(err)
 	}
 	profile()
 	parser := buildParser()
@@ -345,12 +364,11 @@ func main() {
 	)
 
 	sequenceCmd.PersistentFlags().StringVarP(&cfgfile, "config", "", "", "TOML-formatted configuration file, default checks ./sequence.toml, then sequence.toml in the same directory as program")
-	sequenceCmd.PersistentFlags().StringVarP(&format, "format", "", "", "format of the message to tokenize, can be 'json' or leave empty")
 	sequenceCmd.PersistentFlags().StringVarP(&infile, "input", "i", "", "input file, required, if - then stdin")
 	sequenceCmd.PersistentFlags().StringVarP(&outfile, "output", "o", "", "output file, if omitted, to stdout, if multiple out-formats will use the same file name with diff extensions")
 	sequenceCmd.PersistentFlags().StringVarP(&patfile, "patterns", "p", "", "existing patterns text file, can be a file or directory")
-	sequenceCmd.PersistentFlags().StringVarP(&outformat, "out-format", "f", "", "format of the output file, can be YAML, XML or txt or a combo pipe separated eg txt|xml, if empty it uses text, used by analyze")
-	sequenceCmd.PersistentFlags().StringVarP(&informat, "in-format", "k", "", "format of the input data, can be JSON or text, if empty it uses text, used by analyze")
+	sequenceCmd.PersistentFlags().StringVarP(&outformat, "out-format", "f", "", "format of the output file, can be yaml, xml or txt or a combo comma separated eg txt,xml, if empty it uses text, used by analyze")
+	sequenceCmd.PersistentFlags().StringVarP(&informat, "in-format", "k", "", "format of the input data, can be json or text, if empty it uses text, used by analyze")
 
 	analyzeCmd.Run = analyze
 	analyzeByServiceCmd.Run = analyzebyservice

@@ -44,8 +44,10 @@ func ReadLogRecord(fname string, format string, lr []LogRecord) []LogRecord {
 			s := k[0]
 			//we need to remove the service from the remaining message
 			i := len(s) + 1
-			m := message[i:]
-			r = LogRecord{Service: s, Message: m}
+			if i < len(message){
+				m := message[i:]
+				r = LogRecord{Service: s, Message: m}
+			}
 		}
 		lr = append(lr, r)
 	}

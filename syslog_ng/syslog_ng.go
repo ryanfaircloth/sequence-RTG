@@ -290,8 +290,6 @@ func SaveToOutputFiles(informat string, outformat string, outfile string, amap m
 					pattDB = AddToRuleset(result, pattDB)
 				}
 			}
-			//TODO: Make sure this below threshold logging can be turned off
-			// save the below threshold messages for processing later or as a log
 		}else if saveBT{
 			for _, lr := range result.Examples{
 				if informat == "json"{
