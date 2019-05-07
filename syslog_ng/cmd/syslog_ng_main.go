@@ -163,6 +163,8 @@ func analyze(cmd *cobra.Command, args []string) {
 func analyzebyservice(cmd *cobra.Command, args []string) {
 	readConfig()
     validateInputs("analyze")
+	//sequence.GetPatternsFromDatabase()
+	//sequence.GetServicesFromDatabase()
 	profile()
 	parser := buildParser()
 	analyzer := sequence.NewAnalyzer()
@@ -228,6 +230,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 	anTime := time.Since(startTime)
 	fmt.Printf("Analysed in: %s\n", anTime)
 
+	syslog_ng.SaveToDatabase(amap)
 	val := syslog_ng.SaveToOutputFiles(informat, outformat, outfile, amap)
 
 	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d passed the threshold, %d messages errored, time taken: %s", processed, len(amap), len(amap), val, err_count, time.Since(startTime))

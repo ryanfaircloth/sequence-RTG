@@ -3,6 +3,7 @@ package syslog_ng
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/volatiletech/null"
 	"index/suffixarray"
 	"os"
 	"sequence"
@@ -221,6 +222,26 @@ func SortandSaveLogMessages(lr []sequence.LogRecord, fname string  ){
 	defer ofile.Close()
 	for _, r := range lr{
 		fmt.Fprintf(ofile, "%s  %s\n",  r.Service, r.Message )
+	}
+}
+
+func SaveToDatabase(amap map[string]sequence.AnalyzerResult) {
+	//add the patterns and examples
+	for pat, result := range amap {
+		result.Pattern = pat
+		//start with the service, so not to cause a primary key violation
+		sid := sequence.GenerateIDFromPattern(result.Examples[0].Service)
+		if !sequence.CheckServiceExists(sid){
+			sequence.AddService(sid,result.Examples[0].Service )
+		}
+
+		//now lets check for the pattern
+		if !sequence.CheckPatternExists(result.PatternId){
+			var custom null.String
+			custom.String = replaceTags(pat)
+			custom.Valid = true
+			sequence.AddPattern(result, sid, custom)
+		}
 	}
 }
 
