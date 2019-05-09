@@ -27,9 +27,9 @@ func OpenDbandSetContext()(*sql.DB, context.Context){
 	return db, ctx
 }
 
-func GetPatternsFromDatabase(db *sql.DB, ctx context.Context){
+func GetPatternsFromDatabase(db *sql.DB, ctx context.Context, tx *sql.Tx){
 	// This pulls 'all' of the patterns from the patterns database
-	patterns, _ := models.Patterns().All(ctx, db)
+	patterns, _ := models.Patterns().All(ctx, tx)
 	for _, p := range patterns{
 		fmt.Println(p.SequencePattern)
 	}
@@ -52,13 +52,13 @@ func CheckServiceExists(db *sql.DB, ctx context.Context, id string) bool{
 	return false
 }
 
-func AddService(db *sql.DB, ctx context.Context, id string, name string){
+func AddService(ctx context.Context, tx *sql.Tx, id string, name string){
 	// This pulls 'all' of the services from the services table
 	var s models.Service
 	s.ID = id
 	s.Name = name
 	s.DateCreated = time.Now()
-	err := s.Insert(ctx, db, boil.Whitelist("id", "name", "date_created"))
+	err := s.Insert(ctx, tx, boil.Whitelist("id", "name", "date_created"))
 	if err != nil{
 		log.Fatal("Error inserting service into database, id: ", id)
 	}
@@ -72,20 +72,21 @@ func CheckPatternExists(db *sql.DB, ctx context.Context,id string) bool{
 	return false
 }
 
-func AddPattern(db *sql.DB, ctx context.Context, result AnalyzerResult, sID string){
+func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, sID string){
 	p := models.Pattern{ID:result.PatternId, SequencePattern:result.Pattern, DateCreated:time.Now(),ServiceID:sID, ThresholdReached:result.ThresholdReached}
-	err := p.Insert(ctx, db, boil.Whitelist("id", "sequence_pattern", "date_created", "threshold_reached", "service_id"))
+	err := p.Insert(ctx, tx, boil.Whitelist("id", "sequence_pattern", "date_created", "threshold_reached", "service_id"))
 	if err != nil{
 		log.Fatal("Error inserting pattern into database, id: ", result.PatternId)
 	}
 
-	//add examples
-	for _, e := range result.Examples{
-		ex := models.Example{ExampleDetail:e.Message, PatternID:result.PatternId}
-		err = ex.Insert(ctx, db, boil.Infer())
+	//add examples if threshold has been reached
+	if result.ThresholdReached{
+		for _, e := range result.Examples{
+			ex := models.Example{ExampleDetail:e.Message, PatternID:result.PatternId}
+			err = ex.Insert(ctx, tx, boil.Infer())
+		}
 	}
-
 	//add initial statistics
 	st := models.Statistic{PatternID:result.PatternId, CumulativeMatchCount:int64(result.ExampleCount), OriginalMatchCount:int64(result.ExampleCount), DateLastMatched:time.Now()}
-	err = st.Insert(ctx, db, boil.Infer())
+	err = st.Insert(ctx, tx, boil.Infer())
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"index/suffixarray"
+	"log"
 	"os"
 	"sequence"
 	"sort"
@@ -232,14 +233,23 @@ func SaveToDatabase(amap map[string]sequence.AnalyzerResult) {
 		result.Pattern = pat
 		//start with the service, so not to cause a primary key violation
 		sid := sequence.GenerateIDFromPattern(result.Examples[0].Service)
+		tx, err := db.BeginTx(ctx, nil)
+		if err != nil {
+			log.Fatal("Could not start a transaction to save to the database.")
+		}
 		if !sequence.CheckServiceExists(db, ctx, sid){
-			sequence.AddService(db, ctx, sid,result.Examples[0].Service )
+			sequence.AddService(ctx, tx, sid,result.Examples[0].Service )
 		}
 
 		//now lets check for the pattern
 		if !sequence.CheckPatternExists(db, ctx, result.PatternId){
-			sequence.AddPattern(db, ctx, result, sid)
+			sequence.AddPattern(ctx, tx, result, sid)
 		}
+
+		// Rollback or commit
+		tx.Commit()
+		tx.Rollback()
+
 	}
 }
 
