@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/volatiletech/null"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries"
 	"github.com/volatiletech/sqlboiler/queries/qm"
@@ -23,12 +22,11 @@ import (
 
 // Pattern is an object representing the database table.
 type Pattern struct {
-	ID               string      `boil:"id" json:"id" toml:"id" yaml:"id"`
-	SequencePattern  string      `boil:"sequence_pattern" json:"sequence_pattern" toml:"sequence_pattern" yaml:"sequence_pattern"`
-	CustomPattern    null.String `boil:"custom_pattern" json:"custom_pattern,omitempty" toml:"custom_pattern" yaml:"custom_pattern,omitempty"`
-	DateCreated      time.Time   `boil:"date_created" json:"date_created" toml:"date_created" yaml:"date_created"`
-	ServiceID        string      `boil:"service_id" json:"service_id" toml:"service_id" yaml:"service_id"`
-	ThresholdReached bool        `boil:"threshold_reached" json:"threshold_reached" toml:"threshold_reached" yaml:"threshold_reached"`
+	ID               string    `boil:"id" json:"id" toml:"id" yaml:"id"`
+	SequencePattern  string    `boil:"sequence_pattern" json:"sequence_pattern" toml:"sequence_pattern" yaml:"sequence_pattern"`
+	DateCreated      time.Time `boil:"date_created" json:"date_created" toml:"date_created" yaml:"date_created"`
+	ServiceID        string    `boil:"service_id" json:"service_id" toml:"service_id" yaml:"service_id"`
+	ThresholdReached bool      `boil:"threshold_reached" json:"threshold_reached" toml:"threshold_reached" yaml:"threshold_reached"`
 
 	R *patternR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L patternL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -37,43 +35,18 @@ type Pattern struct {
 var PatternColumns = struct {
 	ID               string
 	SequencePattern  string
-	CustomPattern    string
 	DateCreated      string
 	ServiceID        string
 	ThresholdReached string
 }{
 	ID:               "id",
 	SequencePattern:  "sequence_pattern",
-	CustomPattern:    "custom_pattern",
 	DateCreated:      "date_created",
 	ServiceID:        "service_id",
 	ThresholdReached: "threshold_reached",
 }
 
 // Generated where
-
-type whereHelpernull_String struct{ field string }
-
-func (w whereHelpernull_String) EQ(x null.String) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, false, x)
-}
-func (w whereHelpernull_String) NEQ(x null.String) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, true, x)
-}
-func (w whereHelpernull_String) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_String) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
-func (w whereHelpernull_String) LT(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpernull_String) LTE(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpernull_String) GT(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpernull_String) GTE(x null.String) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
 
 type whereHelpertime_Time struct{ field string }
 
@@ -108,14 +81,12 @@ func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field
 var PatternWhere = struct {
 	ID               whereHelperstring
 	SequencePattern  whereHelperstring
-	CustomPattern    whereHelpernull_String
 	DateCreated      whereHelpertime_Time
 	ServiceID        whereHelperstring
 	ThresholdReached whereHelperbool
 }{
 	ID:               whereHelperstring{field: `id`},
 	SequencePattern:  whereHelperstring{field: `sequence_pattern`},
-	CustomPattern:    whereHelpernull_String{field: `custom_pattern`},
 	DateCreated:      whereHelpertime_Time{field: `date_created`},
 	ServiceID:        whereHelperstring{field: `service_id`},
 	ThresholdReached: whereHelperbool{field: `threshold_reached`},
@@ -148,8 +119,8 @@ func (*patternR) NewStruct() *patternR {
 type patternL struct{}
 
 var (
-	patternColumns               = []string{"id", "sequence_pattern", "custom_pattern", "date_created", "service_id", "threshold_reached"}
-	patternColumnsWithoutDefault = []string{"id", "sequence_pattern", "custom_pattern", "date_created", "service_id"}
+	patternColumns               = []string{"id", "sequence_pattern", "date_created", "service_id", "threshold_reached"}
+	patternColumnsWithoutDefault = []string{"id", "sequence_pattern", "date_created", "service_id"}
 	patternColumnsWithDefault    = []string{"threshold_reached"}
 	patternPrimaryKeyColumns     = []string{"id"}
 )
