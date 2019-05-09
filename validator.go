@@ -38,4 +38,11 @@ func ValidateOutFormatWithFile(outfile string, outformat string) string {
 	return ""
 }
 
+func ValidateBatchSize(batchsize int) string {
+	if batchsize < 0{
+		return "Batch size must be zero or greater. Negative numbers are not permitted."
+	}
+	return ""
+}
+
 

@@ -24,6 +24,7 @@ var (
 	cpuprofile string
 	workers    int
 	format     string
+	batchsize  int
 
 	quit chan struct{}
 	done chan struct{}
@@ -78,7 +79,7 @@ func analyze(cmd *cobra.Command, args []string) {
 
 	//We load the file completely
 	var lr []sequence.LogRecord
-	lr = sequence.ReadLogRecord(infile, informat, lr)
+	lr = sequence.ReadLogRecord(infile, informat, lr, batchsize)
 
 	//get the threshold for including the pattern in the
 	//output files
@@ -174,11 +175,11 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 	lrMap := make(map[string] sequence.LogRecordCollection)
 	var total = 0
 	//We load the file completely
-	total, lrMap = sequence.ReadLogRecordAsMap(infile, informat, lrMap)
+	total, lrMap = sequence.ReadLogRecordAsMap(infile, informat, lrMap, batchsize)
 
 	if sequence.GetIncludeBelowThreshold() && len(sequence.GetBelowThresholdPath()) > 0{
 		var reused = 0
-		reused, lrMap = sequence.ReadLogRecordAsMap(sequence.GetBelowThresholdPath(), informat, lrMap)
+		reused, lrMap = sequence.ReadLogRecordAsMap(sequence.GetBelowThresholdPath(), informat, lrMap, 0)
 		total += reused
 	}
 
@@ -230,7 +231,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 	anTime := time.Since(startTime)
 	fmt.Printf("Analysed in: %s\n", anTime)
 
-	syslog_ng.SaveToDatabase(amap)
+	//syslog_ng.SaveToDatabase(amap)
 	val := syslog_ng.SaveToOutputFiles(informat, outformat, outfile, amap)
 
 	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d passed the threshold, %d messages errored, time taken: %s", processed, len(amap), len(amap), val, err_count, time.Since(startTime))
@@ -257,6 +258,10 @@ func validateInputs(commandType string) {
 			errors = errors + err + "\n"
 		}
 		err = sequence.ValidateOutFormatWithFile(outfile, outformat)
+		if err != "" {
+			errors = errors + err + "\n"
+		}
+		err = sequence.ValidateBatchSize(batchsize)
 		if err != "" {
 			errors = errors + err + "\n"
 		}
@@ -379,6 +384,7 @@ func main() {
 	sequenceCmd.PersistentFlags().StringVarP(&patfile, "patterns", "p", "", "existing patterns text file, can be a file or directory")
 	sequenceCmd.PersistentFlags().StringVarP(&outformat, "out-format", "f", "", "format of the output file, can be yaml, xml or txt or a combo comma separated eg txt,xml, if empty it uses text, used by analyze")
 	sequenceCmd.PersistentFlags().StringVarP(&informat, "in-format", "k", "", "format of the input data, can be json or text, if empty it uses text, used by analyze")
+	sequenceCmd.PersistentFlags().IntVarP(&batchsize, "batch-size", "b", 0, "if using a large file or stdin, the batch size sets the limit of how many to process at one time")
 
 	analyzeCmd.Run = analyze
 	analyzeByServiceCmd.Run = analyzebyservice

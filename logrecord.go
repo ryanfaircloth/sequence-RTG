@@ -19,10 +19,11 @@ type LogRecordCollection struct {
 
 //if json, this method expects record in the format {"service": "service-name", message: "log message"}
 //eg {"service":"remctld","message":"error receiving initial token: unexpected end of file"}
-func ReadLogRecord(fname string, format string, lr []LogRecord) []LogRecord {
+func ReadLogRecord(fname string, format string, lr []LogRecord, batchLimit int) []LogRecord {
 	iscan, ifile := OpenInputFile(fname)
 	defer ifile.Close()
 	var r LogRecord
+	var count = 0
 	for iscan.Scan() {
 		message := iscan.Text()
 		if len(message) == 0 {
@@ -50,6 +51,10 @@ func ReadLogRecord(fname string, format string, lr []LogRecord) []LogRecord {
 			}
 		}
 		lr = append(lr, r)
+		count++
+		if batchLimit != 0 && count >= batchLimit{
+			break
+		}
 	}
 	//fmt.Printf("File loaded: %d records found\n", len(lr))
 	return lr
@@ -57,7 +62,7 @@ func ReadLogRecord(fname string, format string, lr []LogRecord) []LogRecord {
 
 //if json, this method expects record in the format {"service": "service-name", message: "log message"}
 //eg {"service":"remctld","message":"error receiving initial token: unexpected end of file"}
-func ReadLogRecordAsMap(fname string, format string, smap map[string] LogRecordCollection) (int, map[string] LogRecordCollection){
+func ReadLogRecordAsMap(fname string, format string, smap map[string] LogRecordCollection, batchLimit int) (int, map[string] LogRecordCollection){
 	var lr LogRecordCollection
 	var count = 0
 	iscan, ifile := OpenInputFile(fname)
@@ -104,6 +109,9 @@ func ReadLogRecordAsMap(fname string, format string, smap map[string] LogRecordC
 			smap[r.Service] = lr
 		}
 		count++
+		if batchLimit != 0 && count >= batchLimit{
+			break
+		}
 	}
 	return count, smap
 }
