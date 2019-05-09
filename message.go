@@ -68,11 +68,22 @@ func (this *Message) Tokenize() (Token, error) {
 			// Number of spaces skipped
 			nss := this.skipSpace(this.Data[this.state.start:])
 			this.state.start += nss
+		}else{
+			//just return the space if it is a space
+			if this.Data[this.state.start] == ' '{
+				tok := Token{
+					Tag:   TagUnknown,
+					Type:  TokenLiteral,
+					Value: " ",
+				}
+				this.state.start += 1
+				return tok, nil
+			}
 		}
 
 		// Let's see if this is a tag token, enclosed in two '%' chars
 		// at least 2 chars left, and the first is a '%'
-		if this.state.start+1 < this.state.end && this.Data[this.state.start] == '%' {
+		if this.state.start+1 < this.state.end && this.Data[this.state.start] == '%'{
 			var i int
 			var r rune
 

@@ -165,8 +165,6 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 	readConfig()
     validateInputs("analyze")
 	profile()
-	parser := buildParser()
-	analyzer := sequence.NewAnalyzer()
 	scanner := sequence.NewScanner()
 
 	startTime := time.Now()
@@ -191,19 +189,33 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 	err_count := 0
 	processed := 0
 	amap := make(map[string]sequence.AnalyzerResult)
-	for _, lrc := range lrMap{
+	pmap := make(map[string]string)
+	for svc, lrc := range lrMap{
+		matched := false
 		// For all the log messages, if we can't parse it, then let's add it to the
 		// analyzer for pattern analysis, this requires the previous pattern file/folder
 		//	to be passed in
-		analyzer = sequence.NewAnalyzer()
+		analyzer := sequence.NewAnalyzer()
+		sid := sequence.GenerateIDFromPattern(svc)
+		parser := buildParserFromDb(sid)
 		for _, l := range lrc.Records {
 			//TODO Fix this so it doesn't scan twice or parse twice
 			seq := scanMessage(scanner, l.Message)
-			if _, err := parser.Parse(seq); err != nil {
+			pseq, err := parser.Parse(seq)
+			if err != nil {
 				analyzer.Add(seq)
+			}else{
+				pat := strings.TrimSpace(pseq.String())
+				pmap[pat] = "found"
+				matched = true
+				processed++
 			}
 		}
 		analyzer.Finalize()
+
+		if matched{
+			continue
+		}
 
 		for _, l := range lrc.Records {
 			seq := scanMessage(scanner, l.Message)
@@ -232,7 +244,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 	syslog_ng.SaveToDatabase(amap)
 	val := syslog_ng.SaveToOutputFiles(informat, outformat, outfile, amap)
 
-	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d passed the threshold, %d messages errored, time taken: %s", processed, len(amap), len(amap), val, err_count, time.Since(startTime))
+	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d passed the threshold, %d messages errored, time taken: %s", processed, len(amap)+len(pmap), len(amap), val, err_count, time.Since(startTime))
 }
 
 func validateInputs(commandType string) {
@@ -334,6 +346,28 @@ func buildParser() *sequence.Parser {
 
 	return parser
 }
+
+func buildParserFromDb(serviceid string) *sequence.Parser {
+	parser := sequence.NewParser()
+	scanner := sequence.NewScanner()
+	db, ctx := sequence.OpenDbandSetContext()
+	defer db.Close()
+	//load all patterns from the database
+	pmap := sequence.GetPatternsFromDatabaseByService(db, ctx, serviceid)
+
+	for _, pat := range pmap {
+		seq, err := scanner.Scan(pat)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		if err := parser.Add(seq); err != nil {
+			log.Fatal(err)
+		}
+	}
+	return parser
+}
+
 
 func readConfig() {
 	if cfgfile == "" {

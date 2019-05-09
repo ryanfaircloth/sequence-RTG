@@ -117,6 +117,9 @@ func AddExampleToAnalyzerResult(this *AnalyzerResult, lr LogRecord, threshold in
 		//nothing to here
 		return
 	}
+	if threshold <= 1{
+		this.ThresholdReached = true
+	}
 	//we keep a minimum of three
 	if len(this.Examples) > threshold && len(this.Examples) > 3{
 		//truncate the messages to three different ones

@@ -329,7 +329,7 @@ func SaveToOutputFiles(informat string, outformat string, outfile string, amap m
 			vals = append(vals, result.ExampleCount)
 			for _, fmat := range outformats {
 				if fmat == "" || fmat == "txt"{
-					fmt.Fprintf(txtFile, " %s\n %s\n %d log messages matched\n %s\n\n", result.PatternId, pat, result.ExampleCount, result.Examples[0].Message)
+					fmt.Fprintf(txtFile, "# %s\n %s\n# %d log messages matched\n# %s\n\n", result.PatternId, pat, result.ExampleCount, result.Examples[0].Message)
 				}
 				if fmat == "yaml" {
 					result.Pattern = pat

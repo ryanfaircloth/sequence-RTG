@@ -36,6 +36,16 @@ func GetPatternsFromDatabase(db *sql.DB, ctx context.Context) map[string]string{
 	return pmap
 }
 
+func GetPatternsFromDatabaseByService(db *sql.DB, ctx context.Context, sid string) map[string]string{
+	pmap := make(map[string]string)
+	// This pulls 'all' of the patterns from the patterns database
+	patterns, _ := models.Patterns(models.PatternWhere.ServiceID.EQ(sid)).All(ctx, db)
+	for _, p := range patterns{
+		pmap[p.ID] = p.SequencePattern
+	}
+	return pmap
+}
+
 func GetServicesFromDatabase(db *sql.DB, ctx context.Context) map[string]string{
 	// This pulls 'all' of the services from the services table
 	smap := make(map[string]string)
