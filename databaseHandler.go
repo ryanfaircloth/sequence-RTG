@@ -3,7 +3,6 @@ package sequence
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/volatiletech/sqlboiler/boil"
 	"log"
@@ -27,20 +26,24 @@ func OpenDbandSetContext()(*sql.DB, context.Context){
 	return db, ctx
 }
 
-func GetPatternsFromDatabase(db *sql.DB, ctx context.Context, tx *sql.Tx){
+func GetPatternsFromDatabase(db *sql.DB, ctx context.Context) map[string]string{
+	pmap := make(map[string]string)
 	// This pulls 'all' of the patterns from the patterns database
-	patterns, _ := models.Patterns().All(ctx, tx)
+	patterns, _ := models.Patterns().All(ctx, db)
 	for _, p := range patterns{
-		fmt.Println(p.SequencePattern)
+		pmap[p.ID] = p.SequencePattern
 	}
+	return pmap
 }
 
-func GetServicesFromDatabase(db *sql.DB, ctx context.Context){
+func GetServicesFromDatabase(db *sql.DB, ctx context.Context) map[string]string{
 	// This pulls 'all' of the services from the services table
+	smap := make(map[string]string)
 	services, _ := models.Services().All(ctx, db)
 	for _, p := range services{
-		fmt.Println(p.Name)
+		smap[p.ID] = p.Name
 	}
+	return smap
 }
 
 func CheckServiceExists(db *sql.DB, ctx context.Context, id string) bool{

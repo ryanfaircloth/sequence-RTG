@@ -228,29 +228,47 @@ func SortandSaveLogMessages(lr []sequence.LogRecord, fname string  ){
 func SaveToDatabase(amap map[string]sequence.AnalyzerResult) {
 	db, ctx := sequence.OpenDbandSetContext()
 	defer db.Close()
+	//exisitng services
+	smap := sequence.GetServicesFromDatabase(db, ctx)
+	//services to be added to db
+	nmap := make(map[string]string)
 	//add the patterns and examples
-	for pat, result := range amap {
-		result.Pattern = pat
+	for _, result := range amap {
 		//start with the service, so not to cause a primary key violation
 		sid := sequence.GenerateIDFromPattern(result.Examples[0].Service)
-		tx, err := db.BeginTx(ctx, nil)
-		if err != nil {
-			log.Fatal("Could not start a transaction to save to the database.")
+		//check the services if it exists and if not append.
+		_, ok := smap[sid]
+		if !ok{
+			nmap[sid] = result.Examples[0].Service
 		}
-		if !sequence.CheckServiceExists(db, ctx, sid){
-			sequence.AddService(ctx, tx, sid,result.Examples[0].Service )
-		}
+	}
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Fatal("Could not start a transaction to save to the database.")
+	}
+	//start with the service, so not to cause a primary key violation
+	for sid, m := range nmap{
+		sequence.AddService(ctx, tx, sid, m)
+	}
+	tx.Commit()
 
-		//now lets check for the pattern
-		if !sequence.CheckPatternExists(db, ctx, result.PatternId){
+	tx, err = db.BeginTx(ctx, nil)
+	if err != nil {
+		log.Fatal("Could not start a transaction to save to the database.")
+	}
+	//technically we should have any existing patterns passed to here, but just in case
+	//lets check first
+	pmap := sequence.GetPatternsFromDatabase(db, ctx)
+	for pat, result := range amap {
+		_, found := pmap[result.PatternId]
+		if !found{
+			result.Pattern = pat
+			sid := sequence.GenerateIDFromPattern(result.Examples[0].Service)
 			sequence.AddPattern(ctx, tx, result, sid)
 		}
-
-		// Rollback or commit
-		tx.Commit()
-		tx.Rollback()
-
 	}
+	tx.Commit()
+
 }
 
 func SaveToOutputFiles(informat string, outformat string, outfile string, amap map[string]sequence.AnalyzerResult) int {
