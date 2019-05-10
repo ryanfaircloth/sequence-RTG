@@ -154,9 +154,9 @@ func analyze(cmd *cobra.Command, args []string) {
 		processed++
 	}
 
-	val := syslog_ng.SaveToOutputFiles(informat, outformat, outfile, amap)
+	syslog_ng.SaveToDatabase(amap)
 
-	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d passed the threshold and were added to the xml/yaml file, %d messages errored\n", len(lr), len(pmap)+len(amap), len(amap), val, err_count)
+	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored\n", len(lr), len(pmap)+len(amap), len(amap), err_count)
 	anTime := time.Since(startTime)
 	fmt.Printf("Analysed in: %s\n", anTime)
 }
@@ -173,10 +173,11 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 	//We load the file completely
 	total, lrMap = sequence.ReadLogRecordAsMap(infile, informat, lrMap, batchsize)
 
-	if sequence.GetIncludeBelowThreshold() && len(sequence.GetBelowThresholdPath()) > 0{
-		var reused = 0
-		reused, lrMap = sequence.ReadLogRecordAsMap(sequence.GetBelowThresholdPath(), informat, lrMap, 0)
-		total += reused
+	if sequence.GetIncludeBelowThreshold(){
+		//var reused = 0
+		//TODO change to get these from the db
+		//reused, lrMap = sequence.ReadLogRecordAsMap(sequence.GetBelowThresholdPath(), informat, lrMap, 0)
+		//total += reused
 	}
 
 	//get the threshold for including the pattern in the
@@ -191,7 +192,6 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 	amap := make(map[string]sequence.AnalyzerResult)
 	pmap := make(map[string]string)
 	for svc, lrc := range lrMap{
-		matched := false
 		// For all the log messages, if we can't parse it, then let's add it to the
 		// analyzer for pattern analysis, this requires the previous pattern file/folder
 		//	to be passed in
@@ -201,38 +201,35 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 		for _, l := range lrc.Records {
 			//TODO Fix this so it doesn't scan twice or parse twice
 			seq := scanMessage(scanner, l.Message)
-			pseq, err := parser.Parse(seq)
+			_, err := parser.Parse(seq)
 			if err != nil {
 				analyzer.Add(seq)
-			}else{
-				pat := strings.TrimSpace(pseq.String())
-				pmap[pat] = "found"
-				matched = true
-				processed++
 			}
 		}
 		analyzer.Finalize()
 
-		if matched{
-			continue
-		}
-
 		for _, l := range lrc.Records {
 			seq := scanMessage(scanner, l.Message)
-			aseq, err := analyzer.Analyze(seq)
-			if err != nil {
-				sequence.LogAnalysisFailed(l)
-				err_count++
-			} else {
-				pat := strings.TrimSpace(aseq.String())
-				ar, ok := amap[pat]
-				if !ok {
-					ar = sequence.AnalyzerResult{}
+			pseq, err := parser.Parse(seq)
+			if err == nil {
+				pat := strings.TrimSpace(pseq.String())
+				pmap[pat] = "found"
+			}else {
+				aseq, err := analyzer.Analyze(seq)
+				if err != nil {
+					sequence.LogAnalysisFailed(l)
+					err_count++
+				} else {
+					pat := strings.TrimSpace(aseq.String())
+					ar, ok := amap[pat]
+					if !ok {
+						ar = sequence.AnalyzerResult{}
+					}
+					sequence.AddExampleToAnalyzerResult(&ar, l, threshold)
+					ar.PatternId = sequence.GenerateIDFromPattern(pat)
+					ar.ExampleCount++
+					amap[pat] = ar
 				}
-				sequence.AddExampleToAnalyzerResult(&ar, l, threshold)
-				ar.PatternId = sequence.GenerateIDFromPattern(pat)
-				ar.ExampleCount++
-				amap[pat] = ar
 			}
 			processed++
 		}
@@ -242,14 +239,20 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 	fmt.Printf("Analysed in: %s\n", anTime)
 
 	syslog_ng.SaveToDatabase(amap)
-	val := syslog_ng.SaveToOutputFiles(informat, outformat, outfile, amap)
 
-	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d passed the threshold, %d messages errored, time taken: %s", processed, len(amap)+len(pmap), len(amap), val, err_count, time.Since(startTime))
+	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored, time taken: %s", processed, len(amap)+len(pmap), len(amap), err_count, time.Since(startTime))
+}
+
+func outputtofile(cmd *cobra.Command, args []string) {
+	readConfig()
+	validateInputs("outputtofiles")
+	profile()
+	syslog_ng.OutputToFiles(outformat, outfile)
 }
 
 func validateInputs(commandType string) {
 	var errors string
-	switch commandType{
+	switch commandType {
 	case "analyze":
 		//set the formats to lower before we start
 		informat = strings.ToLower(informat)
@@ -272,6 +275,17 @@ func validateInputs(commandType string) {
 			errors = errors + err + "\n"
 		}
 		err = sequence.ValidateBatchSize(batchsize)
+		if err != "" {
+			errors = errors + err + "\n"
+		}
+	case "outputtofiles":
+		//set the formats to lower before we start
+		outformat = strings.ToLower(outformat)
+		err := sequence.ValidateOutformat(outformat)
+		if err != "" {
+			errors = errors + err + "\n"
+		}
+		err = sequence.ValidateOutFormatWithFile(outfile, outformat)
 		if err != "" {
 			errors = errors + err + "\n"
 		}
@@ -408,6 +422,11 @@ func main() {
 			Use:   "analyzebyservice",
 			Short: "analyzes a log file and output a list of patterns that will match all the log messages",
 		}
+
+		outToFileCmd = &cobra.Command{
+			Use:   "outputtofile",
+			Short: "outputs a list of patterns to the files in the formats requested",
+		}
 	)
 
 	sequenceCmd.PersistentFlags().StringVarP(&cfgfile, "config", "", "", "TOML-formatted configuration file, default checks ./sequence.toml, then sequence.toml in the same directory as program")
@@ -420,9 +439,11 @@ func main() {
 
 	analyzeCmd.Run = analyze
 	analyzeByServiceCmd.Run = analyzebyservice
+	outToFileCmd.Run = outputtofile
 
 	sequenceCmd.AddCommand(analyzeCmd)
 	sequenceCmd.AddCommand(analyzeByServiceCmd)
+	sequenceCmd.AddCommand(outToFileCmd)
 
 	sequenceCmd.Execute()
 }

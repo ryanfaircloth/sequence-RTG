@@ -1,7 +1,6 @@
 package syslog_ng
 
 import (
-	"encoding/json"
 	"fmt"
 	"index/suffixarray"
 	"log"
@@ -271,22 +270,18 @@ func SaveToDatabase(amap map[string]sequence.AnalyzerResult) {
 
 }
 
-func SaveToOutputFiles(informat string, outformat string, outfile string, amap map[string]sequence.AnalyzerResult) int {
+func OutputToFiles(outformat string, outfile string){
 
 	var txtFile *os.File
 	var xmlFile *os.File
 	var yamlFile *os.File
-	var btFile *os.File
 	var xPattDB XPatternDB
 	var yPattDB YPatternDB
 	var vals []int
 
-	saveBT := len(sequence.GetBelowThresholdPath()) > 0
-	//open the below threshold file if it has a value
-	if saveBT{
-		btFile = sequence.OpenOutputFile(sequence.GetBelowThresholdPath())
-		defer btFile.Close()
-	}
+	db, ctx := sequence.OpenDbandSetContext()
+	defer db.Close()
+	patmap := sequence.GetPatternsWithExamplesFromDatabase(db,ctx)
 
 	outformats := strings.Split(outformat, ",")
 	//open the output files for saving data and add any headers
@@ -323,33 +318,17 @@ func SaveToOutputFiles(informat string, outformat string, outfile string, amap m
 		}
 	}
 	//add the patterns and examples
-	for pat, result := range amap {
-		//only add patterns with a certain number of examples found
-		if result.ThresholdReached {
-			vals = append(vals, result.ExampleCount)
-			for _, fmat := range outformats {
-				if fmat == "" || fmat == "txt"{
-					fmt.Fprintf(txtFile, "# %s\n %s\n# %d log messages matched\n# %s\n\n", result.PatternId, pat, result.ExampleCount, result.Examples[0].Message)
-				}
-				if fmat == "yaml" {
-					result.Pattern = pat
-					yPattDB = AddToYaml(result, yPattDB)
-				}
-				if fmat == "xml" {
-					result.Pattern = pat
-					xPattDB = AddToRuleset(result, xPattDB)
-				}
+	for _, result := range patmap {
+		vals = append(vals, result.ExampleCount)
+		for _, fmat := range outformats {
+			if fmat == "" || fmat == "txt"{
+				fmt.Fprintf(txtFile, "# %s\n %s\n# %d log messages matched\n# %s\n\n", result.PatternId, result.Pattern, result.ExampleCount, result.Examples[0].Message)
 			}
-		}else if saveBT{
-			for _, lr := range result.Examples{
-				if informat == "json"{
-					out, err := json.Marshal(lr)
-					if err == nil{
-						fmt.Fprintf(btFile, "%s\n", out)
-					}
-				}else{
-					fmt.Fprintf(btFile, "%s %s\n",  lr.Service, lr.Message)
-				}
+			if fmat == "yaml" {
+				yPattDB = AddToYaml(result, yPattDB)
+			}
+			if fmat == "xml" {
+				xPattDB = AddToRuleset(result, xPattDB)
 			}
 		}
 	}
@@ -367,8 +346,6 @@ func SaveToOutputFiles(informat string, outformat string, outfile string, amap m
 			fmt.Fprintf(xmlFile, "%s", x)
 		}
 	}
-
-	return len(vals)
 }
 
 

@@ -78,7 +78,8 @@ func buildRule (result sequence.AnalyzerResult) YRule {
 		rule.Examples = append(rule.Examples, example)
 	}
 	rule.Values.New = true
-	rule.Values.DateCreated = time.Now().Format("2006-01-02")
+	rule.Values.DateCreated = result.DateCreated.Format("2006-01-02")
+	//TODO: Update when date last matched is logging
 	rule.Values.DateLastMatched = time.Now().Format("2006-01-02")
 	//create a new UUID
 	rule.ID = result.PatternId

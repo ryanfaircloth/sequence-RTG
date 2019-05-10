@@ -36,6 +36,29 @@ func GetPatternsFromDatabase(db *sql.DB, ctx context.Context) map[string]string{
 	return pmap
 }
 
+func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context) map[string]AnalyzerResult{
+	pmap := make(map[string]AnalyzerResult)
+	var patterns models.PatternSlice
+	if config.matchThresholdValue != "0"{
+		patterns, _ = models.Patterns(models.PatternWhere.ThresholdReached.EQ(true)).All(ctx, db)
+	}else{
+		patterns, _ = models.Patterns().All(ctx, db)
+	}
+	for _, p := range patterns{
+		s, _ := models.Services(models.ServiceWhere.ID.EQ(p.ServiceID)).One(ctx,db)
+		ar := AnalyzerResult{PatternId:p.ID, Pattern:p.SequencePattern, ThresholdReached:p.ThresholdReached, DateCreated:p.DateCreated}
+		ex, _  := p.PatternExamples().All(ctx, db)
+		for _, e := range ex{
+			lr := LogRecord{Message:e.ExampleDetail, Service:s.Name}
+			ar.Examples = append(ar.Examples, lr)
+		}
+		st, _ := p.PatternStatistics().One(ctx, db)
+		ar.ExampleCount = int(st.OriginalMatchCount)
+		pmap[p.ID]=ar
+	}
+	return pmap
+}
+
 func GetPatternsFromDatabaseByService(db *sql.DB, ctx context.Context, sid string) map[string]string{
 	pmap := make(map[string]string)
 	// This pulls 'all' of the patterns from the patterns database

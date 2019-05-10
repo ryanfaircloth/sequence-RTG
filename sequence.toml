@@ -11,10 +11,6 @@ markSpaces = true
 matchThresholdType = "percent"
 matchThresholdValue = "0.001"
 
-# if using a threshold, you can save the messages for the patterns do not reach the threshold
-# to process later or general interest. If the path is empty, the save functionality will be turned off.
-belowThresholdPath = "C:\\data\\underthreshold.txt"
-
 # if using a threshold, and you save the messages for the patterns do not reach the threshold
 # this flag allows you to use them in the next run
 inclBelThresholdRecs = false

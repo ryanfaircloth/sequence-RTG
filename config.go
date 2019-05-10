@@ -33,7 +33,6 @@ var (
   		markSpaces bool
 		matchThresholdType     string
 		matchThresholdValue    string
-		belowThresholdPath     string
 		inclBelThresholdRecs   bool
 	}
 
@@ -76,7 +75,6 @@ func ReadConfig(file string) error {
 	config.markSpaces  = configInfo.MarkSpaces
 	config.matchThresholdType  = configInfo.MatchThresholdType
 	config.matchThresholdValue  = configInfo.MatchThresholdValue
-	config.belowThresholdPath = configInfo.BelowThresholdPath
 	config.inclBelThresholdRecs = configInfo.InclBelThresholdRecs
 
 	keymaps.keywords = make(map[string]TagType, 30)
@@ -131,10 +129,6 @@ func ReadConfig(file string) error {
 	allTypesCount = TokenTypesCount + TagTypesCount
 
 	return nil
-}
-
-func GetBelowThresholdPath() string{
-	return config.belowThresholdPath
 }
 
 func GetIncludeBelowThreshold() bool{

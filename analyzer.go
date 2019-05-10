@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 	"unicode"
 
 	"github.com/willf/bitset"
@@ -88,6 +89,7 @@ type AnalyzerResult struct {
 	ExampleCount int
 	Examples []LogRecord
 	ThresholdReached bool
+	DateCreated time.Time
 }
 
 
@@ -1153,13 +1155,6 @@ LOOP:
 					seq[i].Tag = TagMsgTime
 					seq[i].Type = seq[i].Tag.TokenType()
 					fexists[TagMsgTime] = true
-				}
-
-			case TokenURI:
-				if !fexists[TagObject] {
-					seq[i].Tag = TagObject
-					seq[i].Type = seq[i].Tag.TokenType()
-					fexists[TagObject] = true
 				}
 
 			case TokenMac:
