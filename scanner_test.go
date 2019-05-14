@@ -40,9 +40,13 @@ func TestMessageScanTokens(t *testing.T) {
 		)
 
 		msg.reset()
-
-		for i, r := range tc.data {
-			stop = msg.tokenStep(i, r)
+		rdata := []rune(tc.data)
+		for i, r := range rdata {
+			var n rune
+			if i < len(rdata){
+				n = rdata[i+1]
+			}
+			stop = msg.tokenStep(i, r, n)
 			if stop {
 				//glog.Debugf("i=%d, r=%c, stop=%t", i, r, stop)
 				if l == 0 {
@@ -81,7 +85,7 @@ func TestScannerSignature(t *testing.T) {
 	scanner := NewScanner()
 
 	for _, tc := range sigtests {
-		seq, err := scanner.Scan(tc.data)
+		seq, err := scanner.Scan(tc.data, false)
 		require.NoError(t, err, tc.data)
 		require.Equal(t, tc.sig, seq.Signature(), tc.data+"\n"+seq.PrintTokens())
 	}
@@ -112,11 +116,11 @@ func benchmarkScanner(b *testing.B, data string, stype string) {
 	scanner := NewScanner()
 	l := int64(len(data))
 
-	var benchFunc func(string) (Sequence, error)
+	var benchFunc func(string, bool) (Sequence, error)
 
 	switch stype {
 	case "json":
-		benchFunc = scanner.ScanJson
+		//benchFunc = scanner.ScanJson
 
 	default:
 		benchFunc = scanner.Scan
@@ -127,7 +131,7 @@ func benchmarkScanner(b *testing.B, data string, stype string) {
 
 	for i := 0; i < b.N; i++ {
 		b.SetBytes(l)
-		benchFunc(data)
+		benchFunc(data, false)
 	}
 }
 
@@ -145,7 +149,7 @@ func runTestCases(t *testing.T, tests []testCase) {
 			seq, err = scanner.ScanJson(tc.data)
 
 		default:
-			seq, err = scanner.Scan(tc.data)
+			seq, err = scanner.Scan(tc.data, false)
 		}
 
 		require.NoError(t, err, tc.data)

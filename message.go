@@ -17,6 +17,7 @@ package sequence
 import (
 	"fmt"
 	"io"
+	"strings"
 	"unicode"
 )
 
@@ -61,7 +62,7 @@ const (
 )
 
 // Scan is similar to Tokenize except it returns one token at a time
-func (this *Message) Tokenize() (Token, error) {
+func (this *Message) Tokenize(isParse bool) (Token, error) {
 	if this.state.start < this.state.end {
 
 		if !config.markSpaces{
@@ -83,28 +84,32 @@ func (this *Message) Tokenize() (Token, error) {
 
 		// Let's see if this is a tag token, enclosed in two '%' chars
 		// at least 2 chars left, and the first is a '%'
-		if this.state.start+1 < this.state.end && this.Data[this.state.start] == '%'{
-			var i int
-			var r rune
+		// Don't do this if not in parse mode, picks up things that it shouldn't
+		if isParse{
+			if this.state.start+1 < this.state.end && this.Data[this.state.start] == '%'{
+				var i int
+				var r rune
 
-			for i, r = range this.Data[this.state.start+1:] {
-				if !isTagTokenChar(r) {
-					break
-				}
-			}
-
-			if r == '%' && i > 0 {
-				tok := Token{
-					Tag:   TagUnknown,
-					Type:  TokenLiteral,
-					Value: this.Data[this.state.start : this.state.start+i+2],
+				for i, r = range this.Data[this.state.start+1:] {
+					if !isTagTokenChar(r) {
+						break
+					}
 				}
 
-				this.state.start += i + 2
+				if r == '%' && i > 0 {
+					tok := Token{
+						Tag:   TagUnknown,
+						Type:  TokenLiteral,
+						Value: this.Data[this.state.start : this.state.start+i+2],
+					}
 
-				return tok, nil
+					this.state.start += i + 2
+
+					return tok, nil
+				}
 			}
 		}
+
 
 		l, t, err := this.scanToken(this.Data[this.state.start:])
 		if err != nil {
@@ -124,7 +129,24 @@ func (this *Message) Tokenize() (Token, error) {
 			}
 		}
 
-		tok := Token{Tag: TagUnknown, Type: t, Value: this.Data[this.state.start : this.state.start+l]}
+		//check the literal for any signs of it containing a tag
+		val := this.Data[this.state.start : this.state.start+l]
+		ct := strings.Count(val, "%")
+		idx := strings.Index(val, "%")
+		cp := false
+		if isParse{
+			//there should be at least 2 or it isn't a tag
+			//this is the first one, not the start
+			if ct > 1 && idx > 0 && idx < len(val){
+				val = val[:idx]
+				l=idx
+			}
+		}else{
+			if ct > 1 && idx >= 0{
+				cp = true
+			}
+		}
+		tok := Token{Tag: TagUnknown, Type: t, Value: val, hasPercent:cp}
 		this.state.tokCount++
 		this.state.prevToken = tok
 		this.state.start += l + s
@@ -132,7 +154,6 @@ func (this *Message) Tokenize() (Token, error) {
 		if tok.Type == TokenAlphaOnly{
 			tok.Type = TokenLiteral
 		}
-
 		return tok, nil
 	}
 
@@ -175,15 +196,24 @@ func (this *Message) scanToken(data string) (int, TokenType, error) {
 	}
 
 	for i, r := range data {
+		//this is the next char for look ahead
+		//sometimes the following char is useful
+		//we pass as a string as converting to a rune is expensive
+		//the "step" functions will convert if needed.
+		var s = ""
+		if i < len(data)-1{
+			s = data[i+1:i+2]
+		}
+
 		if !tokenStop {
-			tokenStop = this.tokenStep(i, r)
+			tokenStop = this.tokenStep(i, r, s)
 			if !tokenStop {
 				tokenLen++
 			}
 		}
 
 		if !hexStop {
-			hexValid, hexStop = this.hexStep(i, r)
+			hexValid, hexStop = this.hexStep(i, r, s)
 
 			if hexValid {
 				hexLen = i + 1
@@ -249,20 +279,17 @@ func (this *Message) scanToken(data string) (int, TokenType, error) {
 	return len(data), this.state.tokenType, nil
 }
 
-func (this *Message) tokenStep(i int, r rune) bool {
-	//fmt.Printf("r=%c\n", r, )
+func (this *Message) tokenStep(i int, r rune, nr string) bool {
+	//fmt.Printf("r=%c, nr=%s\n", r, nr)
 	switch this.state.tokenType {
 	case TokenUnknown:
 		switch r {
 		case 'h', 'H':
-			this.state.tokenType = TokenURI
-
+			if nr == "t" || nr == "T"{
+				this.state.tokenType = TokenURI
+			}
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 			this.state.tokenType = TokenInteger
-
-		// case '.':
-		// 	this.state.tokenType = TokenFloat
-		// 	this.state.initDot = true
 
 		case '/':
 			if this.state.prevToken.Type == TokenIPv4 {
@@ -321,6 +348,10 @@ func (this *Message) tokenStep(i int, r rune) bool {
 
 		case '\\':
 			this.state.tokenType = TokenPath
+
+		case '?','&':
+			this.state.tokenType = TokenLiteral
+			this.state.tokenStop = true
 
 		default:
 			if isLetter(r){
@@ -396,7 +427,17 @@ func (this *Message) tokenStep(i int, r rune) bool {
 		case '/', '\\':
 			this.state.tokenType = TokenPath
 		case '-', '_':
-			this.state.tokenType = TokenId
+			//check this is followed by a letter or number
+			//before changing type
+			if nr != ""{
+				n := []rune(nr)[0]
+				if isDigit(n) || isLetter(n){
+					this.state.tokenType = TokenId
+				}else{
+					this.state.tokenStop = true
+				}
+			}
+
 		default:
 			if isLetter(r) {
 				this.state.tokenType = TokenAlphaNum
@@ -444,7 +485,17 @@ func (this *Message) tokenStep(i int, r rune) bool {
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 			//no need to change type
 		case '_', '-':
-			this.state.tokenType = TokenId
+			//check this is followed by a letter or number
+			//before changing type
+			if nr != ""{
+				//this conversion happens only when needed as it is expensive wrt time
+				n := []rune(nr)[0]
+				if isDigit(n) || isLetter(n){
+					this.state.tokenType = TokenId
+				}else{
+					this.state.tokenStop = true
+				}
+			}
 		case '.':
 			// this should be the ONLY dot this switch case should see
 			this.state.dots++
@@ -491,8 +542,8 @@ func (this *Message) tokenStep(i int, r rune) bool {
 
 	case TokenLiteral:
 		if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) || (!this.state.inquote && r == '\'') {
-			//this.state.tokenType = TokenLiteral
-		} else {
+			//keep going
+		}else{
 			this.state.tokenStop = true
 		}
 		//glog.Debugf("tokenStop=%t, r=%c", this.state.tokenStop, r)
@@ -562,7 +613,7 @@ func (this *Message) tokenStep(i int, r rune) bool {
 //
 // first return value indicates whether this is a valid hex string
 // second return value indicates whether to stop scanning
-func (this *Message) hexStep(i int, r rune) (bool, bool) {
+func (this *Message) hexStep(i int, r rune, nr string) (bool, bool) {
 	switch this.state.hexState {
 	case hexStart:
 		switch {
@@ -611,8 +662,9 @@ func (this *Message) hexStep(i int, r rune) (bool, bool) {
 			this.state.hexState = hexColon
 
 			// for the special case of "::" which is valid and represents an
-			// unspecified ip
-			if i == 1 {
+			// unspecified ip, need to check for space afterwards otherwise not
+			// valid ipv6
+			if i == 1 && nr == " " {
 				return true, false
 			}
 
@@ -694,7 +746,7 @@ func isLetter(r rune) bool {
 func isLiteral(r rune) bool {
 	//return 'a' <= r && r <= 'z' || 'A' <= r && r <= 'Z' || r >= '0' && r <= '9' || r == '+' || r == '-' || r == '_' || r == '#' || r == '\\' || r == '%' || r == '*' || r == '@' || r == '$' || r == '?' || r == '.' || r == '&' || r == '/'
 	switch r {
-	case '+', '-', '_', '#', '\\', '%', '*', '@', '$', '?', '.', '&', '/', '~':
+	case '+', '-', '_', '#', '\\', '%', '*', '@', '$', '.', '/', '~':
 		return true
 	}
 	return 'a' <= r && r <= 'z' || 'A' <= r && r <= 'Z' || r >= '0' && r <= '9'

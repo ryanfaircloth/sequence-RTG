@@ -3,13 +3,11 @@ package sequence
 import (
 	"encoding/json"
 	"strings"
-	"time"
 )
 
 type LogRecord struct {
 	Service string `json:"service"`
 	Message string `json:"message"`
-	DateFirstAnalysed time.Time `json:"dateFirstAnalyzed"`
 }
 
 type LogRecordCollection struct {
@@ -36,6 +34,7 @@ func ReadLogRecord(fname string, format string, lr []LogRecord, batchLimit int) 
 			r = LogRecord{}
 			_ = json.Unmarshal([]byte(message), &r)
 			//check for an empty service and set it to none
+			//TODO: Review if these should be discarded too
 			if r.Service == ""{
 				r.Service = "none"
 			}
@@ -49,6 +48,10 @@ func ReadLogRecord(fname string, format string, lr []LogRecord, batchLimit int) 
 				m := message[i:]
 				r = LogRecord{Service: s, Message: m}
 			}
+		}
+		//check for an empty message and discard
+		if len(strings.TrimSpace(r.Message)) == 0{
+			continue
 		}
 		lr = append(lr, r)
 		count++
@@ -70,7 +73,7 @@ func ReadLogRecordAsMap(fname string, format string, smap map[string] LogRecordC
 	var r LogRecord
 	for iscan.Scan() {
 		message := iscan.Text()
-		if len(message) == 0 {
+		if len(strings.TrimSpace(message)) == 0 {
 			break
 		}
 		if message[0] == '#' {
@@ -79,10 +82,8 @@ func ReadLogRecordAsMap(fname string, format string, smap map[string] LogRecordC
 		if format == "json"{
 			r = LogRecord{}
 			_ = json.Unmarshal([]byte(message), &r)
-			if r.DateFirstAnalysed.IsZero(){
-				r.DateFirstAnalysed = time.Now()
-			}
 			//check for an empty service and set it to none
+			//TODO: Review if these should be discarded too
 			if r.Service == ""{
 				r.Service = "none"
 			}
@@ -98,6 +99,10 @@ func ReadLogRecordAsMap(fname string, format string, smap map[string] LogRecordC
 			} else{
 				r = LogRecord{Service: s, Message: ""}
 			}
+		}
+		//check for an empty message and discard
+		if len(strings.TrimSpace(r.Message)) == 0{
+			continue
 		}
 		//look for the service in the map
 		if val, ok := smap[r.Service]; ok {

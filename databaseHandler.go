@@ -79,15 +79,6 @@ func GetServicesFromDatabase(db *sql.DB, ctx context.Context) map[string]string{
 	return smap
 }
 
-func CheckServiceExists(db *sql.DB, ctx context.Context, id string) bool{
-	// This pulls 'all' of the services from the services table
-	service, _ := models.FindService(ctx, db, id)
-	if service != nil{
-		return true
-	}
-	return false
-}
-
 func AddService(ctx context.Context, tx *sql.Tx, id string, name string){
 	// This pulls 'all' of the services from the services table
 	var s models.Service
@@ -100,14 +91,6 @@ func AddService(ctx context.Context, tx *sql.Tx, id string, name string){
 	}
 }
 
-func CheckPatternExists(db *sql.DB, ctx context.Context,id string) bool{
-	p, _ := models.FindPattern(ctx, db, id)
-	if p != nil{
-		return true
-	}
-	return false
-}
-
 func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, sID string){
 	p := models.Pattern{ID:result.PatternId, SequencePattern:result.Pattern, DateCreated:time.Now(),ServiceID:sID, ThresholdReached:result.ThresholdReached}
 	err := p.Insert(ctx, tx, boil.Whitelist("id", "sequence_pattern", "date_created", "threshold_reached", "service_id"))
@@ -115,11 +98,26 @@ func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, sID stri
 		log.Fatal("Error inserting pattern into database, id: ", result.PatternId)
 	}
 
-	//add examples if threshold has been reached
+	//add all examples if threshold has been reached as these will have already been pruned
+	//otherwise limit to max three.
 	if result.ThresholdReached{
 		for _, e := range result.Examples{
 			ex := models.Example{ExampleDetail:e.Message, PatternID:result.PatternId}
 			err = ex.Insert(ctx, tx, boil.Infer())
+		}
+	}else{
+		prev := ""
+		count := 0
+		for _, e := range result.Examples{
+			if prev != e.Message{
+				ex := models.Example{ExampleDetail:e.Message, PatternID:result.PatternId}
+				err = ex.Insert(ctx, tx, boil.Infer())
+				prev = e.Message
+				count++
+			}
+			if count >= 3{
+				break
+			}
 		}
 	}
 	//add initial statistics

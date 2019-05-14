@@ -144,7 +144,7 @@ func buildRuleXML (result sequence.AnalyzerResult) XRule {
 
 func buildRulesetXML (rsName string) XRuleset {
 	rs := XRuleset{Name:rsName}
-	rs.ID = sequence.GenerateIDFromPattern(rsName)
+	rs.ID = sequence.GenerateIDFromService(rsName)
 	var p = XPattern{Pattern:rsName}
 	rs.Patterns = append(rs.Patterns, p)
 	return rs

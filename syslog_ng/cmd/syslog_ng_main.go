@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/surge/glog"
@@ -146,7 +147,7 @@ func analyze(cmd *cobra.Command, args []string) {
 					stat = sequence.AnalyzerResult{}
 				}
 				sequence.AddExampleToAnalyzerResult(&stat, l, threshold)
-				stat.PatternId = sequence.GenerateIDFromPattern(pat)
+				stat.PatternId = sequence.GenerateIDFromPattern(pat, stat.Examples[0].Service)
 				stat.ExampleCount++
 				amap[pat] = stat
 			}
@@ -196,7 +197,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 		// analyzer for pattern analysis, this requires the previous pattern file/folder
 		//	to be passed in
 		analyzer := sequence.NewAnalyzer()
-		sid := sequence.GenerateIDFromPattern(svc)
+		sid := sequence.GenerateIDFromService(svc)
 		parser := buildParserFromDb(sid)
 		for _, l := range lrc.Records {
 			//TODO Fix this so it doesn't scan twice or parse twice
@@ -212,7 +213,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 			seq := scanMessage(scanner, l.Message)
 			pseq, err := parser.Parse(seq)
 			if err == nil {
-				pat := strings.TrimSpace(pseq.String())
+				pat := pseq.String()
 				pmap[pat] = "found"
 			}else {
 				aseq, err := analyzer.Analyze(seq)
@@ -220,13 +221,13 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 					sequence.LogAnalysisFailed(l)
 					err_count++
 				} else {
-					pat := strings.TrimSpace(aseq.String())
+					pat := aseq.String()
 					ar, ok := amap[pat]
 					if !ok {
 						ar = sequence.AnalyzerResult{}
 					}
 					sequence.AddExampleToAnalyzerResult(&ar, l, threshold)
-					ar.PatternId = sequence.GenerateIDFromPattern(pat)
+					ar.PatternId = sequence.GenerateIDFromPattern(pat, ar.Examples[0].Service)
 					ar.ExampleCount++
 					amap[pat] = ar
 				}
@@ -239,6 +240,13 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 	fmt.Printf("Analysed in: %s\n", anTime)
 
 	syslog_ng.SaveToDatabase(amap)
+
+	//debugging what is coming out as new
+	oFile := sequence.OpenOutputFile("C:\\data\\debug.txt")
+	defer oFile.Close()
+	for pat, stat := range amap {
+		fmt.Fprintf(oFile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.ExampleCount, stat.Examples[0].Message)
+	}
 
 	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored, time taken: %s", processed, len(amap)+len(pmap), len(amap), err_count, time.Since(startTime))
 }
@@ -302,19 +310,33 @@ func scanMessage(scanner *sequence.Scanner, data string) sequence.Sequence {
 		err error
 	)
 
-	switch format {
-	case "json":
+	if testJson(data){
 		seq, err = scanner.ScanJson(data)
+	} else {
+		switch format {
+		case "json":
+			seq, err = scanner.ScanJson(data)
 
-	default:
-		seq, err = scanner.Scan(data)
+		default:
+			seq, err = scanner.Scan(data, false)
+		}
 	}
-
 	if err != nil {
 		log.Fatal(err)
 	}
 	return seq
 }
+
+func testJson(data string)bool{
+	data = strings.TrimSpace(data)
+	var js string
+	if data[:1] == "{" && data[len(data)-1:] == "}"{
+		//try to marshall the json
+		return json.Unmarshal([]byte(data), &js) == nil
+	}
+	return false
+}
+
 
 func buildParser() *sequence.Parser {
 	parser := sequence.NewParser()
@@ -345,7 +367,7 @@ func buildParser() *sequence.Parser {
 				continue
 			}
 
-			seq, err := scanner.Scan(line)
+			seq, err := scanner.Scan(line, true)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -370,7 +392,7 @@ func buildParserFromDb(serviceid string) *sequence.Parser {
 	pmap := sequence.GetPatternsFromDatabaseByService(db, ctx, serviceid)
 
 	for _, pat := range pmap {
-		seq, err := scanner.Scan(pat)
+		seq, err := scanner.Scan(pat, true)
 		if err != nil {
 			log.Fatal(err)
 		}

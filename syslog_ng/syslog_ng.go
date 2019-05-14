@@ -23,7 +23,9 @@ var syslog_ng = map[string]string{
 	"(%integer%)"	:	"(@NUMBER@)",
 	"'%integer%'"	:   "'@NUMBER@'",
 	"%srcip%"		:   "@IPvANY:srcip@",
+	"%srcip%,"		:   "@IPvANY:srcip@",
 	"%dstip%"		:   "@IPvANY:dstip@",
+	"%ipv6%"		:   "@IPv6:srcip@",
 	"%msgtime%"		:  	"@ESTRING:msgtime: @",
 	"%time%"		:	"@ESTRING:time: @",
 	"%protocol%"	: 	"@ESTRING:protocol: @",
@@ -234,7 +236,7 @@ func SaveToDatabase(amap map[string]sequence.AnalyzerResult) {
 	//add the patterns and examples
 	for _, result := range amap {
 		//start with the service, so not to cause a primary key violation
-		sid := sequence.GenerateIDFromPattern(result.Examples[0].Service)
+		sid := sequence.GenerateIDFromService(result.Examples[0].Service)
 		//check the services if it exists and if not append.
 		_, ok := smap[sid]
 		if !ok{
@@ -262,7 +264,7 @@ func SaveToDatabase(amap map[string]sequence.AnalyzerResult) {
 		_, found := pmap[result.PatternId]
 		if !found{
 			result.Pattern = pat
-			sid := sequence.GenerateIDFromPattern(result.Examples[0].Service)
+			sid := sequence.GenerateIDFromService(result.Examples[0].Service)
 			sequence.AddPattern(ctx, tx, result, sid)
 		}
 	}

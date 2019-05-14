@@ -94,7 +94,7 @@ func buildRuleset (result sequence.AnalyzerResult) YRuleset {
 	rsName := result.Examples[0].Service
 	rs.Patterns = append(rs.Patterns, rsName)
 	//create a new UUID
-	rs.ID = sequence.GenerateIDFromPattern(rsName)
+	rs.ID = sequence.GenerateIDFromService(rsName)
 	return rs
 }
 

@@ -121,7 +121,7 @@ func NewScanner() *Scanner {
 // Scan is not concurrent-safe, and the returned Sequence is only valid until
 // the next time any Scan*() method is called. The best practice would be to
 // create one Scanner for each goroutine.
-func (this *Scanner) Scan(s string) (Sequence, error) {
+func (this *Scanner) Scan(s string, isParse bool) (Sequence, error) {
 	this.msg.Data = s
 	this.msg.reset()
 	this.seq = this.seq[:0]
@@ -132,7 +132,7 @@ func (this *Scanner) Scan(s string) (Sequence, error) {
 	)
 
 	spaceBefore := false
-	for tok, err = this.msg.Tokenize(); err == nil; tok, err = this.msg.Tokenize() {
+	for tok, err = this.msg.Tokenize(isParse); err == nil; tok, err = this.msg.Tokenize(isParse) {
 
 		//convert the alphanum tokens to string token type
 		if tok.Type == TokenAlphaNum || tok.Type == TokenId{
@@ -156,6 +156,7 @@ func (this *Scanner) Scan(s string) (Sequence, error) {
 
 		// special case for %r, or request, token in apache logs, which is comprised
 		// of method, url, and protocol like "GET http://blah HTTP/1.0"
+		//TODO: find the equivalent code in the parser
 		if len(tok.Value) == 1 && tok.Value == "\"" && this.msg.state.inquote && this.msg.state.start != len(s) && s[this.msg.state.start] != ' ' {
 			l := matchRequestMethods(s[this.msg.state.start:])
 			if l > 0 {
@@ -229,7 +230,7 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 		kquote, vquote bool        // quoted key, quoted value
 	)
 
-	for tok, err = this.msg.Tokenize(); err == nil; tok, err = this.msg.Tokenize() {
+	for tok, err = this.msg.Tokenize(false); err == nil; tok, err = this.msg.Tokenize(false) {
 		// glog.Debugf("1. tok=%s, state=%d, kquote=%t, vquote=%t, depth=%d", tok, state, kquote, vquote, len(keys))
 		// glog.Debugln(keys)
 		// glog.Debugln(arrs)

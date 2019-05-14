@@ -37,6 +37,7 @@ type Token struct {
 	isValue bool // Is this token a key in k=v pair
 	isKey   bool // Is this token a value in k=v pair
 	isSpaceBefore   bool // Is there token a space before this token
+	hasPercent	bool //% is reserved for the tokens, if a literal contains one it must be come a string
 
 	minus bool // For parser, should this token consume the rest of the tokens
 	plus  bool // For parser, should this token consume one or more tokens

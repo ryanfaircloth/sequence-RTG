@@ -408,13 +408,15 @@ func scanMessage(scanner *sequence.Scanner, data string) sequence.Sequence {
 		err error
 	)
 
-	switch format {
-	case "json":
-		seq, err = scanner.ScanJson(data)
 
-	default:
-		seq, err = scanner.Scan(data)
+	switch format {
+		case "json":
+			seq, err = scanner.ScanJson(data)
+
+		default:
+			seq, err = scanner.Scan(data, false)
 	}
+
 
 	if err != nil {
 		log.Fatal(err)
@@ -451,7 +453,7 @@ func buildParser() *sequence.Parser {
 				continue
 			}
 
-			seq, err := scanner.Scan(line)
+			seq, err := scanner.Scan(line, true)
 			if err != nil {
 				log.Fatal(err)
 			}

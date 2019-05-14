@@ -161,9 +161,17 @@ func TruncateExamples(this *AnalyzerResult){
 //this is so that the same pattern will have the same id
 //in all files and the id is reproducible
 //returns a sha1 hash as the id
-func GenerateIDFromPattern(pattern string) string{
+func GenerateIDFromPattern(pattern string, service string) string{
 	h := sha1.New()
-	h.Write([]byte(pattern))
+	h.Write([]byte(pattern+service))
+	sha := h.Sum(nil)  // "sha" is uint8 type, encoded in base16
+	shaStr := hex.EncodeToString(sha)  // String representation
+	return shaStr
+}
+
+func GenerateIDFromService(service string) string{
+	h := sha1.New()
+	h.Write([]byte(service))
 	sha := h.Sum(nil)  // "sha" is uint8 type, encoded in base16
 	shaStr := hex.EncodeToString(sha)  // String representation
 	return shaStr
@@ -254,6 +262,9 @@ func (this *Analyzer) Add(seq Sequence) error {
 	defer this.mu.Unlock()
 
 	seq = markSequenceKV(seq)
+
+	//Set any literal marked as containing 2 or more % to a string variable
+	seq = markSequencePercent(seq)
 
 	// Add enough levels to support the depth of the token list
 	if l := len(seq) - len(this.levels) + 1; l > 0 {
@@ -779,7 +790,7 @@ func markSequenceKV(seq Sequence) Sequence {
 			//sometimes there are double demlimiters or double equals signs
 			for vi < l && seq[vi].Type == TokenLiteral &&
 				(seq[vi].Value == "\"" || seq[vi].Value == "'" || seq[vi].Value == "<" || seq[vi].Value == "[" || seq[vi].Value == "="){
-					vi = vi + 1
+				vi = vi + 1
 			}
 
 			// if the value index is smaller than the last node index, that means
@@ -807,6 +818,17 @@ func markSequenceKV(seq Sequence) Sequence {
 		}
 	}
 
+	return seq
+}
+
+func markSequencePercent(seq Sequence) Sequence {
+	// Step 1: mark all key=value pairs
+	l := len(seq)
+	for i := l - 1; i >= 0; i-- {
+		if seq[i].hasPercent && seq[i].Type == TokenLiteral{
+			seq[i].Type = TokenString
+		}
+	}
 	return seq
 }
 
@@ -846,6 +868,11 @@ func analyzeSequence(seq Sequence) Sequence {
 					fexists[seq[i+2].Tag] = true
 				}
 
+			}
+
+			//last of all set any marked literals containing percent values to strings
+			if seq[i].hasPercent && seq[i].Type == TokenLiteral{
+				seq[i].Type = TokenString
 			}
 		}
 
