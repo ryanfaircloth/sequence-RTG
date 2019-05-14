@@ -40,11 +40,10 @@ func TestMessageScanTokens(t *testing.T) {
 		)
 
 		msg.reset()
-		rdata := []rune(tc.data)
-		for i, r := range rdata {
-			var n rune
-			if i < len(rdata){
-				n = rdata[i+1]
+		for i, r := range tc.data {
+			var n string
+			if i < len(tc.data)-1{
+				n = tc.data[i+1:i+2]
 			}
 			stop = msg.tokenStep(i, r, n)
 			if stop {
@@ -71,7 +70,11 @@ func TestMessageScanHexString(t *testing.T) {
 		msg.resetHexStates()
 
 		for i, r := range tc.data {
-			valid, stop = msg.hexStep(i, r)
+			var n string
+			if i < len(tc.data)-1{
+				n = tc.data[i+1:i+2]
+			}
+			valid, stop = msg.hexStep(i, r, n)
 			if stop {
 				break
 			}
@@ -219,7 +222,7 @@ var (
 		{"::2:3:4", true},
 		{"0:0:0:0:0:0:0:5", true},
 		{"::5", true},
-		{"::", true},
+		{":: ", true},
 		{"ABC:567:0:0:8888:9999:1111:0", true},
 		{"ABC:567::8888:9999:1111:0", true},
 		{"ABC:567::8888:9999:1111:0 ", true}, // space at the end
@@ -1666,7 +1669,7 @@ var (
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "/"},
 			Token{Type: TokenInteger, Tag: TagUnknown, Value: "514"},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "duration", isSpaceBefore:true},
-			Token{Type: TokenTime, Tag: TagUnknown, Value: " 0:09:23"},
+			Token{Type: TokenTime, Tag: TagUnknown, Value: "0:09:23", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "bytes", isSpaceBefore:true},
 			Token{Type: TokenInteger, Tag: TagUnknown, Value: "7999", isSpaceBefore:true},
 		},

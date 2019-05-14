@@ -664,7 +664,7 @@ func (this *Message) hexStep(i int, r rune, nr string) (bool, bool) {
 			// for the special case of "::" which is valid and represents an
 			// unspecified ip, need to check for space afterwards otherwise not
 			// valid ipv6
-			if i == 1 && nr == " " {
+			if i == 1 && (nr == " " || nr == "'"){
 				return true, false
 			}
 
