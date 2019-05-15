@@ -4,27 +4,26 @@ import (
 	"bufio"
 	"compress/gzip"
 	"io/ioutil"
-	"log"
 	"os"
 	"strings"
 )
 
-func GetDirOfFiles(path string) []string {
+func GetDirOfFiles(path string) ([]string, error) {
 	filenames := make([]string, 0, 10)
 
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
-		log.Fatal(err)
+		return filenames, err
 	}
 
 	for _, f := range files {
 		filenames = append(filenames, path+"/"+f.Name())
 	}
 
-	return filenames
+	return filenames, err
 }
 
-func OpenInputFile(fname string) (*bufio.Scanner, *os.File) {
+func OpenInputFile(fname string) (*bufio.Scanner, *os.File, error) {
 	var s *bufio.Scanner
 	var f *os.File
 	var err error
@@ -34,14 +33,14 @@ func OpenInputFile(fname string) (*bufio.Scanner, *os.File) {
 	} else{
 		f, err = os.Open(fname)
 		if err != nil {
-			log.Fatal(err)
+			return s, f, err
 		}
 	}
 
 	if strings.HasSuffix(fname, ".gz") {
 		gunzip, err := gzip.NewReader(f)
 		if err != nil {
-			log.Fatal(err)
+			return s, f, err
 		}
 
 		s = bufio.NewScanner(gunzip)
@@ -49,10 +48,10 @@ func OpenInputFile(fname string) (*bufio.Scanner, *os.File) {
 		s = bufio.NewScanner(f)
 	}
 
-	return s, f
+	return s, f, err
 }
 
-func OpenOutputFile(fname string) *os.File {
+func OpenOutputFile(fname string) (*os.File, error) {
 	var (
 		ofile *os.File
 		err   error
@@ -63,12 +62,9 @@ func OpenOutputFile(fname string) *os.File {
 	} else {
 		// Open output file
 		ofile, err = os.OpenFile(fname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
-		if err != nil {
-			log.Fatal(err)
-		}
 	}
 
-	return ofile
+	return ofile, err
 }
 
 

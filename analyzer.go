@@ -18,7 +18,6 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
-	"log"
 	"math"
 	"strconv"
 	"strings"
@@ -175,10 +174,6 @@ func GenerateIDFromService(service string) string{
 	sha := h.Sum(nil)  // "sha" is uint8 type, encoded in base16
 	shaStr := hex.EncodeToString(sha)  // String representation
 	return shaStr
-}
-
-func LogAnalysisFailed(lr LogRecord){
-	log.Printf("Error analyzing: %s", lr.Message)
 }
 
 func GetThreshold(numTotal int) int {

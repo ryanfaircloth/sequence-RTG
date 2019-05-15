@@ -18,8 +18,11 @@ type LogRecordCollection struct {
 //if json, this method expects record in the format {"service": "service-name", message: "log message"}
 //eg {"service":"remctld","message":"error receiving initial token: unexpected end of file"}
 func ReadLogRecord(fname string, format string, lr []LogRecord, batchLimit int) []LogRecord {
-	iscan, ifile := OpenInputFile(fname)
+	iscan, ifile, err := OpenInputFile(fname)
 	defer ifile.Close()
+	if err != nil{
+		logger.HandleFatal(err.Error())
+	}
 	var r LogRecord
 	var count = 0
 	for iscan.Scan() {
@@ -68,7 +71,10 @@ func ReadLogRecord(fname string, format string, lr []LogRecord, batchLimit int) 
 func ReadLogRecordAsMap(fname string, format string, smap map[string] LogRecordCollection, batchLimit int) (int, map[string] LogRecordCollection){
 	var lr LogRecordCollection
 	var count = 0
-	iscan, ifile := OpenInputFile(fname)
+	iscan, ifile, err := OpenInputFile(fname)
+	if err != nil{
+		logger.HandleFatal(err.Error())
+	}
 	defer ifile.Close()
 	var r LogRecord
 	for iscan.Scan() {

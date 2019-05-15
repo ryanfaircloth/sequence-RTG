@@ -18,7 +18,6 @@ package sequence
 
 import (
 	"testing"
-
 	"github.com/stretchr/testify/require"
 )
 

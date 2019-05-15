@@ -2,7 +2,6 @@ package syslog_ng
 
 import (
 	"gopkg.in/yaml.v3"
-	"log"
 	"sequence"
 	"time"
 )
@@ -64,12 +63,8 @@ func AddToYaml(pattern sequence.AnalyzerResult, db YPatternDB) YPatternDB{
 }
 
 func buildRule (result sequence.AnalyzerResult) YRule {
-	var err error
 	rule := YRule{}
 	rule.Values.Seqmatches = result.ExampleCount
-	if err != nil {
-		log.Fatal(err)
-	}
 	//get the ruleset from the example (service)
 	rule.Ruleset =	result.Examples[0].Service
 	rule.Patterns = append(rule.Patterns, replaceTags(result.Pattern))

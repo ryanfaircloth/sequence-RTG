@@ -17,7 +17,6 @@ package sequence
 import (
 	"fmt"
 	"strings"
-
 	"github.com/BurntSushi/toml"
 	"github.com/zhenjl/porter2"
 )
@@ -44,6 +43,7 @@ var (
 	TagTypesCount   int
 	TokenTypesCount = int(token__END__) + 1
 	allTypesCount   int
+	logger *StandardLogger
 )
 
 func ReadConfig(file string) error {
@@ -133,6 +133,10 @@ func ReadConfig(file string) error {
 
 func GetIncludeBelowThreshold() bool{
 	return config.inclBelThresholdRecs
+}
+
+func SetLogger(log *StandardLogger) {
+	logger = log
 }
 
 func predefineAnalyzerTags(f string, t TagType) {

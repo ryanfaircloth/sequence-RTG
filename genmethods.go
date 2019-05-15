@@ -19,7 +19,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"time"
 )
@@ -75,7 +74,7 @@ func outputFile(fname string) *os.File {
 		// Open output file
 		ofile, err = os.OpenFile(fname, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 		if err != nil {
-			log.Fatal(err)
+			logger.HandleFatal(err)
 		}
 	}
 
@@ -85,7 +84,7 @@ func outputFile(fname string) *os.File {
 func main() {
 	flag.Parse()
 	if len(flag.Args()) != 1 {
-		log.Fatal("Invalid command. Must be 'genmethods <outfile>.'")
+		logger.HandleFatal("Invalid command. Must be 'genmethods <outfile>.'")
 	}
 
 	ofile := outputFile(flag.Arg(0))
@@ -177,9 +176,7 @@ loop:
 					// should be "com.ar" but there's also "blogspot.com.ar", so
 					// we need to make sure we are either behind a "." or it's
 					// the beginning.
-					fmt.Fprintf(ofile, `				m = %d
-				// %s - final
-`, c.m-1, c.w)
+					fmt.Fprintf(ofile, `m = %d// %s - final`, c.m-1, c.w)
 				}
 			}
 

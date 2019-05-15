@@ -3,7 +3,6 @@ package syslog_ng
 import (
 	"fmt"
 	"index/suffixarray"
-	"log"
 	"os"
 	"sequence"
 	"sort"
@@ -193,10 +192,6 @@ func getWithDelimiters(p string, start, end int ) (string, string, string){
 	return p[start:end], "", fieldname
 }
 
-func checkIfNew(pattern sequence.AnalyzerResult) bool {
-	return false
-}
-
 
 func SortLogMessages(lr []sequence.LogRecord) []sequence.LogRecord{
 	sort.Slice(lr, func(i, j int) bool {
@@ -219,7 +214,7 @@ func SortandSaveLogMessages(lr []sequence.LogRecord, fname string  ){
 
 		return lr[i].Message < lr[j].Message
 	})
-	ofile := sequence.OpenOutputFile(fname)
+	ofile, _ := sequence.OpenOutputFile(fname)
 	defer ofile.Close()
 	for _, r := range lr{
 		fmt.Fprintf(ofile, "%s  %s\n",  r.Service, r.Message )
@@ -245,7 +240,7 @@ func SaveToDatabase(amap map[string]sequence.AnalyzerResult) {
 	}
 	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
-		log.Fatal("Could not start a transaction to save to the database.")
+		logger.HandleFatal("Could not start a transaction to save to the database.")
 	}
 	//start with the service, so not to cause a primary key violation
 	for sid, m := range nmap{
@@ -255,7 +250,7 @@ func SaveToDatabase(amap map[string]sequence.AnalyzerResult) {
 
 	tx, err = db.BeginTx(ctx, nil)
 	if err != nil {
-		log.Fatal("Could not start a transaction to save to the database.")
+		logger.HandleFatal("Could not start a transaction to save to the database.")
 	}
 	//technically we should have any existing patterns passed to here, but just in case
 	//lets check first
@@ -272,14 +267,18 @@ func SaveToDatabase(amap map[string]sequence.AnalyzerResult) {
 
 }
 
-func OutputToFiles(outformat string, outfile string){
+func OutputToFiles(outformat string, outfile string) error{
 
-	var txtFile *os.File
-	var xmlFile *os.File
-	var yamlFile *os.File
-	var xPattDB XPatternDB
-	var yPattDB YPatternDB
-	var vals []int
+	var (
+			txtFile *os.File
+			xmlFile *os.File
+			yamlFile *os.File
+			xPattDB XPatternDB
+	    	yPattDB YPatternDB
+			vals []int
+			err error
+		)
+
 
 	db, ctx := sequence.OpenDbandSetContext()
 	defer db.Close()
@@ -294,7 +293,10 @@ func OutputToFiles(outformat string, outfile string){
 			if outfile != ""{
 				fname =  outfile  + ".txt"
 			}
-			txtFile = sequence.OpenOutputFile(fname)
+			txtFile, err = sequence.OpenOutputFile(fname)
+			if err != nil{
+				return err
+			}
 			defer txtFile.Close()
 		}
 		if fmat == "yaml" {
@@ -302,8 +304,11 @@ func OutputToFiles(outformat string, outfile string){
 			if outfile != ""{
 				fname =  outfile  + ".yaml"
 			}
-			yamlFile = sequence.OpenOutputFile(fname)
+			yamlFile, err = sequence.OpenOutputFile(fname)
 			defer yamlFile.Close()
+			if err != nil{
+				return err
+			}
 			yPattDB = YPatternDB{}
 			yPattDB.Rulesets = make(map[string]YRuleset)
 			yPattDB.Rules = make(map[string]YRule)
@@ -313,8 +318,11 @@ func OutputToFiles(outformat string, outfile string){
 			if outfile != ""{
 				fname =  outfile  + ".xml"
 			}
-			xmlFile = sequence.OpenOutputFile(fname)
+			xmlFile, err = sequence.OpenOutputFile(fname)
 			defer xmlFile.Close()
+			if err != nil{
+				return err
+			}
 			fmt.Fprintf(xmlFile, "<?xml version='1.0' encoding='UTF-8'?>\n")
 			xPattDB = XPatternDB{Version: "4", Pubdate:time.Now().Format("2006-01-02 15:04:05")}
 		}
@@ -348,6 +356,8 @@ func OutputToFiles(outformat string, outfile string){
 			fmt.Fprintf(xmlFile, "%s", x)
 		}
 	}
+
+	return err
 }
 
 

@@ -2,7 +2,6 @@ package syslog_ng
 
 import (
 	"encoding/xml"
-	"log"
 	"sequence"
 	"strconv"
 	"time"
@@ -111,7 +110,6 @@ func AddToRuleset(pattern sequence.AnalyzerResult, document XPatternDB) XPattern
 }
 
 func buildRuleXML (result sequence.AnalyzerResult) XRule {
-	var err error
 	rule := XRule{}
 	count := XRuleValue{Name:"seq-matches", Value: strconv.Itoa(result.ExampleCount)}
 	rule.Values.Values = append(rule.Values.Values, count)
@@ -121,9 +119,6 @@ func buildRuleXML (result sequence.AnalyzerResult) XRule {
 	rule.Values.Values = append(rule.Values.Values, dc)
 	dlm := XRuleValue{Name:"seq-last-match", Value: time.Now().Format("2006-01-02")}
 	rule.Values.Values = append(rule.Values.Values, dlm)
-	if err != nil {
-		log.Fatal(err)
-	}
 	var p XPattern
 	var e XExample
 	var t XTestMessage

@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/spf13/cobra"
-	"github.com/surge/glog"
-	"log"
 	"os"
 	"os/signal"
 	"runtime/pprof"
@@ -19,6 +17,7 @@ var (
 	cfgfile    string
 	infile     string
 	outfile    string
+	logfile    string
 	outformat  string
 	informat  string
 	patfile    string
@@ -26,6 +25,7 @@ var (
 	workers    int
 	format     string
 	batchsize  int
+	standardLogger *sequence.StandardLogger
 
 	quit chan struct{}
 	done chan struct{}
@@ -38,7 +38,7 @@ func profile() {
 	if cpuprofile != "" {
 		f, err = os.Create(cpuprofile)
 		if err != nil {
-			log.Fatal(err)
+			sequence.StandardLogger{}.Fatal(err)
 		}
 
 		pprof.StartCPUProfile(f)
@@ -49,15 +49,15 @@ func profile() {
 	go func() {
 		select {
 		case sig := <-sigchan:
-			log.Printf("Existing due to trapped signal; %v", sig)
+			standardLogger.HandleInfo(fmt.Sprintf("Existing due to trapped signal; %v", sig))
 
 		case <-quit:
-			log.Println("Quiting...")
+			standardLogger.HandleInfo("Quiting...")
 
 		}
 
 		if f != nil {
-			glog.Errorf("Stopping profile")
+			standardLogger.HandleError("Stopping profile")
 			pprof.StopCPUProfile()
 			f.Close()
 		}
@@ -67,11 +67,16 @@ func profile() {
 	}()
 }
 
-
-func analyze(cmd *cobra.Command, args []string) {
+func start(){
+	standardLogger = sequence.NewLogger(logfile)
 	readConfig()
 	validateInputs("analyze")
 	profile()
+}
+
+
+func analyze(cmd *cobra.Command, args []string) {
+	start()
 	parser := buildParser()
 	analyzer := sequence.NewAnalyzer()
 	scanner := sequence.NewScanner()
@@ -138,7 +143,7 @@ func analyze(cmd *cobra.Command, args []string) {
 		} else {
 			aseq, err := analyzer.Analyze(seq)
 			if err != nil {
-				sequence.LogAnalysisFailed(l)
+				standardLogger.LogAnalysisFailed(l)
 				err_count++
 			} else {
 				pat := strings.TrimSpace(aseq.String())
@@ -157,15 +162,13 @@ func analyze(cmd *cobra.Command, args []string) {
 
 	syslog_ng.SaveToDatabase(amap)
 
-	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored\n", len(lr), len(pmap)+len(amap), len(amap), err_count)
+	standardLogger.HandleInfo(fmt.Sprintf("Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored\n", len(lr), len(pmap)+len(amap), len(amap), err_count))
 	anTime := time.Since(startTime)
-	fmt.Printf("Analysed in: %s\n", anTime)
+	standardLogger.HandleInfo(fmt.Sprintf("Analysed in: %s\n", anTime))
 }
 
 func analyzebyservice(cmd *cobra.Command, args []string) {
-	readConfig()
-    validateInputs("analyze")
-	profile()
+	start()
 	scanner := sequence.NewScanner()
 
 	startTime := time.Now()
@@ -218,7 +221,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 			}else {
 				aseq, err := analyzer.Analyze(seq)
 				if err != nil {
-					sequence.LogAnalysisFailed(l)
+					standardLogger.LogAnalysisFailed(l)
 					err_count++
 				} else {
 					pat := aseq.String()
@@ -237,24 +240,22 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 		//fmt.Printf("Processed: %d\n", processed)
 	}
 	anTime := time.Since(startTime)
-	fmt.Printf("Analysed in: %s\n", anTime)
+	standardLogger.HandleInfo(fmt.Sprintf("Analysed in: %s\n", anTime))
 
 	syslog_ng.SaveToDatabase(amap)
 
 	//debugging what is coming out as new
-	oFile := sequence.OpenOutputFile("C:\\data\\debug.txt")
+	oFile, _:= sequence.OpenOutputFile("C:\\data\\debug.txt")
 	defer oFile.Close()
 	for pat, stat := range amap {
 		fmt.Fprintf(oFile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.ExampleCount, stat.Examples[0].Message)
 	}
 
-	log.Printf("Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored, time taken: %s", processed, len(amap)+len(pmap), len(amap), err_count, time.Since(startTime))
+	standardLogger.HandleInfo(fmt.Sprintf("Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored, time taken: %s", processed, len(amap)+len(pmap), len(amap), err_count, time.Since(startTime)))
 }
 
 func outputtofile(cmd *cobra.Command, args []string) {
-	readConfig()
-	validateInputs("outputtofiles")
-	profile()
+	start()
 	syslog_ng.OutputToFiles(outformat, outfile)
 }
 
@@ -268,38 +269,38 @@ func validateInputs(commandType string) {
 
 		//validate input file
 		if infile == "" {
-			errors = errors + "Invalid input file specified\n"
+			errors = errors + "Invalid input file specified"
 		}
 		err := sequence.ValidateInformat(informat)
 		if err != "" {
-			errors = errors + err + "\n"
+			errors = errors + ", " + err
 		}
 		err = sequence.ValidateOutformat(outformat)
 		if err != "" {
-			errors = errors + err + "\n"
+			errors = errors + ", " + err
 		}
 		err = sequence.ValidateOutFormatWithFile(outfile, outformat)
 		if err != "" {
-			errors = errors + err + "\n"
+			errors = errors + ", " + err
 		}
 		err = sequence.ValidateBatchSize(batchsize)
 		if err != "" {
-			errors = errors + err + "\n"
+			errors = errors + ", " + err
 		}
 	case "outputtofiles":
 		//set the formats to lower before we start
 		outformat = strings.ToLower(outformat)
 		err := sequence.ValidateOutformat(outformat)
 		if err != "" {
-			errors = errors + err + "\n"
+			errors = errors + ", " + err
 		}
 		err = sequence.ValidateOutFormatWithFile(outfile, outformat)
 		if err != "" {
-			errors = errors + err + "\n"
+			errors = errors + ", " + err
 		}
 	}
 	if errors != ""{
-		log.Fatal(errors)
+		standardLogger.HandleFatal(errors)
 	}
 }
 
@@ -322,7 +323,7 @@ func scanMessage(scanner *sequence.Scanner, data string) sequence.Sequence {
 		}
 	}
 	if err != nil {
-		log.Fatal(err)
+		standardLogger.HandleFatal(err.Error())
 	}
 	return seq
 }
@@ -348,9 +349,9 @@ func buildParser() *sequence.Parser {
 	var files []string
 
 	if fi, err := os.Stat(patfile); err != nil {
-		log.Fatal(err)
+		standardLogger.HandleFatal(err.Error())
 	} else if fi.Mode().IsDir() {
-		files = sequence.GetDirOfFiles(patfile)
+		files, err = sequence.GetDirOfFiles(patfile)
 	} else {
 		files = append(files, patfile)
 	}
@@ -359,7 +360,11 @@ func buildParser() *sequence.Parser {
 
 	for _, file := range files {
 		// Open pattern file
-		pscan, pfile := sequence.OpenInputFile(file)
+		pscan, pfile, err:= sequence.OpenInputFile(file)
+		defer pfile.Close()
+		if err != nil {
+			standardLogger.HandleFatal(err.Error())
+		}
 
 		for pscan.Scan() {
 			line := pscan.Text()
@@ -369,15 +374,13 @@ func buildParser() *sequence.Parser {
 
 			seq, err := scanner.Scan(line, true)
 			if err != nil {
-				log.Fatal(err)
+				standardLogger.HandleFatal(err.Error())
 			}
 
 			if err := parser.Add(seq); err != nil {
-				log.Fatal(err)
+				standardLogger.HandleFatal(err.Error())
 			}
 		}
-
-		pfile.Close()
 	}
 
 	return parser
@@ -394,11 +397,11 @@ func buildParserFromDb(serviceid string) *sequence.Parser {
 	for _, pat := range pmap {
 		seq, err := scanner.Scan(pat, true)
 		if err != nil {
-			log.Fatal(err)
+			standardLogger.HandleFatal(err.Error())
 		}
 
 		if err := parser.Add(seq); err != nil {
-			log.Fatal(err)
+			standardLogger.HandleFatal(err.Error())
 		}
 	}
 	return parser
@@ -414,15 +417,18 @@ func readConfig() {
 				cfgfile = os.Args[0][:slash] + "/sequence.toml"
 
 				if _, err := os.Stat(cfgfile); err != nil {
-					log.Fatalln("No configuration file found")
+					standardLogger.HandleFatal("No configuration file found")
 				}
 			}
 		}
 	}
 
 	if err := sequence.ReadConfig(cfgfile); err != nil {
-		log.Fatal(err)
+		standardLogger.HandleFatal(err.Error())
 	}
+	//set the logger for the sequence and syslog_ng modules
+	sequence.SetLogger(standardLogger)
+	syslog_ng.SetLogger(standardLogger)
 }
 
 func main() {
@@ -458,6 +464,7 @@ func main() {
 	sequenceCmd.PersistentFlags().StringVarP(&outformat, "out-format", "f", "", "format of the output file, can be yaml, xml or txt or a combo comma separated eg txt,xml, if empty it uses text, used by analyze")
 	sequenceCmd.PersistentFlags().StringVarP(&informat, "in-format", "k", "", "format of the input data, can be json or text, if empty it uses text, used by analyze")
 	sequenceCmd.PersistentFlags().IntVarP(&batchsize, "batch-size", "b", 0, "if using a large file or stdin, the batch size sets the limit of how many to process at one time")
+	sequenceCmd.PersistentFlags().StringVarP(&logfile, "log-file", "l", "", "location of log file if different from the exe directory")
 
 	analyzeCmd.Run = analyze
 	analyzeByServiceCmd.Run = analyzebyservice
