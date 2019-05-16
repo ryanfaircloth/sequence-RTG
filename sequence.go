@@ -38,6 +38,11 @@ func (this Sequence) String() string {
 		if token.Tag != TagUnknown {
 			c = token.Tag.String()
 
+			if token.Type == TokenTime && token.Tag == TagRegExTime {
+				//append the regex type
+				c += ":" + token.Special
+			}
+
 			if token.until != "" {
 				c += ":-:" + token.until
 			} else {
@@ -70,7 +75,7 @@ func (this Sequence) String() string {
 			c = "%" + c + "%"
 			// This prevents the generic "string" type from over tokenising the patterns
 			//if token.Type == TokenString && !token.isValue{
-				//c = token.Value
+			//c = token.Value
 			//}
 		} else {
 			c = token.Value

@@ -76,7 +76,7 @@ var syslog_ng = map[string]string{
 	"%pktssent%" 	: 	"@ESTRING:pktssent: @",
 	"%duration%" 	: 	"@ESTRING:duration: @",
 	"%uri%"			:	"@ESTRING:uri: @",
-	"%regextime%"	:	"@PCRE:timestamp:[regex]@",
+	"%regextime%"	:	"@PCRE:timestamp:[regexnotfound]@",
 }
 
 var syslog_ng_string = map[string]string{
@@ -145,9 +145,23 @@ func getSpecial(p string) string {
 
 	for i, off := range offsets {
 		if i % 2 == 0 && i < len(offsets)-1{
-			//s:= p[off:offsets[i+1]+1]
 			s, del, fieldname := getWithDelimiters(p, off, offsets[i+1]+1)
-			if del != ""{
+			//check if a time regex tag, this needs some manipulation
+			if strings.Contains(s, sequence.TagRegExTime.String()) && del == ""{
+				r, rg := getTimeRegex(s)
+				// look for the pattern
+				if val, ok := syslog_ng[r]; ok {
+					r = val
+					if rg != ""{
+						r = strings.Replace(r, "[regexnotfound]", rg, 1)
+					}
+				}
+				k = strings.Replace(k, s, r, 1)
+			} else if del != ""{
+				//remove any extra colons and numbers
+				if strings.Contains(s, sequence.TagRegExTime.String()){
+					fieldname = sequence.TagRegExTime.String()
+				}
 				if val, ok := syslog_ng_string[del]; ok {
 					val = strings.Replace(val, "[fieldname]", fieldname, 1)
 					k = strings.Replace(k, s, val, 1)
@@ -191,6 +205,18 @@ func getWithDelimiters(p string, start, end int ) (string, string, string){
 		}
 	}
 	return p[start:end], "", fieldname
+}
+
+func getTimeRegex(p string) (string, string){
+	//this should be in the format %regextime:number%, the number is the regex id
+	//find the colon
+	i := strings.Index(p, ":")
+	h := p[i+1:len(p)-1]
+	rg, ok := sequence.GetTimeSettingsRegExValue(h)
+	if ok {
+		p = p[:i] + "%"
+	}
+	return p, rg
 }
 
 

@@ -221,8 +221,7 @@ func (this *Message) scanToken(data string) (int, Token, error) {
 		}
 
 		if !timeStop {
-			if tnode = timeStep(r, tnode); tnode == nil {
-				timeStop = true
+			if tnode, timeStop = timeStep(r, tnode); timeStop == true {
 				if timeLen > 0 {
 					if tnode.regextype != ""{
 						tagType = TagRegExTime

@@ -14,7 +14,9 @@
 
 package sequence
 
-import "strings"
+import (
+	"strings"
+)
 
 type timeNode struct {
 	ntype    	int
@@ -104,20 +106,19 @@ func tnType(r rune) int {
 	return timeNodeLiteral
 }
 
-func timeStep(r rune, cur *timeNode) *timeNode {
+func timeStep(r rune, cur *timeNode) (*timeNode, bool) {
 	if cur == nil {
-		return nil
+		return nil, true
 	}
-
+	//fmt.Printf("r=%c\n", r)
 	t := tnType(r)
 
 	for _, n := range cur.children {
 		if (n.ntype == timeNodeDigitOrSpace && (t == timeNodeDigit || t == timeNodeSpace)) ||
 			(n.ntype == t && (t != timeNodeLiteral || (t == timeNodeLiteral && n.value == r))) {
-
-			return n
+			return n, false
 		}
 	}
 
-	return nil
+	return cur, true
 }

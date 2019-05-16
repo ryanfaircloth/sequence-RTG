@@ -155,6 +155,11 @@ func GetIncludeBelowThreshold() bool{
 	return config.inclBelThresholdRecs
 }
 
+func GetTimeSettingsRegExValue(id string) (string, bool){
+	f, ok := timesettings.regex[id]
+	return f, ok
+}
+
 func SetLogger(log *StandardLogger) {
 	logger = log
 }

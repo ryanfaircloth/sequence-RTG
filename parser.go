@@ -16,6 +16,7 @@ package sequence
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -395,7 +396,12 @@ func processTagToken(token Token) (Token, error) {
 			case metaStar:
 				token.star = true
 			default:
-				return token, fmt.Errorf("Invalid tag token %q: unknown meta character", token.Value)
+				//this is for any kind of numbering data such as regex id
+				if _, err := strconv.Atoi(parts[1]); err == nil{
+					token.Special = parts[1]
+				}else{
+					return token, fmt.Errorf("Invalid tag token %q: unknown meta character", token.Value)
+				}
 			}
 		}
 

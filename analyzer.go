@@ -902,6 +902,7 @@ func analyzeSequence(seq Sequence) Sequence {
 	}
 
 	//glog.Debugf("2. %s", seq.PrintTokens())
+	//TODO: Review this - do we want to keep it?
 
 	// Step 3: try to recognize syslog headers (RFC5424 and RFC3164)
 	// RFC5424
@@ -919,7 +920,9 @@ func analyzeSequence(seq Sequence) Sequence {
 
 		// RFC5424 header format
 		// message time
-		seq[1].Tag = TagMsgTime
+		if seq[1].Tag != TagRegExTime{
+			seq[1].Tag = TagMsgTime
+		}
 		seq[1].Type = seq[1].Tag.TokenType()
 		fexists[seq[1].Tag] = true
 
@@ -956,7 +959,9 @@ func analyzeSequence(seq Sequence) Sequence {
 
 		// RFC3164 format 1 - "Oct 11 22:14:15 mymachine su: ..."
 		// message time
-		seq[0].Tag = TagMsgTime
+		if seq[0].Tag != TagRegExTime{
+			seq[0].Tag = TagMsgTime
+		}
 		seq[0].Type = seq[0].Tag.TokenType()
 		fexists[seq[0].Tag] = true
 
@@ -986,7 +991,9 @@ func analyzeSequence(seq Sequence) Sequence {
 
 		// RFC3164 format 2 - "Aug 24 05:34:00 CST 1987 mymachine myproc[10]: ..."
 		// message time
-		seq[0].Tag = TagMsgTime
+		if seq[0].Tag != TagRegExTime{
+			seq[0].Tag = TagMsgTime
+		}
 		seq[0].Type = seq[0].Tag.TokenType()
 		fexists[seq[0].Tag] = true
 
@@ -1017,7 +1024,9 @@ func analyzeSequence(seq Sequence) Sequence {
 
 		// "jan 12 06:49:56 irc last message repeated 6 times"
 		// message time
-		seq[0].Tag = TagMsgTime
+		if seq[0].Tag != TagRegExTime{
+			seq[0].Tag = TagMsgTime
+		}
 		seq[0].Type = seq[0].Tag.TokenType()
 		fexists[seq[0].Tag] = true
 
