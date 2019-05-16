@@ -17,11 +17,12 @@ package sequence
 import "strings"
 
 type timeNode struct {
-	ntype    int
-	value    rune
-	final    TokenType
-	subtype  int
-	children []*timeNode
+	ntype    	int
+	value    	rune
+	final    	TokenType
+	subtype  	int
+	regextype 	string
+	children 	[]*timeNode
 }
 
 const (
@@ -40,10 +41,11 @@ var (
 	minTimeLength int = 1000
 )
 
-func buildTimeFSM(fmts []string) *timeNode {
+func buildTimeFSM(fmts map[int][]string) *timeNode {
 	root := &timeNode{ntype: timeNodeRoot}
 
-	for i, f := range fmts {
+	for i, fm := range fmts {
+		f := fm[0]
 		f = strings.ToLower(f)
 		if len(f) < minTimeLength {
 			minTimeLength = len(f)
@@ -79,6 +81,7 @@ func buildTimeFSM(fmts []string) *timeNode {
 
 		parent.final = TokenTime
 		parent.subtype = i
+		parent.regextype = fm[1]
 	}
 
 	return root

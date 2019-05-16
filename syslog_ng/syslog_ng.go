@@ -76,6 +76,7 @@ var syslog_ng = map[string]string{
 	"%pktssent%" 	: 	"@ESTRING:pktssent: @",
 	"%duration%" 	: 	"@ESTRING:duration: @",
 	"%uri%"			:	"@ESTRING:uri: @",
+	"%regextime%"	:	"@PCRE:timestamp:[regex]@",
 }
 
 var syslog_ng_string = map[string]string{

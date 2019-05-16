@@ -16,9 +16,10 @@ package sequence
 
 import (
 	"fmt"
-	"strings"
 	"github.com/BurntSushi/toml"
 	"github.com/zhenjl/porter2"
+	"strconv"
+	"strings"
 )
 
 var (
@@ -35,6 +36,11 @@ var (
 		inclBelThresholdRecs   bool
 	}
 
+	timesettings struct {
+		formats map[int][]string
+		regex  map[string]string
+	}
+
 	keymaps struct {
 		keywords map[string]TagType
 		prekeys  map[string][]TagType
@@ -49,13 +55,17 @@ var (
 func ReadConfig(file string) error {
 	var configInfo struct {
 		Version     string
-		TimeFormats []string
 		Tags        []string
 		MarkSpaces 	bool
 		MatchThresholdType     string
 		MatchThresholdValue    string
 		BelowThresholdPath	   string
 		InclBelThresholdRecs   bool
+
+		Timesettings struct {
+			Formats  map[string][]string
+			Regex map[string]string
+		}
 
 		Analyzer struct {
 			Prekeys  map[string][]string
@@ -67,8 +77,6 @@ func ReadConfig(file string) error {
 		return err
 	}
 
-	timeFsmRoot = buildTimeFSM(configInfo.TimeFormats)
-
 	config.tagIDs = make(map[string]TagType, 30)
 	config.tagNames = config.tagNames[:0]
 	config.tagTypes = config.tagTypes[:0]
@@ -76,6 +84,18 @@ func ReadConfig(file string) error {
 	config.matchThresholdType  = configInfo.MatchThresholdType
 	config.matchThresholdValue  = configInfo.MatchThresholdValue
 	config.inclBelThresholdRecs = configInfo.InclBelThresholdRecs
+
+	timesettings.formats = make(map[int][]string, len(configInfo.Timesettings.Formats))
+	for i, f := range configInfo.Timesettings.Formats{
+		x, err := strconv.Atoi(i)
+		if err == nil{
+			timesettings.formats[x] = f
+		}
+	}
+
+	timesettings.regex = configInfo.Timesettings.Regex
+
+	timeFsmRoot = buildTimeFSM(timesettings.formats)
 
 	keymaps.keywords = make(map[string]TagType, 30)
 	keymaps.prekeys = make(map[string][]TagType, 30)
@@ -145,6 +165,8 @@ func predefineAnalyzerTags(f string, t TagType) {
 		TagMsgId = t
 	case "msgtime":
 		TagMsgTime = t
+	case "regextime":
+		TagRegExTime = t
 	case "severity":
 		TagSeverity = t
 	case "priority":
@@ -247,7 +269,8 @@ func predefineAnalyzerTags(f string, t TagType) {
 var (
 	TagUnknown    TagType = 0
 	TagMsgId      TagType // The message identifier
-	TagMsgTime    TagType // The timestamp that’s part of the log message
+	TagMsgTime	  TagType // The timestamp that is a string with no spaces
+	TagRegExTime  TagType // The timestamp that has spaces and needs a regex for matching
 	TagSeverity   TagType // The severity of the event, e.g., Emergency, …
 	TagPriority   TagType // The priority of the event
 	TagAppHost    TagType // The hostname of the host where the log message is generated

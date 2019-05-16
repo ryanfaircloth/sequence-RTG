@@ -111,13 +111,13 @@ func (this *Message) Tokenize(isParse bool) (Token, error) {
 		}
 
 
-		l, t, err := this.scanToken(this.Data[this.state.start:])
+		l, tok, err := this.scanToken(this.Data[this.state.start:])
 		if err != nil {
 			return Token{}, err
 		} else if l == 0 {
 			return Token{}, io.EOF
-		} else if t == TokenUnknown {
-			return Token{}, fmt.Errorf("unknown token encountered: %s\n%v", this.Data[this.state.start:], t)
+		} else if tok.Type == TokenUnknown {
+			return Token{}, fmt.Errorf("unknown token encountered: %s\n%v", this.Data[this.state.start:], tok.Type)
 		}
 
 		// remove any trailing spaces
@@ -133,7 +133,6 @@ func (this *Message) Tokenize(isParse bool) (Token, error) {
 		val := this.Data[this.state.start : this.state.start+l]
 		ct := strings.Count(val, "%")
 		idx := strings.Index(val, "%")
-		cp := false
 		if isParse{
 			//there should be at least 2 or it isn't a tag
 			//this is the first one, not the start
@@ -143,10 +142,10 @@ func (this *Message) Tokenize(isParse bool) (Token, error) {
 			}
 		}else{
 			if ct > 1 && idx >= 0{
-				cp = true
+				tok.Special = "%"
 			}
 		}
-		tok := Token{Tag: TagUnknown, Type: t, Value: val, hasPercent:cp}
+		tok.Value = val
 		this.state.tokCount++
 		this.state.prevToken = tok
 		this.state.start += l + s
@@ -175,12 +174,13 @@ func (this *Message) skipSpace(data string) int {
 	return i
 }
 
-func (this *Message) scanToken(data string) (int, TokenType, error) {
+func (this *Message) scanToken(data string) (int, Token, error) {
 	var (
 		tnode                                  = timeFsmRoot
 		tokenStop, timeStop, hexStop, hexValid bool
 		timeLen, hexLen, tokenLen              int
 		l                                      = len(data)
+		tagType								   = TagUnknown
 	)
 
 	this.resetTokenStates()
@@ -223,9 +223,11 @@ func (this *Message) scanToken(data string) (int, TokenType, error) {
 		if !timeStop {
 			if tnode = timeStep(r, tnode); tnode == nil {
 				timeStop = true
-
 				if timeLen > 0 {
-					return timeLen, TokenTime, nil
+					if tnode.regextype != ""{
+						tagType = TagRegExTime
+					}
+					return timeLen, Token{Type:TokenTime, Tag:tagType, Special:tnode.regextype}, nil
 				}
 			} else if tnode.final == TokenTime {
 				if i+1 > timeLen {
@@ -238,16 +240,19 @@ func (this *Message) scanToken(data string) (int, TokenType, error) {
 		// This means either we found something, or we have exhausted the string
 		if (tokenStop && timeStop && hexStop) || i == l-1 {
 			if timeLen > 0 {
-				return timeLen, TokenTime, nil
+				if tnode.regextype != ""{
+					tagType = TagRegExTime
+				}
+				return timeLen, Token{Type:TokenTime, Tag:tagType, Special:tnode.regextype}, nil
 			} else if hexLen > 0 && this.state.hexColons > 1 {
 				if this.state.hexColons == 5 && this.state.hexMaxSuccColons == 1 {
-					return hexLen, TokenMac, nil
+					return hexLen, Token{Type:TokenMac, Tag:tagType}, nil
 				} else if this.state.hexSuccColonsSeries == 1 ||
 					(this.state.hexColons == 7 && this.state.hexSuccColonsSeries == 0) {
 
-					return hexLen, TokenIPv6, nil
+					return hexLen, Token{Type:TokenIPv6, Tag:tagType}, nil
 				} else {
-					return hexLen, TokenLiteral, nil
+					return hexLen, Token{Type:TokenLiteral, Tag:tagType}, nil
 				}
 			}
 
@@ -256,7 +261,7 @@ func (this *Message) scanToken(data string) (int, TokenType, error) {
 			// a word, it cannot be space since we skipped all space. This means it
 			// is a single character literal, so return that.
 			if tokenLen == 0 {
-				return 1, TokenLiteral, nil
+				return 1, Token{Type:TokenLiteral, Tag:tagType}, nil
 			} else {
 				switch this.state.tokenType {
 				case TokenIPv4:
@@ -271,12 +276,12 @@ func (this *Message) scanToken(data string) (int, TokenType, error) {
 					}
 				}
 
-				return tokenLen, this.state.tokenType, nil
+				return tokenLen, Token{Type:this.state.tokenType, Tag:tagType}, nil
 			}
 		}
 	}
 
-	return len(data), this.state.tokenType, nil
+	return len(data), Token{Type:this.state.tokenType, Tag:tagType}, nil
 }
 
 func (this *Message) tokenStep(i int, r rune, nr string) bool {

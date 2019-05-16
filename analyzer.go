@@ -820,7 +820,7 @@ func markSequencePercent(seq Sequence) Sequence {
 	// Step 1: mark all key=value pairs
 	l := len(seq)
 	for i := l - 1; i >= 0; i-- {
-		if seq[i].hasPercent && seq[i].Type == TokenLiteral{
+		if seq[i].Special == "%" && seq[i].Type == TokenLiteral{
 			seq[i].Type = TokenString
 		}
 	}
@@ -866,7 +866,7 @@ func analyzeSequence(seq Sequence) Sequence {
 			}
 
 			//last of all set any marked literals containing percent values to strings
-			if seq[i].hasPercent && seq[i].Type == TokenLiteral{
+			if seq[i].Special == "%" && seq[i].Type == TokenLiteral{
 				seq[i].Type = TokenString
 			}
 		}
