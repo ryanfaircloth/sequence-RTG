@@ -178,17 +178,18 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 	//We load the file completely
 	total, lrMap = sequence.ReadLogRecordAsMap(infile, informat, lrMap, batchsize)
 
+	standardLogger.HandleInfo(fmt.Sprintf("Read in %d records successfully, starting analysis..", total))
+
 	if sequence.GetIncludeBelowThreshold(){
 		//var reused = 0
 		//TODO change to get these from the db
 		//reused, lrMap = sequence.ReadLogRecordAsMap(sequence.GetBelowThresholdPath(), informat, lrMap, 0)
 		//total += reused
 	}
-
 	//get the threshold for including the pattern in the
 	//output files
 	threshold := sequence.GetThreshold(total)
-
+	standardLogger.HandleDebug(fmt.Sprintf("Threshhold equals %d ", threshold))
 	//Here we group by service and process
 	//We lose the cross service patterns but we get better
 	//within service patterns
@@ -197,12 +198,15 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 	amap := make(map[string]sequence.AnalyzerResult)
 	pmap := make(map[string]string)
 	for svc, lrc := range lrMap{
+		standardLogger.HandleDebug(fmt.Sprintf("Started processing records from service: %s", svc))
 		// For all the log messages, if we can't parse it, then let's add it to the
 		// analyzer for pattern analysis, this requires the previous pattern file/folder
 		//	to be passed in
 		analyzer := sequence.NewAnalyzer()
 		sid := sequence.GenerateIDFromService(svc)
+		standardLogger.HandleDebug("Started building parser using patterns from database")
 		parser := buildParserFromDb(sid)
+		standardLogger.HandleDebug("Completed building parser and starting to check if matches existing patterns")
 		for _, l := range lrc.Records {
 			//TODO Fix this so it doesn't scan twice or parse twice
 			seq := scanMessage(scanner, l.Message)
@@ -212,7 +216,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 			}
 		}
 		analyzer.Finalize()
-
+		standardLogger.HandleDebug("Added new patterns and finalised. Starting individual analysis")
 		for _, l := range lrc.Records {
 			seq := scanMessage(scanner, l.Message)
 			pseq, err := parser.Parse(seq)
@@ -242,15 +246,15 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 	}
 	anTime := time.Since(startTime)
 	standardLogger.HandleInfo(fmt.Sprintf("Analysed in: %s\n", anTime))
-
+	standardLogger.HandleDebug("Starting save to the database.")
 	syslog_ng.SaveToDatabase(amap)
-
+	standardLogger.HandleDebug("Finished save to the database.")
 	//debugging what is coming out as new
-	oFile, _:= sequence.OpenOutputFile("C:\\data\\debug.txt")
-	defer oFile.Close()
-	for pat, stat := range amap {
-		fmt.Fprintf(oFile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.ExampleCount, stat.Examples[0].Message)
-	}
+	//oFile, _:= sequence.OpenOutputFile("C:\\data\\debug.txt")
+	//defer oFile.Close()
+	//for pat, stat := range amap {
+		//fmt.Fprintf(oFile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.ExampleCount, stat.Examples[0].Message)
+	//}
 
 	standardLogger.HandleInfo(fmt.Sprintf("Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored, time taken: %s", processed, len(amap)+len(pmap), len(amap), err_count, time.Since(startTime)))
 }

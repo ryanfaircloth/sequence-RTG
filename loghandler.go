@@ -43,6 +43,7 @@ func NewLogger(fname string) *StandardLogger {
 
 // Declare variables to store log messages as new Events
 var (
+	errorGenericDebug = Event{000, "%s"}
 	errorGenericInfo = Event{100, "%s"}
 	errorGenericError = Event{200, "%s"}
 	errorAnalysisFailed = Event{201, "Unable to analyze: %s"}
@@ -92,5 +93,11 @@ func (l *StandardLogger) HandleError(message string){
 	l.WithFields(logrus.Fields{
 		"id": errorGenericError.id,
 	}).Infof(errorGenericError.message, message)
+}
+
+func (l *StandardLogger) HandleDebug(message string){
+	l.WithFields(logrus.Fields{
+		"id": errorGenericDebug.id,
+	}).Debugf(errorGenericDebug.message, message)
 }
 
