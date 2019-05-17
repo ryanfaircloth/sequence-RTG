@@ -24,6 +24,7 @@ var (
 	cpuprofile string
 	workers    int
 	format     string
+	parcfgfile string
 	batchsize  int
 	standardLogger *sequence.StandardLogger
 
@@ -256,7 +257,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 
 func outputtofile(cmd *cobra.Command, args []string) {
 	start()
-	syslog_ng.OutputToFiles(outformat, outfile)
+	syslog_ng.OutputToFiles(outformat, outfile, parcfgfile)
 }
 
 func validateInputs(commandType string) {
@@ -465,6 +466,7 @@ func main() {
 	sequenceCmd.PersistentFlags().StringVarP(&informat, "in-format", "k", "", "format of the input data, can be json or text, if empty it uses text, used by analyze")
 	sequenceCmd.PersistentFlags().IntVarP(&batchsize, "batch-size", "b", 0, "if using a large file or stdin, the batch size sets the limit of how many to process at one time")
 	sequenceCmd.PersistentFlags().StringVarP(&logfile, "log-file", "l", "", "location of log file if different from the exe directory")
+	sequenceCmd.PersistentFlags().StringVarP(&parcfgfile, "custom-parser-config", "c", "", "TOML-formatted configuration file, default checks ./custom_parser.toml, then custom_parser.toml in the same directory as program")
 
 	analyzeCmd.Run = analyze
 	analyzeByServiceCmd.Run = analyzebyservice

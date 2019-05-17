@@ -2,6 +2,7 @@ package syslog_ng
 
 import (
 	"fmt"
+	"github.com/BurntSushi/toml"
 	"index/suffixarray"
 	"os"
 	"sequence"
@@ -10,89 +11,32 @@ import (
 	"time"
 )
 
-var syslog_ng = map[string]string{
-	"%string%"		:   "@ESTRING:: @",
-	"%alphanum%"	:   "@ESTRING:alphanum: @",
-	"%path%"		:   "@ESTRING:path: @",
-	"%id%"			:   "@ESTRING:id: @",
-   	"%srcemail%"	: 	"@EMAIL:srcemail:@",
-	"%float%"		:   "@FLOAT@",
-	"%integer%"		:  	"@NUMBER@",
-	"%integer%:"	:  	"@NUMBER@:",
-	"(%integer%)"	:	"(@NUMBER@)",
-	"'%integer%'"	:   "'@NUMBER@'",
-	"%srcip%"		:   "@IPvANY:srcip@",
-	"%srcip%,"		:   "@IPvANY:srcip@",
-	"%dstip%"		:   "@IPvANY:dstip@",
-	"%ipv6%"		:   "@IPv6:srcip@",
-	"%msgtime%"		:  	"@ESTRING:msgtime: @",
-	"%time%"		:	"@ESTRING:time: @",
-	"%protocol%"	: 	"@ESTRING:protocol: @",
-	"%msgid%" 		:   "@ESTRING:msgid: @",
-	"%severity%" 	:	"@ESTRING:severity: @",
-	"%priority%" 	: 	"@ESTRING:priority: @",
-	"%apphost%" 	: 	"@ESTRING:apphost: @",
-	"%appip%" 		:   "@ESTRING:appip: @",
-	"%appvendor%"	:	"@ESTRING:appvendor: @",
-	"%appname%" 	: 	"@ESTRING:appname: @",
-	"%srcdomain%"	:	"@ESTRING:srcdomain: @",
-	"%srczone%" 	: 	"@ESTRING:srczone: @",
-	"%srchost%" 	: 	"@HOSTNAME:srchost@",
-	"%srcipnat%" 	:	"@ESTRING:srcipnat: @",
-	"%srcport%" 	: 	"@NUMBER:srcport@",
-	"%srcport%:" 	: 	"@NUMBER:srcport@:",
-	"%srcportnat%" 	: 	"@ESTRING:srcportnat: @",
-	"%srcmac%" 		: 	"@MACADDR:srcmac@",
-	"%srcuser%" 	: 	"@ESTRING:srcuser: @",
-	"%srcuid%" 		: 	"@ESTRING:srcuid: @",
-	"%srcgid%" 		: 	"@ESTRING:srcgid: @",
-	"%dstdomain%" 	: 	"@ESTRING:dstdomain: @",
-	"%dstzone%" 	: 	"@ESTRING:dstzone: @",
-	"%dsthost%" 	: 	"@HOSTNAME:dsthost:@",
-	"%dstipnat%" 	: 	"@ESTRING:dstipnat: @",
-	"%dstport%" 	: 	"@NUMBER:dstport@",
-	"%dstportnat%" 	: 	"@ESTRING:dstportnat: @",
-	"%dstmac%" 		: 	"@MACADDR:dstmac@",
-	"%dstuser%" 	: 	"@ESTRING:dstuser: @",
-	"%dstuid%" 		: 	"@ESTRING:dstuid: @",
-	"%dstgroup%" 	: 	"@ESTRING:dstgroup: @",
-	"%dstgid%" 		: 	"@ESTRING:dstgid: @",
-	"%dstemail%" 	: 	"@ESTRING:dstemail: @",
-	"%iniface%" 	: 	"@ESTRING:iniface: @",
-	"%outiface%" 	: 	"@ESTRING:outiface: @",
-	"%policyid%" 	: 	"@ESTRING:policyid: @",
-	"%sessionid%" 	: 	"@ESTRING:sessionid: @",
-	"%action%" 		: 	"@ESTRING:action: @",
-	"%command%" 	: 	"@ESTRING:command: @",
-	"%object%" 		: 	"@ESTRING:object: @",
-	"%object%:"		:	"@ESTRING:object::@",
-	"%method%" 		: 	"@ESTRING:method: @",
-	"%status%" 		: 	"@ESTRING:status: @",
-	"%status%:" 	: 	"@ESTRING:status::@",
-	"%reason%" 		: 	"@ESTRING:reason: @",
-	"%bytesrecv%" 	: 	"@ESTRING:bytesrecv: @",
-	"%bytessent%" 	: 	"@ESTRING:bytessent: @",
-	"%pktsrecv%" 	: 	"@ESTRING:pktsrecv: @",
-	"%pktssent%" 	: 	"@ESTRING:pktssent: @",
-	"%duration%" 	: 	"@ESTRING:duration: @",
-	"%uri%"			:	"@ESTRING:uri: @",
-	"%regextime%"	:	"@PCRE:timestamp:[regexnotfound]@",
-}
+var(
+	tags struct {
+		general map[string]string
+		delstr  map[string]string
+		cfield	map[string]string
+	}
+)
 
-var syslog_ng_string = map[string]string{
-	"()"		: 	"@QSTRING:[fieldname]:()@",
-	"[]"		: 	"@QSTRING:[fieldname]:[]@",
-	"\"\""		: 	"@QSTRING:[fieldname]:\"@",
-	"''"		: 	"@QSTRING:[fieldname]:'@",
-	"<>"		:	"@QSTRING:[fieldname]:<>@",
-	"``"		:	"@QSTRING:[fieldname]:`@",
-	":"			:	"@ESTRING:[fieldname]::@",
-	","			:	"@ESTRING:[fieldname]:,@",
-	";"			:	"@ESTRING:[fieldname]:;@",
-	">"			:	"@ESTRING:[fieldname]:>@",
-	"'"			:	"@ESTRING:[fieldname]:'@",
-	"no-sp"		:	"@ESTRING:[fieldname]:@",
 
+func readConfig(file string) error {
+	var configInfo struct{
+		Tags struct {
+			General  		map[string]string
+			DelimitedString	map[string]string
+			Fieldname  		map[string]string
+		}
+	}
+	if _, err := toml.DecodeFile(file, &configInfo); err != nil {
+		return err
+	}
+
+	tags.general = configInfo.Tags.General
+	tags.delstr = configInfo.Tags.DelimitedString
+	tags.cfield = configInfo.Tags.Fieldname
+
+	return nil
 }
 
 //this replaces the sequence tags with the syslog-ng tags
@@ -102,11 +46,15 @@ func replaceTags(pattern string) string{
 	s := strings.Fields(pattern)
 	var new []string
 	for _, p := range s{
-		if val, ok := syslog_ng[p]; ok {
+		if val, ok := tags.general[p]; ok {
+			fieldname := p[1:len(p)-1]
 			p=val
+			//replace any field names that have a custom value in the config
+			p = checkForCustomFieldName(p, fieldname)
 		}else{
 			p=getSpecial(p)
 		}
+
 		//reconstruct
 		new = append(new, p)
 	}
@@ -150,7 +98,7 @@ func getSpecial(p string) string {
 			if strings.Contains(s, sequence.TagRegExTime.String()) && del == ""{
 				r, rg := getTimeRegex(s)
 				// look for the pattern
-				if val, ok := syslog_ng[r]; ok {
+				if val, ok := tags.general[r]; ok {
 					r = val
 					if rg != ""{
 						r = strings.Replace(r, "[regexnotfound]", rg, 1)
@@ -162,19 +110,26 @@ func getSpecial(p string) string {
 				if strings.Contains(s, sequence.TagRegExTime.String()){
 					fieldname = sequence.TagRegExTime.String()
 				}
-				if val, ok := syslog_ng_string[del]; ok {
+				if val, ok := tags.delstr[del]; ok {
 					val = strings.Replace(val, "[fieldname]", fieldname, 1)
 					k = strings.Replace(k, s, val, 1)
 				}
 			}else{
-				if val, ok := syslog_ng[s]; ok {
+				if val, ok := tags.general[s]; ok {
 					k = strings.Replace(k, s, val, 1)
 				}
 			}
-
+			k = checkForCustomFieldName(k, fieldname)
 		}
 	}
 	return k
+}
+
+func checkForCustomFieldName(s string, f string) string{
+	if val, ok := tags.cfield[f]; ok{
+		s = strings.Replace(s, f, val, 1)
+	}
+	return s
 }
 
 func getWithDelimiters(p string, start, end int ) (string, string, string){
@@ -294,7 +249,7 @@ func SaveToDatabase(amap map[string]sequence.AnalyzerResult) {
 
 }
 
-func OutputToFiles(outformat string, outfile string) error{
+func OutputToFiles(outformat string, outfile string, config string) error{
 
 	var (
 			txtFile *os.File
@@ -306,7 +261,13 @@ func OutputToFiles(outformat string, outfile string) error{
 			err error
 		)
 
-
+	if config == ""{
+		config = "./custom_parser.toml"
+	}
+	//read the config to load the tags
+	if err = readConfig(config); err != nil{
+		return err
+	}
 	db, ctx := sequence.OpenDbandSetContext()
 	defer db.Close()
 	patmap := sequence.GetPatternsWithExamplesFromDatabase(db,ctx)
