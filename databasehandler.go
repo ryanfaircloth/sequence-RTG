@@ -3,6 +3,7 @@ package sequence
 import (
 	"context"
 	"database/sql"
+	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/volatiletech/sqlboiler/boil"
 	"sequence/models"
@@ -57,7 +58,7 @@ func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context) map[st
 		if err !=nil {
 			logger.DatabaseSelectFailed("services", "Where id = " + p.ServiceID, err.Error())
 		}
-		ar := AnalyzerResult{PatternId:p.ID, Pattern:p.SequencePattern, ThresholdReached:p.ThresholdReached, DateCreated:p.DateCreated}
+		ar := AnalyzerResult{PatternId:p.ID, Pattern:p.SequencePattern, ThresholdReached:p.ThresholdReached, DateCreated:p.DateCreated, ExampleCount:int(p.OriginalMatchCount)}
 		var ex models.ExampleSlice
 		ex, err = p.PatternExamples().All(ctx, db)
 		if err !=nil {
@@ -67,11 +68,6 @@ func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context) map[st
 			lr := LogRecord{Message:e.ExampleDetail, Service:s.Name}
 			ar.Examples = append(ar.Examples, lr)
 		}
-		st, er := p.PatternStatistics().One(ctx, db)
-		if er !=nil {
-			logger.DatabaseSelectFailed("statistics", "One", err.Error())
-		}
-		ar.ExampleCount = int(st.OriginalMatchCount)
 		pmap[p.ID]=ar
 	}
 	return pmap
@@ -116,8 +112,9 @@ func AddService(ctx context.Context, tx *sql.Tx, id string, name string){
 }
 
 func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, sID string){
-	p := models.Pattern{ID:result.PatternId, SequencePattern:result.Pattern, DateCreated:time.Now(),ServiceID:sID, ThresholdReached:result.ThresholdReached}
-	err := p.Insert(ctx, tx, boil.Whitelist("id", "sequence_pattern", "date_created", "threshold_reached", "service_id"))
+	p := models.Pattern{ID:result.PatternId, SequencePattern:result.Pattern, DateCreated:time.Now(),ServiceID:sID, ThresholdReached:result.ThresholdReached,
+		CumulativeMatchCount:int64(result.ExampleCount), OriginalMatchCount:int64(result.ExampleCount), DateLastMatched:time.Now()}
+	err := p.Insert(ctx, tx, boil.Whitelist("id", "sequence_pattern", "date_created", "threshold_reached", "service_id", "date_last_matched", "original_match_count", "cumulative_match_count"))
 	if err != nil{
 		logger.DatabaseInsertFailed("pattern", result.PatternId, err.Error())
 	}
@@ -126,7 +123,11 @@ func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, sID stri
 	//otherwise limit to max three.
 	if result.ThresholdReached{
 		for _, e := range result.Examples{
-			ex := models.Example{ExampleDetail:e.Message, PatternID:result.PatternId}
+			id, err := uuid.NewUUID()
+			if err !=nil {
+				logger.DatabaseInsertFailed("example", result.PatternId, err.Error())
+			}
+			ex := models.Example{ExampleDetail:e.Message, PatternID:result.PatternId, ID:id.String()}
 			err = ex.Insert(ctx, tx, boil.Infer())
 			if err != nil{
 				logger.DatabaseInsertFailed("example", result.PatternId, err.Error())
@@ -149,11 +150,5 @@ func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, sID stri
 				break
 			}
 		}
-	}
-	//add initial statistics
-	st := models.Statistic{PatternID:result.PatternId, CumulativeMatchCount:int64(result.ExampleCount), OriginalMatchCount:int64(result.ExampleCount), DateLastMatched:time.Now()}
-	err = st.Insert(ctx, tx, boil.Infer())
-	if err != nil{
-		logger.DatabaseInsertFailed("statistics", result.PatternId, err.Error())
 	}
 }

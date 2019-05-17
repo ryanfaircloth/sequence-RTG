@@ -677,7 +677,7 @@ func testExamplesSelect(t *testing.T) {
 }
 
 var (
-	exampleDBTypes = map[string]string{`ID`: `INTEGER`, `PatternID`: `STRING (20, 50)`, `ExampleDetail`: `STRING (1000)`}
+	exampleDBTypes = map[string]string{`ID`: `STRING`, `PatternID`: `STRING (20, 50)`, `ExampleDetail`: `STRING (1000)`}
 	_              = bytes.MinRead
 )
 

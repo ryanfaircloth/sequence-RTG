@@ -15,77 +15,66 @@ func TestParent(t *testing.T) {
 	t.Run("Examples", testExamples)
 	t.Run("Patterns", testPatterns)
 	t.Run("Services", testServices)
-	t.Run("Statistics", testStatistics)
 }
 
 func TestDelete(t *testing.T) {
 	t.Run("Examples", testExamplesDelete)
 	t.Run("Patterns", testPatternsDelete)
 	t.Run("Services", testServicesDelete)
-	t.Run("Statistics", testStatisticsDelete)
 }
 
 func TestQueryDeleteAll(t *testing.T) {
 	t.Run("Examples", testExamplesQueryDeleteAll)
 	t.Run("Patterns", testPatternsQueryDeleteAll)
 	t.Run("Services", testServicesQueryDeleteAll)
-	t.Run("Statistics", testStatisticsQueryDeleteAll)
 }
 
 func TestSliceDeleteAll(t *testing.T) {
 	t.Run("Examples", testExamplesSliceDeleteAll)
 	t.Run("Patterns", testPatternsSliceDeleteAll)
 	t.Run("Services", testServicesSliceDeleteAll)
-	t.Run("Statistics", testStatisticsSliceDeleteAll)
 }
 
 func TestExists(t *testing.T) {
 	t.Run("Examples", testExamplesExists)
 	t.Run("Patterns", testPatternsExists)
 	t.Run("Services", testServicesExists)
-	t.Run("Statistics", testStatisticsExists)
 }
 
 func TestFind(t *testing.T) {
 	t.Run("Examples", testExamplesFind)
 	t.Run("Patterns", testPatternsFind)
 	t.Run("Services", testServicesFind)
-	t.Run("Statistics", testStatisticsFind)
 }
 
 func TestBind(t *testing.T) {
 	t.Run("Examples", testExamplesBind)
 	t.Run("Patterns", testPatternsBind)
 	t.Run("Services", testServicesBind)
-	t.Run("Statistics", testStatisticsBind)
 }
 
 func TestOne(t *testing.T) {
 	t.Run("Examples", testExamplesOne)
 	t.Run("Patterns", testPatternsOne)
 	t.Run("Services", testServicesOne)
-	t.Run("Statistics", testStatisticsOne)
 }
 
 func TestAll(t *testing.T) {
 	t.Run("Examples", testExamplesAll)
 	t.Run("Patterns", testPatternsAll)
 	t.Run("Services", testServicesAll)
-	t.Run("Statistics", testStatisticsAll)
 }
 
 func TestCount(t *testing.T) {
 	t.Run("Examples", testExamplesCount)
 	t.Run("Patterns", testPatternsCount)
 	t.Run("Services", testServicesCount)
-	t.Run("Statistics", testStatisticsCount)
 }
 
 func TestHooks(t *testing.T) {
 	t.Run("Examples", testExamplesHooks)
 	t.Run("Patterns", testPatternsHooks)
 	t.Run("Services", testServicesHooks)
-	t.Run("Statistics", testStatisticsHooks)
 }
 
 func TestInsert(t *testing.T) {
@@ -95,8 +84,6 @@ func TestInsert(t *testing.T) {
 	t.Run("Patterns", testPatternsInsertWhitelist)
 	t.Run("Services", testServicesInsert)
 	t.Run("Services", testServicesInsertWhitelist)
-	t.Run("Statistics", testStatisticsInsert)
-	t.Run("Statistics", testStatisticsInsertWhitelist)
 }
 
 // TestToOne tests cannot be run in parallel
@@ -104,7 +91,6 @@ func TestInsert(t *testing.T) {
 func TestToOne(t *testing.T) {
 	t.Run("ExampleToPatternUsingPattern", testExampleToOnePatternUsingPattern)
 	t.Run("PatternToServiceUsingService", testPatternToOneServiceUsingService)
-	t.Run("StatisticToPatternUsingPattern", testStatisticToOnePatternUsingPattern)
 }
 
 // TestOneToOne tests cannot be run in parallel
@@ -115,7 +101,6 @@ func TestOneToOne(t *testing.T) {}
 // or deadlocks can occur.
 func TestToMany(t *testing.T) {
 	t.Run("PatternToPatternExamples", testPatternToManyPatternExamples)
-	t.Run("PatternToPatternStatistics", testPatternToManyPatternStatistics)
 	t.Run("ServiceToServicePatterns", testServiceToManyServicePatterns)
 }
 
@@ -124,7 +109,6 @@ func TestToMany(t *testing.T) {
 func TestToOneSet(t *testing.T) {
 	t.Run("ExampleToPatternUsingPatternExamples", testExampleToOneSetOpPatternUsingPattern)
 	t.Run("PatternToServiceUsingServicePatterns", testPatternToOneSetOpServiceUsingService)
-	t.Run("StatisticToPatternUsingPatternStatistics", testStatisticToOneSetOpPatternUsingPattern)
 }
 
 // TestToOneRemove tests cannot be run in parallel
@@ -143,7 +127,6 @@ func TestOneToOneRemove(t *testing.T) {}
 // or deadlocks can occur.
 func TestToManyAdd(t *testing.T) {
 	t.Run("PatternToPatternExamples", testPatternToManyAddOpPatternExamples)
-	t.Run("PatternToPatternStatistics", testPatternToManyAddOpPatternStatistics)
 	t.Run("ServiceToServicePatterns", testServiceToManyAddOpServicePatterns)
 }
 
@@ -159,33 +142,28 @@ func TestReload(t *testing.T) {
 	t.Run("Examples", testExamplesReload)
 	t.Run("Patterns", testPatternsReload)
 	t.Run("Services", testServicesReload)
-	t.Run("Statistics", testStatisticsReload)
 }
 
 func TestReloadAll(t *testing.T) {
 	t.Run("Examples", testExamplesReloadAll)
 	t.Run("Patterns", testPatternsReloadAll)
 	t.Run("Services", testServicesReloadAll)
-	t.Run("Statistics", testStatisticsReloadAll)
 }
 
 func TestSelect(t *testing.T) {
 	t.Run("Examples", testExamplesSelect)
 	t.Run("Patterns", testPatternsSelect)
 	t.Run("Services", testServicesSelect)
-	t.Run("Statistics", testStatisticsSelect)
 }
 
 func TestUpdate(t *testing.T) {
 	t.Run("Examples", testExamplesUpdate)
 	t.Run("Patterns", testPatternsUpdate)
 	t.Run("Services", testServicesUpdate)
-	t.Run("Statistics", testStatisticsUpdate)
 }
 
 func TestSliceUpdateAll(t *testing.T) {
 	t.Run("Examples", testExamplesSliceUpdateAll)
 	t.Run("Patterns", testPatternsSliceUpdateAll)
 	t.Run("Services", testServicesSliceUpdateAll)
-	t.Run("Statistics", testStatisticsSliceUpdateAll)
 }

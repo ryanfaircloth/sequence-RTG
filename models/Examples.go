@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/volatiletech/null"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries"
 	"github.com/volatiletech/sqlboiler/queries/qm"
@@ -23,9 +22,9 @@ import (
 
 // Example is an object representing the database table.
 type Example struct {
-	ID            null.Int64 `boil:"id" json:"id,omitempty" toml:"id" yaml:"id,omitempty"`
-	PatternID     string     `boil:"pattern_id" json:"pattern_id" toml:"pattern_id" yaml:"pattern_id"`
-	ExampleDetail string     `boil:"example_detail" json:"example_detail" toml:"example_detail" yaml:"example_detail"`
+	ID            string `boil:"id" json:"id" toml:"id" yaml:"id"`
+	PatternID     string `boil:"pattern_id" json:"pattern_id" toml:"pattern_id" yaml:"pattern_id"`
+	ExampleDetail string `boil:"example_detail" json:"example_detail" toml:"example_detail" yaml:"example_detail"`
 
 	R *exampleR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L exampleL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -43,29 +42,6 @@ var ExampleColumns = struct {
 
 // Generated where
 
-type whereHelpernull_Int64 struct{ field string }
-
-func (w whereHelpernull_Int64) EQ(x null.Int64) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, false, x)
-}
-func (w whereHelpernull_Int64) NEQ(x null.Int64) qm.QueryMod {
-	return qmhelper.WhereNullEQ(w.field, true, x)
-}
-func (w whereHelpernull_Int64) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_Int64) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
-func (w whereHelpernull_Int64) LT(x null.Int64) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpernull_Int64) LTE(x null.Int64) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpernull_Int64) GT(x null.Int64) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpernull_Int64) GTE(x null.Int64) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
-
 type whereHelperstring struct{ field string }
 
 func (w whereHelperstring) EQ(x string) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
@@ -76,11 +52,11 @@ func (w whereHelperstring) GT(x string) qm.QueryMod  { return qmhelper.Where(w.f
 func (w whereHelperstring) GTE(x string) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
 
 var ExampleWhere = struct {
-	ID            whereHelpernull_Int64
+	ID            whereHelperstring
 	PatternID     whereHelperstring
 	ExampleDetail whereHelperstring
 }{
-	ID:            whereHelpernull_Int64{field: `id`},
+	ID:            whereHelperstring{field: `id`},
 	PatternID:     whereHelperstring{field: `pattern_id`},
 	ExampleDetail: whereHelperstring{field: `example_detail`},
 }
@@ -107,8 +83,8 @@ type exampleL struct{}
 
 var (
 	exampleColumns               = []string{"id", "pattern_id", "example_detail"}
-	exampleColumnsWithoutDefault = []string{"pattern_id", "example_detail"}
-	exampleColumnsWithDefault    = []string{"id"}
+	exampleColumnsWithoutDefault = []string{"id", "pattern_id", "example_detail"}
+	exampleColumnsWithDefault    = []string{}
 	examplePrimaryKeyColumns     = []string{"id"}
 )
 
@@ -557,7 +533,7 @@ func Examples(mods ...qm.QueryMod) exampleQuery {
 
 // FindExample retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindExample(ctx context.Context, exec boil.ContextExecutor, iD null.Int64, selectCols ...string) (*Example, error) {
+func FindExample(ctx context.Context, exec boil.ContextExecutor, iD string, selectCols ...string) (*Example, error) {
 	exampleObj := &Example{}
 
 	sel := "*"
@@ -956,7 +932,7 @@ func (o *ExampleSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor)
 }
 
 // ExampleExists checks if the Example row exists.
-func ExampleExists(ctx context.Context, exec boil.ContextExecutor, iD null.Int64) (bool, error) {
+func ExampleExists(ctx context.Context, exec boil.ContextExecutor, iD string) (bool, error) {
 	var exists bool
 	sql := "select exists(select 1 from \"Examples\" where \"id\"=? limit 1)"
 

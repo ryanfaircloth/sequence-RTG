@@ -572,84 +572,6 @@ func testPatternToManyPatternExamples(t *testing.T) {
 	}
 }
 
-func testPatternToManyPatternStatistics(t *testing.T) {
-	var err error
-	ctx := context.Background()
-	tx := MustTx(boil.BeginTx(ctx, nil))
-	defer func() { _ = tx.Rollback() }()
-
-	var a Pattern
-	var b, c Statistic
-
-	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, patternDBTypes, true, patternColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Pattern struct: %s", err)
-	}
-
-	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	if err = randomize.Struct(seed, &b, statisticDBTypes, false, statisticColumnsWithDefault...); err != nil {
-		t.Fatal(err)
-	}
-	if err = randomize.Struct(seed, &c, statisticDBTypes, false, statisticColumnsWithDefault...); err != nil {
-		t.Fatal(err)
-	}
-
-	b.PatternID = a.ID
-	c.PatternID = a.ID
-
-	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	check, err := a.PatternStatistics().All(ctx, tx)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	bFound, cFound := false, false
-	for _, v := range check {
-		if v.PatternID == b.PatternID {
-			bFound = true
-		}
-		if v.PatternID == c.PatternID {
-			cFound = true
-		}
-	}
-
-	if !bFound {
-		t.Error("expected to find b")
-	}
-	if !cFound {
-		t.Error("expected to find c")
-	}
-
-	slice := PatternSlice{&a}
-	if err = a.L.LoadPatternStatistics(ctx, tx, false, (*[]*Pattern)(&slice), nil); err != nil {
-		t.Fatal(err)
-	}
-	if got := len(a.R.PatternStatistics); got != 2 {
-		t.Error("number of eager loaded records wrong, got:", got)
-	}
-
-	a.R.PatternStatistics = nil
-	if err = a.L.LoadPatternStatistics(ctx, tx, true, &a, nil); err != nil {
-		t.Fatal(err)
-	}
-	if got := len(a.R.PatternStatistics); got != 2 {
-		t.Error("number of eager loaded records wrong, got:", got)
-	}
-
-	if t.Failed() {
-		t.Logf("%#v", check)
-	}
-}
-
 func testPatternToManyAddOpPatternExamples(t *testing.T) {
 	var err error
 
@@ -717,81 +639,6 @@ func testPatternToManyAddOpPatternExamples(t *testing.T) {
 		}
 
 		count, err := a.PatternExamples().Count(ctx, tx)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if want := int64((i + 1) * 2); count != want {
-			t.Error("want", want, "got", count)
-		}
-	}
-}
-func testPatternToManyAddOpPatternStatistics(t *testing.T) {
-	var err error
-
-	ctx := context.Background()
-	tx := MustTx(boil.BeginTx(ctx, nil))
-	defer func() { _ = tx.Rollback() }()
-
-	var a Pattern
-	var b, c, d, e Statistic
-
-	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, patternDBTypes, false, strmangle.SetComplement(patternPrimaryKeyColumns, patternColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-	foreigners := []*Statistic{&b, &c, &d, &e}
-	for _, x := range foreigners {
-		if err = randomize.Struct(seed, x, statisticDBTypes, false, strmangle.SetComplement(statisticPrimaryKeyColumns, statisticColumnsWithoutDefault)...); err != nil {
-			t.Fatal(err)
-		}
-	}
-
-	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	foreignersSplitByInsertion := [][]*Statistic{
-		{&b, &c},
-		{&d, &e},
-	}
-
-	for i, x := range foreignersSplitByInsertion {
-		err = a.AddPatternStatistics(ctx, tx, i != 0, x...)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		first := x[0]
-		second := x[1]
-
-		if a.ID != first.PatternID {
-			t.Error("foreign key was wrong value", a.ID, first.PatternID)
-		}
-		if a.ID != second.PatternID {
-			t.Error("foreign key was wrong value", a.ID, second.PatternID)
-		}
-
-		if first.R.Pattern != &a {
-			t.Error("relationship was not added properly to the foreign slice")
-		}
-		if second.R.Pattern != &a {
-			t.Error("relationship was not added properly to the foreign slice")
-		}
-
-		if a.R.PatternStatistics[i*2] != first {
-			t.Error("relationship struct slice not set to correct value")
-		}
-		if a.R.PatternStatistics[i*2+1] != second {
-			t.Error("relationship struct slice not set to correct value")
-		}
-
-		count, err := a.PatternStatistics().Count(ctx, tx)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -983,7 +830,7 @@ func testPatternsSelect(t *testing.T) {
 }
 
 var (
-	patternDBTypes = map[string]string{`ID`: `STRING (20, 50)`, `SequencePattern`: `STRING (1000)`, `DateCreated`: `DATETIME`, `ServiceID`: `STRING (20, 50)`, `ThresholdReached`: `BOOLEAN`}
+	patternDBTypes = map[string]string{`ID`: `STRING (20, 50)`, `SequencePattern`: `STRING (1000)`, `DateCreated`: `DATETIME`, `ServiceID`: `STRING (20, 50)`, `ThresholdReached`: `BOOLEAN`, `DateLastMatched`: `DATETIME`, `OriginalMatchCount`: `INTEGER`, `CumulativeMatchCount`: `INTEGER`}
 	_              = bytes.MinRead
 )
 
