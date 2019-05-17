@@ -17,6 +17,7 @@ package sequence
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 //go:generate go run genmethods.go -- reqmethods.go
@@ -90,7 +91,7 @@ func (this Sequence) String() string {
 			p += c
 		}
 	}
-	return p
+	return strings.TrimRight(p, " ")
 }
 
 // Signature returns a single line string that represents a common pattern for this

@@ -166,12 +166,12 @@ func SetLogger(log *StandardLogger) {
 
 func predefineAnalyzerTags(f string, t TagType) {
 	switch f {
+	case "regextime":
+		TagRegExTime = t
 	case "msgid":
 		TagMsgId = t
 	case "msgtime":
 		TagMsgTime = t
-	case "regextime":
-		TagRegExTime = t
 	case "severity":
 		TagSeverity = t
 	case "priority":
@@ -273,9 +273,9 @@ func predefineAnalyzerTags(f string, t TagType) {
 
 var (
 	TagUnknown    TagType = 0
+	TagRegExTime  TagType = 1 // The timestamp that has spaces and needs a regex for matching
 	TagMsgId      TagType // The message identifier
 	TagMsgTime	  TagType // The timestamp that is a string with no spaces
-	TagRegExTime  TagType // The timestamp that has spaces and needs a regex for matching
 	TagSeverity   TagType // The severity of the event, e.g., Emergency, …
 	TagPriority   TagType // The priority of the event
 	TagAppHost    TagType // The hostname of the host where the log message is generated

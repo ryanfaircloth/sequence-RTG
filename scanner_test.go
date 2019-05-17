@@ -63,7 +63,6 @@ func TestMessageScanTokens(t *testing.T) {
 
 func TestMessageScanHexString(t *testing.T) {
 	msg := &Message{}
-
 	for _, tc := range hextests {
 		var valid, stop bool
 
@@ -333,7 +332,7 @@ var (
 		{
 			"general",
 			"Jan 12 06:49:41 irc sshd[7034]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=218-161-81-238.hinet-ip.hinet.net  user=root", Sequence{
-				Token{Type: TokenTime, Tag: TagUnknown, Value: "Jan 12 06:49:41"},
+				Token{Type: TokenTime, Tag: TagRegExTime, Value: "Jan 12 06:49:41", Special:"1"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "irc"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "sshd"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "["},
@@ -375,7 +374,7 @@ var (
 		{
 			"general",
 			"Jan 12 06:49:42 irc sshd[7034]: Failed password for root from 218.161.81.238 port 4228 ssh2", Sequence{
-				Token{Type: TokenTime, Tag: TagUnknown, Value: "Jan 12 06:49:42"},
+				Token{Type: TokenTime, Tag: TagRegExTime, Value: "Jan 12 06:49:42", Special:"1"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "irc"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "sshd"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "["},
@@ -399,7 +398,7 @@ var (
 		{
 			"general",
 			"Jan 12 06:49:56 irc last message repeated 6 times", Sequence{
-				Token{Type: TokenTime, Tag: TagUnknown, Value: "Jan 12 06:49:56"},
+				Token{Type: TokenTime, Tag: TagRegExTime, Value: "Jan 12 06:49:56", Special:"1"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "irc"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "last"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "message"},
@@ -416,7 +415,7 @@ var (
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "-"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "-"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "["},
-				Token{Type: TokenTime, Tag: TagUnknown, Value: "16/Jan/2003:21:22:59 -0500"},
+				Token{Type: TokenTime, Tag: TagRegExTime, Value: "16/Jan/2003:21:22:59 -0500", Special:"5"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "]"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "\""},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "GET"},
@@ -435,7 +434,7 @@ var (
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "-"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "-"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "["},
-				Token{Type: TokenTime, Tag: TagUnknown, Value: "16/Jan/2003:21:22:59 -0500"},
+				Token{Type: TokenTime, Tag: TagRegExTime, Value: "16/Jan/2003:21:22:59 -0500", Special:"5"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "]"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "\""},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "GET"},
@@ -454,7 +453,7 @@ var (
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "-"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "-"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "["},
-				Token{Type: TokenTime, Tag: TagUnknown, Value: "03/May/2004:01:19:07 +0000"},
+				Token{Type: TokenTime, Tag: TagRegExTime, Value: "03/May/2004:01:19:07 +0000", Special:"5"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "]"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "\""},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "GET"},
@@ -469,7 +468,7 @@ var (
 		{
 			"general",
 			"4/5/2012 17:55,172.23.1.101,1101,172.23.0.10,139, Generic Protocol Command Decode,3, [1:2100538:17] GPL NETBIOS SMB IPC$ unicode share access ,TCP TTL:128 TOS:0x0 ID:1643 IpLen:20 DgmLen:122 DF,***AP*** Seq: 0xCEF93F32  Ack: 0xC40C0BB  n: 0xFC9C  TcpLen: 20,", Sequence{
-				Token{Type: TokenTime, Tag: TagUnknown, Value: "4/5/2012 17:55"},
+				Token{Type: TokenTime, Tag: TagRegExTime, Value: "4/5/2012 17:55", Special:"99"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: ","},
 				Token{Type: TokenIPv4, Tag: TagUnknown, Value: "172.23.1.101"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: ","},
@@ -539,7 +538,7 @@ var (
 		{
 			"general",
 			"2012-04-05 17:51:26     Local4.Info     172.23.0.1      %ASA-6-302016: Teardown UDP connection 1315632 for inside:172.23.0.2/514 to identity:172.23.0.1/514 duration 0:09:23 bytes 7999", Sequence{
-				Token{Type: TokenTime, Tag: TagUnknown, Value: "2012-04-05 17:51:26"},
+				Token{Type: TokenTime, Tag: TagRegExTime, Value: "2012-04-05 17:51:26"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "Local4.Info"},
 				Token{Type: TokenIPv4, Tag: TagUnknown, Value: "172.23.0.1"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "%ASA-6-302016"},
@@ -561,7 +560,7 @@ var (
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "/"},
 				Token{Type: TokenInteger, Tag: TagUnknown, Value: "514"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "duration"},
-				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "0:09:23"},
+				Token{Type: TokenTime, Tag: TagUnknown, Value: "0:09:23"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "bytes"},
 				Token{Type: TokenInteger, Tag: TagUnknown, Value: "7999"},
 			},
@@ -614,7 +613,7 @@ var (
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "time"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "="},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "\""},
-				Token{Type: TokenTime, Tag: TagUnknown, Value: "2005-03-18 14:01:43"},
+				Token{Type: TokenTime, Tag: TagRegExTime, Value: "2005-03-18 14:01:43", Special:"4"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "\""},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "fw"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "="},
@@ -661,7 +660,7 @@ var (
 		{
 			"general",
 			"mar 01 09:42:03.875 pffbisvr smtp[2424]: 334 warning: denied access to command 'ehlo vishwakstg1.msn.vishwak.net' from [209.235.210.30]", Sequence{
-				Token{Type: TokenTime, Tag: TagUnknown, Value: "mar 01 09:42:03.875"},
+				Token{Type: TokenTime, Tag: TagRegExTime, Value: "mar 01 09:42:03.875", Special:"99"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "pffbisvr"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "smtp"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "["},
@@ -688,7 +687,7 @@ var (
 		{
 			"general",
 			"may  2 19:00:02 dlfssrv sendmail[18980]: taa18980: from user daemon: size is 596, class is 0, priority is 30596, and nrcpts=1, message id is <200305021400.taa18980@dlfssrv.in.ibm.com>, relay=daemon@localhost", Sequence{
-				Token{Type: TokenTime, Tag: TagUnknown, Value: "may  2 19:00:02"},
+				Token{Type: TokenTime, Tag: TagRegExTime, Value: "may  2 19:00:02", Special:"1"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "dlfssrv"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "sendmail"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "["},
@@ -734,7 +733,7 @@ var (
 		{
 			"general",
 			"mar 01 09:45:02.596 pffbisvr smtp[2424]: 121 statistics: duration=181.14 user=<egreetings@vishwak.com> id=zduqd sent=1440 rcvd=356 srcif=d45f49a2-b30 src=209.235.210.30/61663 cldst=192.216.179.206/25 svsrc=172.17.74.195/8423 dstif=fd3c875c-064 dst=172.17.74.52/25 op=\"to 1 recips\" arg=<vishwakstg1ojte15fo000033b4@vishwakstg1.msn.vishwak.net> result=\"250 m2004030109385301402 message accepted for delivery\" proto=smtp rule=131 (denied access to command 'ehlo vishwakstg1.msn.vishwak.net' from [209.235.210.30])", Sequence{
-				Token{Type: TokenTime, Tag: TagUnknown, Value: "mar 01 09:45:02.596"},
+				Token{Type: TokenTime, Tag: TagRegExTime, Value: "mar 01 09:45:02.596", Special:"99"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "pffbisvr"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "smtp"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "["},
@@ -858,7 +857,7 @@ var (
 		{
 			"general",
 			"Jan 31 21:42:59 mail postfix/anvil[14606]: statistics: max connection rate 1/60s for (smtp:5.5.5.5) at Jan 31 21:39:37", Sequence{
-				Token{Tag: TagUnknown, Type: TokenTime, Value: "Jan 31 21:42:59", isKey: false, isValue: false},
+				Token{Tag: TagRegExTime, Type: TokenTime, Value: "Jan 31 21:42:59", isKey: false, isValue: false, Special:"1"},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "mail", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenPath, Value: "postfix/anvil", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "[", isKey: false, isValue: false},
@@ -878,14 +877,14 @@ var (
 				Token{Tag: TagUnknown, Type: TokenIPv4, Value: "5.5.5.5", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: ")", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "at", isKey: false, isValue: false},
-				Token{Tag: TagUnknown, Type: TokenTime, Value: "Jan 31 21:39:37", isKey: false, isValue: false},
+				Token{Tag: TagRegExTime, Type: TokenTime, Value: "Jan 31 21:39:37", isKey: false, isValue: false, Special:"1"},
 			},
 		},
 
 		{
 			"general",
 			"Jan 31 21:42:59 mail postfix/anvil[14606]: statistics: max connection count 1 for (smtp:5.5.5.5) at Jan 31 21:39:37", Sequence{
-				Token{Tag: TagUnknown, Type: TokenTime, Value: "Jan 31 21:42:59", isKey: false, isValue: false},
+				Token{Tag: TagRegExTime, Type: TokenTime, Value: "Jan 31 21:42:59", isKey: false, isValue: false, Special:"1"},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "mail", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenPath, Value: "postfix/anvil", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "[", isKey: false, isValue: false},
@@ -905,14 +904,14 @@ var (
 				Token{Tag: TagUnknown, Type: TokenIPv4, Value: "5.5.5.5", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: ")", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "at", isKey: false, isValue: false},
-				Token{Tag: TagUnknown, Type: TokenTime, Value: "Jan 31 21:39:37", isKey: false, isValue: false},
+				Token{Tag: TagRegExTime, Type: TokenTime, Value: "Jan 31 21:39:37", isKey: false, isValue: false, Special:"1"},
 			},
 		},
 
 		{
 			"general",
 			"Jan 31 21:42:59 mail postfix/anvil[14606]: statistics: max cache size 1 at Jan 31 21:39:37", Sequence{
-				Token{Tag: TagUnknown, Type: TokenTime, Value: "Jan 31 21:42:59", isKey: false, isValue: false},
+				Token{Tag: TagRegExTime, Type: TokenTime, Value: "Jan 31 21:42:59", isKey: false, isValue: false, Special:"1"},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "mail", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenPath, Value: "postfix/anvil", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "[", isKey: false, isValue: false},
@@ -926,7 +925,7 @@ var (
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "size", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenInteger, Value: "1", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "at", isKey: false, isValue: false},
-				Token{Tag: TagUnknown, Type: TokenTime, Value: "Jan 31 21:39:37", isKey: false, isValue: false},
+				Token{Tag: TagRegExTime, Type: TokenTime, Value: "Jan 31 21:39:37", isKey: false, isValue: false, Special:"1"},
 			},
 		},
 
@@ -934,7 +933,7 @@ var (
 		{
 			"general",
 			"Feb 06 13:37:00 box sshd[4388]: Accepted publickey for cryptix from dead:beef:1234:5678:223:32ff:feb1:2e50 port 58251 ssh2: RSA de:ad:be:ef:74:a6:bb:45:45:52:71:de:b2:12:34:56", Sequence{
-				Token{Tag: TagUnknown, Type: TokenTime, Value: "Feb 06 13:37:00", isKey: false, isValue: false},
+				Token{Tag: TagRegExTime, Type: TokenTime, Value: "Feb 06 13:37:00", isKey: false, isValue: false, Special:"1"},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "box", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "sshd", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "[", isKey: false, isValue: false},
@@ -1007,7 +1006,7 @@ var (
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "-"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "-"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "["},
-				Token{Type: TokenTime, Tag: TagUnknown, Value: "16/Jan/2003:21:22:59 -0500"},
+				Token{Type: TokenTime, Tag: TagRegExTime, Value: "16/Jan/2003:21:22:59 -0500", Special:"5"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "]"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "\""},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "GET"},
@@ -1026,7 +1025,7 @@ var (
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "-"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "-"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "["},
-				Token{Type: TokenTime, Tag: TagUnknown, Value: "03/May/2004:01:19:07 +0000"},
+				Token{Type: TokenTime, Tag: TagRegExTime, Value: "03/May/2004:01:19:07 +0000", Special:"5"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "]"},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "\""},
 				Token{Type: TokenLiteral, Tag: TagUnknown, Value: "GET"},
@@ -1045,7 +1044,7 @@ var (
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "-", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "-", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "[", isKey: false, isValue: false},
-				Token{Tag: TagUnknown, Type: TokenTime, Value: "12/Jul/2013:15:56:54 +0000", isKey: false, isValue: false},
+				Token{Tag: TagRegExTime, Type: TokenTime, Value: "12/Jul/2013:15:56:54 +0000", isKey: false, isValue: false, Special:"5"},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "]", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "\"", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "GET", isKey: false, isValue: false},
@@ -1098,7 +1097,7 @@ var (
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "-", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "-", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "[", isKey: false, isValue: false},
-				Token{Tag: TagUnknown, Type: TokenTime, Value: "03/May/2004:01:00:04 +0000", isKey: false, isValue: false},
+				Token{Tag: TagRegExTime, Type: TokenTime, Value: "03/May/2004:01:00:04 +0000", isKey: false, isValue: false, Special:"5"},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "]", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "\"", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "GET", isKey: false, isValue: false},
@@ -1140,7 +1139,7 @@ var (
 			"general",
 			"Feb 06 15:56:09 higgs sshd[902]: Server listening on 0.0.0.0 port 22.",
 			Sequence{
-				Token{Tag: TagUnknown, Type: TokenTime, Value: "Feb 06 15:56:09", isKey: false, isValue: false},
+				Token{Tag: TagRegExTime, Type: TokenTime, Value: "Feb 06 15:56:09", isKey: false, isValue: false, Special:"1"},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "higgs", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "sshd", isKey: false, isValue: false},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "[", isKey: false, isValue: false},
@@ -1441,7 +1440,7 @@ var (
 		{
 			"general",
 			"Jan 12 06:49:41 irc sshd[7034]: pam_unix(sshd:auth): authentication failure; logname= uid=0 euid=0 tty=ssh ruser= rhost=218-161-81-238.hinet-ip.hinet.net  user=root", Sequence{
-			Token{Type: TokenTime, Tag: TagUnknown, Value: "Jan 12 06:49:41"},
+			Token{Type: TokenTime, Tag: TagRegExTime, Value: "Jan 12 06:49:41", Special:"1"},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "irc", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "sshd", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "["},
@@ -1483,7 +1482,7 @@ var (
 		{
 			"general",
 			"Jan 12 06:49:42 irc sshd[7034]: Failed password for root from 218.161.81.238 port 4228 ssh2", Sequence{
-			Token{Type: TokenTime, Tag: TagUnknown, Value: "Jan 12 06:49:42"},
+			Token{Type: TokenTime, Tag: TagRegExTime, Value: "Jan 12 06:49:42", Special:"1"},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "irc", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "sshd", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "["},
@@ -1507,7 +1506,7 @@ var (
 		{
 			"general",
 			"Jan 12 06:49:56 irc last message repeated 6 times", Sequence{
-			Token{Type: TokenTime, Tag: TagUnknown, Value: "Jan 12 06:49:56"},
+			Token{Type: TokenTime, Tag: TagRegExTime, Value: "Jan 12 06:49:56", Special:"1"},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "irc", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "last", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "message", isSpaceBefore:true},
@@ -1524,7 +1523,7 @@ var (
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "-", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "-", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "[", isSpaceBefore:true},
-			Token{Type: TokenTime, Tag: TagUnknown, Value: "16/Jan/2003:21:22:59 -0500"},
+			Token{Type: TokenTime, Tag: TagRegExTime, Value: "16/Jan/2003:21:22:59 -0500", Special:"5"},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "]"},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "\"", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "GET"},
@@ -1543,7 +1542,7 @@ var (
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "-", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "-", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "[", isSpaceBefore:true},
-			Token{Type: TokenTime, Tag: TagUnknown, Value: "16/Jan/2003:21:22:59 -0500"},
+			Token{Type: TokenTime, Tag: TagRegExTime, Value: "16/Jan/2003:21:22:59 -0500", Special:"5"},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "]"},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "\"", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "GET"},
@@ -1562,7 +1561,7 @@ var (
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "-", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "-", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "[", isSpaceBefore:true},
-			Token{Type: TokenTime, Tag: TagUnknown, Value: "03/May/2004:01:19:07 +0000"},
+			Token{Type: TokenTime, Tag: TagRegExTime, Value: "03/May/2004:01:19:07 +0000",Special:"5"},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "]"},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "\"", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "GET"},
@@ -1577,7 +1576,7 @@ var (
 		{
 			"general",
 			"4/5/2012 17:55,172.23.1.101,1101,172.23.0.10,139, Generic Protocol Command Decode,3, [1:2100538:17] GPL NETBIOS SMB IPC$ unicode share access ,TCP TTL:128 TOS:0x0 ID:1643 IpLen:20 DgmLen:122 DF,***AP*** Seq: 0xCEF93F32  Ack: 0xC40C0BB  n: 0xFC9C  TcpLen: 20,", Sequence{
-			Token{Type: TokenTime, Tag: TagUnknown, Value: "4/5/2012 17:55"},
+			Token{Type: TokenTime, Tag: TagRegExTime, Value: "4/5/2012 17:55", Special:"99"},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: ","},
 			Token{Type: TokenIPv4, Tag: TagUnknown, Value: "172.23.1.101"},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: ","},
@@ -1722,7 +1721,7 @@ var (
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "time", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "="},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "\""},
-			Token{Type: TokenTime, Tag: TagUnknown, Value: "2005-03-18 14:01:43"},
+			Token{Type: TokenTime, Tag: TagRegExTime, Value: "2005-03-18 14:01:43", Special:"4"},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "\""},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "fw", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "="},
@@ -1769,7 +1768,7 @@ var (
 		{
 			"general",
 			"mar 01 09:42:03.875 pffbisvr smtp[2424]: 334 warning: denied access to command 'ehlo vishwakstg1.msn.vishwak.net' from [209.235.210.30]", Sequence{
-			Token{Type: TokenTime, Tag: TagUnknown, Value: "mar 01 09:42:03.875"},
+			Token{Type: TokenTime, Tag: TagRegExTime, Value: "mar 01 09:42:03.875", Special:"99"},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "pffbisvr", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "smtp", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "["},
@@ -1796,7 +1795,7 @@ var (
 		{
 			"general",
 			"may  2 19:00:02 dlfssrv sendmail[18980]: taa18980: from user daemon: size is 596, class is 0, priority is 30596, and nrcpts=1, message id is <200305021400.taa18980@dlfssrv.in.ibm.com>, relay=daemon@localhost", Sequence{
-			Token{Type: TokenTime, Tag: TagUnknown, Value: "may  2 19:00:02"},
+			Token{Type: TokenTime, Tag: TagRegExTime, Value: "may  2 19:00:02", Special:"1"},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "dlfssrv", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "sendmail", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "["},
@@ -1842,7 +1841,7 @@ var (
 		{
 			"general",
 			"mar 01 09:45:02.596 pffbisvr smtp[2424]: 121 statistics: duration=181.14 user=<egreetings@vishwak.com> id=zduqd sent=1440 rcvd=356 srcif=d45f49a2-b30 src=209.235.210.30/61663 cldst=192.216.179.206/25 svsrc=172.17.74.195/8423 dstif=fd3c875c-064 dst=172.17.74.52/25 op=\"to 1 recips\" arg=<vishwakstg1ojte15fo000033b4@vishwakstg1.msn.vishwak.net> result=\"250 m2004030109385301402 message accepted for delivery\" proto=smtp rule=131 (denied access to command 'ehlo vishwakstg1.msn.vishwak.net' from [209.235.210.30])", Sequence{
-			Token{Type: TokenTime, Tag: TagUnknown, Value: "mar 01 09:45:02.596"},
+			Token{Type: TokenTime, Tag: TagRegExTime, Value: "mar 01 09:45:02.596", Special:"99"},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "pffbisvr", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "smtp", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "["},
@@ -1966,7 +1965,7 @@ var (
 		{
 			"general",
 			"Jan 31 21:42:59 mail postfix/anvil[14606]: statistics: max connection rate 1/60s for (smtp:5.5.5.5) at Jan 31 21:39:37", Sequence{
-			Token{Tag: TagUnknown, Type: TokenTime, Value: "Jan 31 21:42:59", isKey: false, isValue: false},
+			Token{Tag: TagRegExTime, Type: TokenTime, Value: "Jan 31 21:42:59", isKey: false, isValue: false, Special:"1"},
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "mail", isKey: false, isValue: false, isSpaceBefore:true},
 			Token{Tag: TagUnknown, Type: TokenPath, Value: "postfix/anvil", isKey: false, isValue: false, isSpaceBefore:true},
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "[", isKey: false, isValue: false},
@@ -1986,14 +1985,14 @@ var (
 			Token{Tag: TagUnknown, Type: TokenIPv4, Value: "5.5.5.5", isKey: false, isValue: false},
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: ")", isKey: false, isValue: false},
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "at", isKey: false, isValue: false, isSpaceBefore:true},
-			Token{Tag: TagUnknown, Type: TokenTime, Value: "Jan 31 21:39:37", isKey: false, isValue: false, isSpaceBefore:true},
+			Token{Tag: TagRegExTime, Type: TokenTime, Value: "Jan 31 21:39:37", isKey: false, isValue: false, isSpaceBefore:true, Special:"1"},
 		},
 		},
 
 		{
 			"general",
 			"Jan 31 21:42:59 mail postfix/anvil[14606]: statistics: max cache size 1 at Jan 31 21:39:37", Sequence{
-			Token{Tag: TagUnknown, Type: TokenTime, Value: "Jan 31 21:42:59", isKey: false, isValue: false},
+			Token{Tag: TagRegExTime, Type: TokenTime, Value: "Jan 31 21:42:59", isKey: false, isValue: false, Special:"1"},
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "mail", isKey: false, isValue: false, isSpaceBefore:true},
 			Token{Tag: TagUnknown, Type: TokenPath, Value: "postfix/anvil", isKey: false, isValue: false, isSpaceBefore:true},
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "[", isKey: false, isValue: false},
@@ -2007,7 +2006,7 @@ var (
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "size", isKey: false, isValue: false, isSpaceBefore:true},
 			Token{Tag: TagUnknown, Type: TokenInteger, Value: "1", isKey: false, isValue: false, isSpaceBefore:true},
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "at", isKey: false, isValue: false, isSpaceBefore:true},
-			Token{Tag: TagUnknown, Type: TokenTime, Value: "Jan 31 21:39:37", isKey: false, isValue: false, isSpaceBefore:true},
+			Token{Tag: TagRegExTime, Type: TokenTime, Value: "Jan 31 21:39:37", isKey: false, isValue: false, isSpaceBefore:true, Special:"1"},
 		},
 		},
 
@@ -2015,7 +2014,7 @@ var (
 		{
 			"general",
 			"Feb 06 13:37:00 box sshd[4388]: Accepted publickey for cryptix from dead:beef:1234:5678:223:32ff:feb1:2e50 port 58251 ssh2: RSA de:ad:be:ef:74:a6:bb:45:45:52:71:de:b2:12:34:56", Sequence{
-			Token{Tag: TagUnknown, Type: TokenTime, Value: "Feb 06 13:37:00", isKey: false, isValue: false},
+			Token{Tag: TagRegExTime, Type: TokenTime, Value: "Feb 06 13:37:00", isKey: false, isValue: false, Special:"1"},
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "box", isKey: false, isValue: false, isSpaceBefore:true},
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "sshd", isKey: false, isValue: false, isSpaceBefore:true},
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "[", isKey: false, isValue: false},
@@ -2088,7 +2087,7 @@ var (
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "-", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "-", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "[", isSpaceBefore:true},
-			Token{Type: TokenTime, Tag: TagUnknown, Value: "16/Jan/2003:21:22:59 -0500"},
+			Token{Type: TokenTime, Tag: TagRegExTime, Value: "16/Jan/2003:21:22:59 -0500", Special:"5"},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "]"},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "\"", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "GET"},
@@ -2107,7 +2106,7 @@ var (
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "-", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "-", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "[", isSpaceBefore:true},
-			Token{Type: TokenTime, Tag: TagUnknown, Value: "03/May/2004:01:19:07 +0000"},
+			Token{Type: TokenTime, Tag: TagRegExTime, Value: "03/May/2004:01:19:07 +0000",Special:"5"},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "]"},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "\"", isSpaceBefore:true},
 			Token{Type: TokenLiteral, Tag: TagUnknown, Value: "GET"},
@@ -2126,7 +2125,7 @@ var (
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "-", isKey: false, isValue: false, isSpaceBefore:true},
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "-", isKey: false, isValue: false, isSpaceBefore:true},
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "[", isKey: false, isValue: false, isSpaceBefore:true},
-			Token{Tag: TagUnknown, Type: TokenTime, Value: "12/Jul/2013:15:56:54 +0000", isKey: false, isValue: false},
+			Token{Tag: TagRegExTime, Type: TokenTime, Value: "12/Jul/2013:15:56:54 +0000", isKey: false, isValue: false, Special:"5"},
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "]", isKey: false, isValue: false},
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "\"", isKey: false, isValue: false, isSpaceBefore:true},
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "GET", isKey: false, isValue: false},
@@ -2179,7 +2178,7 @@ var (
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "-", isKey: false, isValue: false, isSpaceBefore:true},
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "-", isKey: false, isValue: false, isSpaceBefore:true},
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "[", isKey: false, isValue: false, isSpaceBefore:true},
-			Token{Tag: TagUnknown, Type: TokenTime, Value: "03/May/2004:01:00:04 +0000", isKey: false, isValue: false},
+			Token{Tag: TagRegExTime, Type: TokenTime, Value: "03/May/2004:01:00:04 +0000", isKey: false, isValue: false, Special:"5"},
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "]", isKey: false, isValue: false},
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "\"", isKey: false, isValue: false, isSpaceBefore:true},
 			Token{Tag: TagUnknown, Type: TokenLiteral, Value: "GET", isKey: false, isValue: false},
@@ -2221,7 +2220,7 @@ var (
 			"general",
 			"Feb 06 15:56:09 higgs sshd[902]: Server listening on 0.0.0.0 port 22.",
 			Sequence{
-				Token{Tag: TagUnknown, Type: TokenTime, Value: "Feb 06 15:56:09", isKey: false, isValue: false},
+				Token{Tag: TagRegExTime, Type: TokenTime, Value: "Feb 06 15:56:09", isKey: false, isValue: false, Special:"1"},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "higgs", isKey: false, isValue: false, isSpaceBefore:true},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "sshd", isKey: false, isValue: false, isSpaceBefore:true},
 				Token{Tag: TagUnknown, Type: TokenLiteral, Value: "[", isKey: false, isValue: false},
