@@ -18,6 +18,7 @@ var (
 	infile     string
 	outfile    string
 	logfile    string
+	errorfile    string
 	outformat  string
 	informat  string
 	patfile    string
@@ -70,6 +71,14 @@ func profile() {
 
 func start(){
 	standardLogger = sequence.NewLogger(logfile)
+	if errorfile != ""{
+		ofile, err := sequence.OpenOutputFile(errorfile)
+		standardLogger.HandleFatal(fmt.Sprintf("Error opening file for system errors: %v", err))
+		if err == nil {
+			err = syslog_ng.RedirectStderr(ofile)
+			standardLogger.HandleFatal(fmt.Sprintf("Failed to redirect stderr to file: %v", err))
+		}
+	}
 	readConfig()
 	validateInputs("analyze")
 	profile()
@@ -470,7 +479,9 @@ func main() {
 	sequenceCmd.PersistentFlags().StringVarP(&informat, "in-format", "k", "", "format of the input data, can be json or text, if empty it uses text, used by analyze")
 	sequenceCmd.PersistentFlags().IntVarP(&batchsize, "batch-size", "b", 0, "if using a large file or stdin, the batch size sets the limit of how many to process at one time")
 	sequenceCmd.PersistentFlags().StringVarP(&logfile, "log-file", "l", "", "location of log file if different from the exe directory")
+	sequenceCmd.PersistentFlags().StringVarP(&errorfile, "std-error-file", "e", "", "this redirects panics etc to a log file not stderr, set to a valid path to enable this")
 	sequenceCmd.PersistentFlags().StringVarP(&parcfgfile, "custom-parser-config", "c", "", "TOML-formatted configuration file, default checks ./custom_parser.toml, then custom_parser.toml in the same directory as program")
+
 
 	analyzeCmd.Run = analyze
 	analyzeByServiceCmd.Run = analyzebyservice
