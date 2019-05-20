@@ -30,6 +30,7 @@ type Pattern struct {
 	DateLastMatched      time.Time `boil:"date_last_matched" json:"date_last_matched" toml:"date_last_matched" yaml:"date_last_matched"`
 	OriginalMatchCount   int64     `boil:"original_match_count" json:"original_match_count" toml:"original_match_count" yaml:"original_match_count"`
 	CumulativeMatchCount int64     `boil:"cumulative_match_count" json:"cumulative_match_count" toml:"cumulative_match_count" yaml:"cumulative_match_count"`
+	IgnorePattern        bool      `boil:"ignore_pattern" json:"ignore_pattern" toml:"ignore_pattern" yaml:"ignore_pattern"`
 
 	R *patternR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L patternL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -44,6 +45,7 @@ var PatternColumns = struct {
 	DateLastMatched      string
 	OriginalMatchCount   string
 	CumulativeMatchCount string
+	IgnorePattern        string
 }{
 	ID:                   "id",
 	SequencePattern:      "sequence_pattern",
@@ -53,6 +55,7 @@ var PatternColumns = struct {
 	DateLastMatched:      "date_last_matched",
 	OriginalMatchCount:   "original_match_count",
 	CumulativeMatchCount: "cumulative_match_count",
+	IgnorePattern:        "ignore_pattern",
 }
 
 // Generated where
@@ -105,6 +108,7 @@ var PatternWhere = struct {
 	DateLastMatched      whereHelpertime_Time
 	OriginalMatchCount   whereHelperint64
 	CumulativeMatchCount whereHelperint64
+	IgnorePattern        whereHelperbool
 }{
 	ID:                   whereHelperstring{field: `id`},
 	SequencePattern:      whereHelperstring{field: `sequence_pattern`},
@@ -114,6 +118,7 @@ var PatternWhere = struct {
 	DateLastMatched:      whereHelpertime_Time{field: `date_last_matched`},
 	OriginalMatchCount:   whereHelperint64{field: `original_match_count`},
 	CumulativeMatchCount: whereHelperint64{field: `cumulative_match_count`},
+	IgnorePattern:        whereHelperbool{field: `ignore_pattern`},
 }
 
 // PatternRels is where relationship names are stored.
@@ -140,9 +145,9 @@ func (*patternR) NewStruct() *patternR {
 type patternL struct{}
 
 var (
-	patternColumns               = []string{"id", "sequence_pattern", "date_created", "service_id", "threshold_reached", "date_last_matched", "original_match_count", "cumulative_match_count"}
+	patternColumns               = []string{"id", "sequence_pattern", "date_created", "service_id", "threshold_reached", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern"}
 	patternColumnsWithoutDefault = []string{"id", "sequence_pattern", "date_created", "service_id", "date_last_matched", "original_match_count", "cumulative_match_count"}
-	patternColumnsWithDefault    = []string{"threshold_reached"}
+	patternColumnsWithDefault    = []string{"threshold_reached", "ignore_pattern"}
 	patternPrimaryKeyColumns     = []string{"id"}
 )
 
