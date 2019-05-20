@@ -20,7 +20,7 @@ type StandardLogger struct {
 }
 
 // NewLogger initializes the standard logger
-func NewLogger(fname string) *StandardLogger {
+func NewLogger(fname string, level string) *StandardLogger {
 	var baseLogger = logrus.New()
 
 	var standardLogger = &StandardLogger{baseLogger}
@@ -34,10 +34,22 @@ func NewLogger(fname string) *StandardLogger {
 		standardLogger.HandleInfo("Failed to log to file, using default stderr")
 	}
 
+	//if set level for logging, default to info
+	switch level{
+	case "fatal":
+		standardLogger.SetLevel(logrus.FatalLevel)
+	case "error":
+		standardLogger.SetLevel(logrus.ErrorLevel)
+	case "debug":
+		standardLogger.SetLevel(logrus.DebugLevel)
+	case "trace":
+		standardLogger.SetLevel(logrus.TraceLevel)
+	default:
+		standardLogger.SetLevel(logrus.InfoLevel)
+	}
+
 	standardLogger.Formatter = &logrus.JSONFormatter{}
 
-	// Only log the warning severity or above.
-	standardLogger.SetLevel(logrus.DebugLevel)
 	return standardLogger
 }
 

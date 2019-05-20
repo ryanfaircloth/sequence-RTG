@@ -45,4 +45,11 @@ func ValidateBatchSize(batchsize int) string {
 	return ""
 }
 
+func ValidateMode(mode string) string {
+	if mode != "" && mode != "cont" && mode != "sing"{
+		return "Mode can either be omitted, 'sing' or 'cont'. Other values are not supported"
+	}
+	return ""
+}
+
 

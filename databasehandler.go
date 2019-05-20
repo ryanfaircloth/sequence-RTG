@@ -3,7 +3,7 @@ package sequence
 import (
 	"context"
 	"database/sql"
-	"github.com/google/uuid"
+	"github.com/gofrs/uuid"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/volatiletech/sqlboiler/boil"
 	"sequence/models"
@@ -123,7 +123,7 @@ func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, sID stri
 	//otherwise limit to max three.
 	if result.ThresholdReached{
 		for _, e := range result.Examples{
-			id, err := uuid.NewUUID()
+			id, err := uuid.NewV4()
 			if err !=nil {
 				logger.DatabaseInsertFailed("example", result.PatternId, err.Error())
 			}
@@ -138,7 +138,11 @@ func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, sID stri
 		count := 0
 		for _, e := range result.Examples{
 			if prev != e.Message{
-				ex := models.Example{ExampleDetail:e.Message, PatternID:result.PatternId}
+				id, err := uuid.NewV4()
+				if err !=nil {
+					logger.DatabaseInsertFailed("example", result.PatternId, err.Error())
+				}
+				ex := models.Example{ExampleDetail:e.Message, PatternID:result.PatternId, ID:id.String()}
 				err = ex.Insert(ctx, tx, boil.Infer())
 				if err != nil{
 					logger.DatabaseInsertFailed("example", result.PatternId, err.Error())

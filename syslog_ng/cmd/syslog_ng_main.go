@@ -18,6 +18,8 @@ var (
 	infile     string
 	outfile    string
 	logfile    string
+	mode    	string
+	loglevel	string
 	errorfile    string
 	outformat  string
 	informat  string
@@ -69,24 +71,27 @@ func profile() {
 	}()
 }
 
-func start(){
-	standardLogger = sequence.NewLogger(logfile)
+func start(commandType string){
+	standardLogger = sequence.NewLogger(logfile, loglevel)
 	if errorfile != ""{
 		ofile, err := sequence.OpenOutputFile(errorfile)
-		standardLogger.HandleFatal(fmt.Sprintf("Error opening file for system errors: %v", err))
 		if err == nil {
 			err = syslog_ng.RedirectStderr(ofile)
-			standardLogger.HandleFatal(fmt.Sprintf("Failed to redirect stderr to file: %v", err))
+			if err != nil{
+				standardLogger.HandleFatal(fmt.Sprintf("Failed to redirect stderr to file: %v", err))
+			}
+		}else{
+			standardLogger.HandleFatal(fmt.Sprintf("Error opening file for system errors: %v", err))
 		}
 	}
 	readConfig()
-	validateInputs("analyze")
+	validateInputs(commandType)
 	profile()
 }
 
 
 func analyze(cmd *cobra.Command, args []string) {
-	start()
+	start("analyze")
 	parser := buildParser()
 	analyzer := sequence.NewAnalyzer()
 	scanner := sequence.NewScanner()
@@ -178,98 +183,110 @@ func analyze(cmd *cobra.Command, args []string) {
 }
 
 func analyzebyservice(cmd *cobra.Command, args []string) {
-	start()
+	start("analyzebyservice")
 	scanner := sequence.NewScanner()
-
-	startTime := time.Now()
-	lrMap := make(map[string] sequence.LogRecordCollection)
-	var total = 0
-	//We load the file completely
-	total, lrMap = sequence.ReadLogRecordAsMap(infile, informat, lrMap, batchsize)
-
-	standardLogger.HandleInfo(fmt.Sprintf("Read in %d records successfully, starting analysis..", total))
-
-	if sequence.GetIncludeBelowThreshold(){
-		//var reused = 0
-		//TODO change to get these from the db
-		//reused, lrMap = sequence.ReadLogRecordAsMap(sequence.GetBelowThresholdPath(), informat, lrMap, 0)
-		//total += reused
+	iscan, ifile, err := sequence.OpenInputFile(infile)
+	if err != nil{
+		standardLogger.HandleFatal(err.Error())
 	}
-	//get the threshold for including the pattern in the
-	//output files
-	threshold := sequence.GetThreshold(total)
-	standardLogger.HandleDebug(fmt.Sprintf("Threshhold equals %d ", threshold))
-	//Here we group by service and process
-	//We lose the cross service patterns but we get better
-	//within service patterns
-	err_count := 0
-	processed := 0
-	amap := make(map[string]sequence.AnalyzerResult)
-	pmap := make(map[string]string)
-	for svc, lrc := range lrMap{
-		standardLogger.HandleDebug(fmt.Sprintf("Started processing records from service: %s", svc))
-		// For all the log messages, if we can't parse it, then let's add it to the
-		// analyzer for pattern analysis, this requires the previous pattern file/folder
-		//	to be passed in
-		analyzer := sequence.NewAnalyzer()
-		sid := sequence.GenerateIDFromService(svc)
-		standardLogger.HandleDebug("Started building parser using patterns from database")
-		parser := buildParserFromDb(sid)
-		standardLogger.HandleDebug("Completed building parser and starting to check if matches existing patterns")
-		for _, l := range lrc.Records {
-			//TODO Fix this so it doesn't scan twice or parse twice
-			seq := scanMessage(scanner, l.Message)
-			_, err := parser.Parse(seq)
-			if err != nil {
-				analyzer.Add(seq)
-			}
+	defer ifile.Close()
+
+	for {
+		lrMap := make(map[string]sequence.LogRecordCollection)
+		startTime := time.Now()
+		//We load the file completely
+		total, lrMap, exit := sequence.ReadLogRecordAsMap(ifile, iscan, informat, lrMap, batchsize, mode)
+		if exit{
+			break
 		}
-		analyzer.Finalize()
-		standardLogger.HandleDebug("Added new patterns and finalised. Starting individual analysis")
-		for _, l := range lrc.Records {
-			seq := scanMessage(scanner, l.Message)
-			pseq, err := parser.Parse(seq)
-			if err == nil {
-				pat := pseq.String()
-				pmap[pat] = "found"
-			}else {
-				aseq, err := analyzer.Analyze(seq)
+		standardLogger.HandleInfo(fmt.Sprintf("Read in %d records successfully, starting analysis..", total))
+
+		if sequence.GetIncludeBelowThreshold() {
+			//var reused = 0
+			//TODO change to get these from the db
+			//reused, lrMap = sequence.ReadLogRecordAsMap(sequence.GetBelowThresholdPath(), informat, lrMap, 0)
+			//total += reused
+		}
+		//get the threshold for including the pattern in the
+		//output files
+		threshold := sequence.GetThreshold(total)
+		standardLogger.HandleDebug(fmt.Sprintf("Threshhold equals %d ", threshold))
+		//Here we group by service and process
+		//We lose the cross service patterns but we get better
+		//within service patterns
+		err_count := 0
+		processed := 0
+		amap := make(map[string]sequence.AnalyzerResult)
+		pmap := make(map[string]string)
+		for svc, lrc := range lrMap {
+			standardLogger.HandleDebug(fmt.Sprintf("Started processing records from service: %s", svc))
+			// For all the log messages, if we can't parse it, then let's add it to the
+			// analyzer for pattern analysis, this requires the previous pattern file/folder
+			//	to be passed in
+			analyzer := sequence.NewAnalyzer()
+			sid := sequence.GenerateIDFromService(svc)
+			standardLogger.HandleDebug("Started building parser using patterns from database")
+			parser := buildParserFromDb(sid)
+			standardLogger.HandleDebug("Completed building parser and starting to check if matches existing patterns")
+			for _, l := range lrc.Records {
+				//TODO Fix this so it doesn't scan twice or parse twice
+				seq := scanMessage(scanner, l.Message)
+				_, err := parser.Parse(seq)
 				if err != nil {
-					standardLogger.LogAnalysisFailed(l)
-					err_count++
-				} else {
-					pat := aseq.String()
-					ar, ok := amap[pat]
-					if !ok {
-						ar = sequence.AnalyzerResult{}
-					}
-					sequence.AddExampleToAnalyzerResult(&ar, l, threshold)
-					ar.PatternId = sequence.GenerateIDFromPattern(pat, ar.Examples[0].Service)
-					ar.ExampleCount++
-					amap[pat] = ar
+					analyzer.Add(seq)
 				}
 			}
-			processed++
+			analyzer.Finalize()
+			standardLogger.HandleDebug("Added new patterns and finalised. Starting individual analysis")
+			for _, l := range lrc.Records {
+				seq := scanMessage(scanner, l.Message)
+				pseq, err := parser.Parse(seq)
+				if err == nil {
+					pat := pseq.String()
+					pmap[pat] = "found"
+				} else {
+					aseq, err := analyzer.Analyze(seq)
+					if err != nil {
+						standardLogger.LogAnalysisFailed(l)
+						err_count++
+					} else {
+						pat := aseq.String()
+						ar, ok := amap[pat]
+						if !ok {
+							ar = sequence.AnalyzerResult{}
+						}
+						sequence.AddExampleToAnalyzerResult(&ar, l, threshold)
+						ar.PatternId = sequence.GenerateIDFromPattern(pat, ar.Examples[0].Service)
+						ar.ExampleCount++
+						amap[pat] = ar
+					}
+				}
+				processed++
+			}
+			//fmt.Printf("Processed: %d\n", processed)
 		}
-		//fmt.Printf("Processed: %d\n", processed)
-	}
-	anTime := time.Since(startTime)
-	standardLogger.HandleInfo(fmt.Sprintf("Analysed in: %s\n", anTime))
-	standardLogger.HandleDebug("Starting save to the database.")
-	syslog_ng.SaveToDatabase(amap)
-	standardLogger.HandleDebug("Finished save to the database.")
-	//debugging what is coming out as new
-	//oFile, _:= sequence.OpenOutputFile("C:\\data\\debug.txt")
-	//defer oFile.Close()
-	//for pat, stat := range amap {
+		anTime := time.Since(startTime)
+		standardLogger.HandleInfo(fmt.Sprintf("Analysed in: %s\n", anTime))
+		standardLogger.HandleDebug("Starting save to the database.")
+		syslog_ng.SaveToDatabase(amap)
+		standardLogger.HandleDebug("Finished save to the database.")
+		//debugging what is coming out as new
+		//oFile, _:= sequence.OpenOutputFile("C:\\data\\debug.txt")
+		//defer oFile.Close()
+		//for pat, stat := range amap {
 		//fmt.Fprintf(oFile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.ExampleCount, stat.Examples[0].Message)
-	//}
+		//}
+		standardLogger.HandleInfo(fmt.Sprintf("Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored, time taken: %s", processed, len(amap)+len(pmap), len(amap), err_count, time.Since(startTime)))
 
-	standardLogger.HandleInfo(fmt.Sprintf("Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored, time taken: %s", processed, len(amap)+len(pmap), len(amap), err_count, time.Since(startTime)))
+		if mode != "cont" || infile != "-" {
+			break
+		}
+	}
 }
 
+
 func outputtofile(cmd *cobra.Command, args []string) {
-	start()
+	start("outputtofile")
 	syslog_ng.OutputToFiles(outformat, outfile, parcfgfile)
 }
 
@@ -298,6 +315,31 @@ func validateInputs(commandType string) {
 			errors = errors + ", " + err
 		}
 		err = sequence.ValidateBatchSize(batchsize)
+		if err != "" {
+			errors = errors + ", " + err
+		}
+		err = sequence.ValidateMode(mode)
+		if err != "" {
+			errors = errors + ", " + err
+		}
+	case "analyzebyservice":
+		//set the formats to lower before we start
+		informat = strings.ToLower(informat)
+		outformat = strings.ToLower(outformat)
+
+		//validate input file
+		if infile == "" {
+			errors = errors + "Invalid input file specified"
+		}
+		err := sequence.ValidateInformat(informat)
+		if err != "" {
+			errors = errors + ", " + err
+		}
+		err = sequence.ValidateBatchSize(batchsize)
+		if err != "" {
+			errors = errors + ", " + err
+		}
+		err = sequence.ValidateMode(mode)
 		if err != "" {
 			errors = errors + ", " + err
 		}
@@ -479,8 +521,10 @@ func main() {
 	sequenceCmd.PersistentFlags().StringVarP(&informat, "in-format", "k", "", "format of the input data, can be json or text, if empty it uses text, used by analyze")
 	sequenceCmd.PersistentFlags().IntVarP(&batchsize, "batch-size", "b", 0, "if using a large file or stdin, the batch size sets the limit of how many to process at one time")
 	sequenceCmd.PersistentFlags().StringVarP(&logfile, "log-file", "l", "", "location of log file if different from the exe directory")
+	sequenceCmd.PersistentFlags().StringVarP(&loglevel, "log-level", "n", "", "defaults to info level, can be 'trace' 'debug', 'info', 'error', 'fatal'")
 	sequenceCmd.PersistentFlags().StringVarP(&errorfile, "std-error-file", "e", "", "this redirects panics etc to a log file not stderr, set to a valid path to enable this")
 	sequenceCmd.PersistentFlags().StringVarP(&parcfgfile, "custom-parser-config", "c", "", "TOML-formatted configuration file, default checks ./custom_parser.toml, then custom_parser.toml in the same directory as program")
+	sequenceCmd.PersistentFlags().StringVarP(&mode, "mode", "m", "", "there are two modes, single (sing) and continuous (cont), single by default, best used with a batch size, used by analyzebyservice")
 
 
 	analyzeCmd.Run = analyze
