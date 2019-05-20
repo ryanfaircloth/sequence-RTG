@@ -29,6 +29,7 @@ tags = [
 	"srczone:string",			# The originating zone
 	"srchost:string",			# The hostname of the originator of the event or connection.
 	"srcip:ipv4",				# The IPv4 address of the originator of the event or connection.
+	"srcuri:uri",				# The uri of the originator of the event or connection.
 	"srcipnat:ipv4",			# The natted (network address translation) IP of the originator of the event or connection.
 	"srcport:integer",			# The port number of the originating connection.
 	"srcportnat:integer",		# The natted port number of the originating connection.
@@ -42,6 +43,7 @@ tags = [
 	"dstzone:string",			# The destination zone
 	"dsthost:string",			# The hostname of the destination of the event or connection.
 	"dstip:ipv4",				# The IPv4 address of the destination of the event or connection.
+	"dsturi:uri",				# The uri of the destination of the event or connection.
 	"dstipnat:ipv4",			# The natted (network address translation) IP of the destination of the event or connection.
 	"dstport:integer",			# The destination port number of the connection.
 	"dstportnat:integer",		# The natted destination port number of the connection.
@@ -81,7 +83,7 @@ tags = [
 	egid 		= [ "srcgid" ]
 	euid 		= [ "srcuid" ]
 	for 		= [ "srchost", "srcipv4", "srcuser" ]
-	from 		= [ "srchost", "srcipv4" ]
+	from 		= [ "srchost", "srcipv4", "srcuri"]
 	gid 		= [ "srcgid" ]
 	group 		= [ "srcgroup" ]
 	logname 	= [ "srcuser" ]
@@ -90,8 +92,9 @@ tags = [
 	rhost 		= [ "srchost", "srcipv4" ]
 	ruser 		= [ "srcuser" ]
 	sport		= [ "srcport" ]
-	src 		= [ "srchost", "srcipv4" ]
+	src 		= [ "srchost", "srcipv4", "srcuri"]
 	time 		= [ "strtime", "regexonetime", "msgtime"]
+	to          = [ "dsthost", "dstipv4", "dsturi"]
 	uid 		= [ "srcuid" ]
 	uname 		= [ "srcuser" ]
 	user 		= [ "srcuser" ]
@@ -233,7 +236,7 @@ tags = [
 	15 = ["Jan 2 2006 15:04:05", "99"]
 	16 = ["Jan 2 15:04:05 2006", "99"]
 	17 = ["Jan 2 15:04:05 -0700", "99"]
-	18 = ["Jan 2, 2006 3:04:05 PM", "2"]                    
+	18 = ["Jan 2, 2006 3:04:05 PM", "2"]
 	19 = ["2006-01-02 15:04:05 -0700", "99"]
 	20 = ["2006-01-02 15:04:05-0700", "99"]
 	21 = ["2006-01-02 15:04:05,000", "99"]
