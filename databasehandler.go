@@ -12,7 +12,7 @@ import (
 
 func OpenDbandSetContext()(*sql.DB, context.Context){
 	// Get a handle to the SQLite database, using mattn/go-sqlite3
-	db, err := sql.Open("sqlite3", "sequence.sdb")
+	db, err := sql.Open("sqlite3", config.database)
 	if err != nil{
 		panic(err)
 	}
