@@ -76,7 +76,7 @@ func start(commandType string){
 	//if errorfile != ""{
 		//ofile, err := sequence.OpenOutputFile(errorfile)
 		//if err == nil {
-			//err = syslog_ng.RedirectStderr(ofile)
+			//err = sequence.RedirectStderr(ofile)
 			//if err != nil{
 				//standardLogger.HandleFatal(fmt.Sprintf("Failed to redirect stderr to file: %v", err))
 			//}
@@ -180,6 +180,11 @@ func analyze(cmd *cobra.Command, args []string) {
 	standardLogger.HandleInfo(fmt.Sprintf("Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored\n", len(lr), len(pmap)+len(amap), len(amap), err_count))
 	anTime := time.Since(startTime)
 	standardLogger.HandleInfo(fmt.Sprintf("Analysed in: %s\n", anTime))
+}
+
+func createdatabase(cmd *cobra.Command, args []string){
+	start("createdatabase")
+	sequence.CreateDatabase(outfile)
 }
 
 func analyzebyservice(cmd *cobra.Command, args []string) {
@@ -354,7 +359,13 @@ func validateInputs(commandType string) {
 		if err != "" {
 			errors = errors + ", " + err
 		}
+	case "createdatabase":
+		err := sequence.ValidateOutFile(outfile)
+		if err != "" {
+			errors = errors + ", " + err
+		}
 	}
+
 	if errors != ""{
 		standardLogger.HandleFatal(errors)
 	}
@@ -497,6 +508,11 @@ func main() {
 			Short: "sequence is a high performance sequential log analyzer and parser",
 		}
 
+		createDatabaseCmd = &cobra.Command{
+			Use:   "createdatabase",
+			Short: "creates a new sequence database to the location in the config file",
+		}
+
 		analyzeCmd = &cobra.Command{
 			Use:   "analyze",
 			Short: "analyzes a log file and output a list of patterns that will match all the log messages",
@@ -526,11 +542,12 @@ func main() {
 	sequenceCmd.PersistentFlags().StringVarP(&parcfgfile, "custom-parser-config", "c", "", "TOML-formatted configuration file, default checks ./custom_parser.toml, then custom_parser.toml in the same directory as program")
 	sequenceCmd.PersistentFlags().StringVarP(&mode, "mode", "m", "", "there are two modes, single (sing) and continuous (cont), single by default, best used with a batch size, used by analyzebyservice")
 
-
+	createDatabaseCmd.Run = createdatabase
 	analyzeCmd.Run = analyze
 	analyzeByServiceCmd.Run = analyzebyservice
 	outToFileCmd.Run = outputtofile
 
+	sequenceCmd.AddCommand(createDatabaseCmd)
 	sequenceCmd.AddCommand(analyzeCmd)
 	sequenceCmd.AddCommand(analyzeByServiceCmd)
 	sequenceCmd.AddCommand(outToFileCmd)

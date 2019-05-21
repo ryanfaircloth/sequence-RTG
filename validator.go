@@ -38,6 +38,14 @@ func ValidateOutFormatWithFile(outfile string, outformat string) string {
 	return ""
 }
 
+//for the create database
+func ValidateOutFile(outfile string) string {
+	if outfile == ""{
+		return "Out file name must be specified for creating a database."
+	}
+	return ""
+}
+
 func ValidateBatchSize(batchsize int) string {
 	if batchsize < 0{
 		return "Batch size must be zero or greater. Negative numbers are not permitted."

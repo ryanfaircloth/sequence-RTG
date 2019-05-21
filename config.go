@@ -35,6 +35,7 @@ var (
 		matchThresholdValue    string
 		inclBelThresholdRecs   bool
 		database			   string
+		createDbCommands	 []string
 	}
 
 	timesettings struct {
@@ -63,6 +64,7 @@ func ReadConfig(file string) error {
 		BelowThresholdPath	   string
 		InclBelThresholdRecs   bool
 		Database 			   string
+		CreateDBCommands	   []string
 
 		Timesettings struct {
 			Formats  map[string][]string
@@ -87,6 +89,7 @@ func ReadConfig(file string) error {
 	config.matchThresholdValue  = configInfo.MatchThresholdValue
 	config.inclBelThresholdRecs = configInfo.InclBelThresholdRecs
 	config.database = configInfo.Database
+	config.createDbCommands = configInfo.CreateDBCommands
 
 	timesettings.formats = make(map[int][]string, len(configInfo.Timesettings.Formats))
 	for i, f := range configInfo.Timesettings.Formats{

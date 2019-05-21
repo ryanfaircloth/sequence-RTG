@@ -10,11 +10,30 @@ import (
 	"time"
 )
 
+func CreateDatabase(fname string){
+	database, err := sql.Open("sqlite3", fname)
+	if err != nil{
+		logger.HandleFatal(err.Error())
+	}
+	tx, err := database.Begin()
+	if err != nil {
+		logger.HandleFatal(err.Error())
+	}
+	query := config.createDbCommands
+	for _, q := range query{
+		_, err = database.Exec(q)
+		if err != nil{
+			logger.HandleFatal(err.Error())
+		}
+	}
+	tx.Commit()
+}
+
 func OpenDbandSetContext()(*sql.DB, context.Context){
 	// Get a handle to the SQLite database, using mattn/go-sqlite3
 	db, err := sql.Open("sqlite3", config.database)
 	if err != nil{
-		panic(err)
+		logger.HandleFatal(err.Error())
 	}
 	// Configure SQLBoiler to use the sqlite database
 	boil.SetDB(db)
