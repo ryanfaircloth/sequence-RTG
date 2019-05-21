@@ -146,8 +146,8 @@ type patternL struct{}
 
 var (
 	patternColumns               = []string{"id", "sequence_pattern", "date_created", "service_id", "threshold_reached", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern"}
-	patternColumnsWithoutDefault = []string{"id", "sequence_pattern", "date_created", "service_id", "date_last_matched", "original_match_count", "cumulative_match_count"}
-	patternColumnsWithDefault    = []string{"threshold_reached", "ignore_pattern"}
+	patternColumnsWithoutDefault = []string{"id", "sequence_pattern", "date_created", "service_id", "threshold_reached", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern"}
+	patternColumnsWithDefault    = []string{}
 	patternPrimaryKeyColumns     = []string{"id"}
 )
 

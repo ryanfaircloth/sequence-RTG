@@ -113,8 +113,8 @@ func AddService(ctx context.Context, tx *sql.Tx, id string, name string){
 
 func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, sID string){
 	p := models.Pattern{ID:result.PatternId, SequencePattern:result.Pattern, DateCreated:time.Now(),ServiceID:sID, ThresholdReached:result.ThresholdReached,
-		CumulativeMatchCount:int64(result.ExampleCount), OriginalMatchCount:int64(result.ExampleCount), DateLastMatched:time.Now()}
-	err := p.Insert(ctx, tx, boil.Whitelist("id", "sequence_pattern", "date_created", "threshold_reached", "service_id", "date_last_matched", "original_match_count", "cumulative_match_count"))
+		CumulativeMatchCount:int64(result.ExampleCount), OriginalMatchCount:int64(result.ExampleCount), DateLastMatched:time.Now(), IgnorePattern:false}
+	err := p.Insert(ctx, tx, boil.Whitelist("id", "sequence_pattern", "date_created", "threshold_reached", "service_id", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern"))
 	if err != nil{
 		logger.DatabaseInsertFailed("pattern", result.PatternId, err.Error())
 	}
