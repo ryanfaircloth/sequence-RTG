@@ -3,6 +3,8 @@ version = "0.1"
 # in the original message, the default parser for sequence has this set to false, for syslog-ng set to true.
 markSpaces = true
 
+database = "sequence.sdb"
+
 # Match Threshold is the number of matches for a pattern before the pattern is included in the output pattern file.
 # Types supported are "percent" and "count"
 # For percent to represent 10% set threshold value to "0.1", for count use an integer value such as "50"
@@ -16,7 +18,7 @@ matchThresholdValue = "0.001"
 inclBelThresholdRecs = false
 
 tags = [
-    "regextime:time",		    # The timestamp that’s part of the log message (matches the a pcre (Perl-Compatible Regular Expression) defined below) (must be at the top)
+    "regextime:time",		    # The timestamp that’s part of the log message (matches the a pcre (Perl-Compatible Regular Expression) defined below) (must be at the top of this list)
 	"msgid:string",				# The message identifier
 	"msgtime:time",				# The timestamp that’s part of the log message (undefined format)
 	"severity:integer",			# The severity of the event, e.g., Emergency, …
