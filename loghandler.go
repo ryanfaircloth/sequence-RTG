@@ -104,7 +104,7 @@ func (l *StandardLogger) HandleInfo(message string){
 func (l *StandardLogger) HandleError(message string){
 	l.WithFields(logrus.Fields{
 		"id": errorGenericError.id,
-	}).Infof(errorGenericError.message, message)
+	}).Errorf(errorGenericError.message, message)
 }
 
 func (l *StandardLogger) HandleDebug(message string){

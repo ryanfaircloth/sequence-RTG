@@ -73,17 +73,17 @@ func profile() {
 
 func start(commandType string){
 	standardLogger = sequence.NewLogger(logfile, loglevel)
-	if errorfile != ""{
-		ofile, err := sequence.OpenOutputFile(errorfile)
-		if err == nil {
-			err = syslog_ng.RedirectStderr(ofile)
-			if err != nil{
-				standardLogger.HandleFatal(fmt.Sprintf("Failed to redirect stderr to file: %v", err))
-			}
-		}else{
-			standardLogger.HandleFatal(fmt.Sprintf("Error opening file for system errors: %v", err))
-		}
-	}
+	//if errorfile != ""{
+		//ofile, err := sequence.OpenOutputFile(errorfile)
+		//if err == nil {
+			//err = syslog_ng.RedirectStderr(ofile)
+			//if err != nil{
+				//standardLogger.HandleFatal(fmt.Sprintf("Failed to redirect stderr to file: %v", err))
+			//}
+		//}else{
+			//standardLogger.HandleFatal(fmt.Sprintf("Error opening file for system errors: %v", err))
+		//}
+	//}
 	readConfig()
 	validateInputs(commandType)
 	profile()
@@ -379,7 +379,7 @@ func scanMessage(scanner *sequence.Scanner, data string) sequence.Sequence {
 		}
 	}
 	if err != nil {
-		standardLogger.HandleFatal(err.Error())
+		standardLogger.HandleError(err.Error())
 	}
 	return seq
 }
