@@ -343,8 +343,10 @@ func OutputToFiles(outformat string, outfile string, config string) error{
 	for _, fmat := range outformats{
 		if fmat == "yaml" {
 			//write to the file
-			y := ConvertToYaml(yPattDB)
-			fmt.Fprintf(yamlFile, "%s", y)
+			err := SaveAsYaml(yamlFile, yPattDB)
+			if err != nil{
+				logger.HandleError(err.Error())
+			}
 		}
 		if fmat == "xml" {
 			//write to the file

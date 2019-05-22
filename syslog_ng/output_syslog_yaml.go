@@ -2,6 +2,7 @@ package syslog_ng
 
 import (
 	"gopkg.in/yaml.v3"
+	"os"
 	"sequence"
 	"time"
 )
@@ -37,14 +38,16 @@ type YRuleset struct{
 
 type YRuleExample struct {
 	Program string 				`yaml:"program"`
-	TestMessage string 			`yaml:"test-message"`
+	TestMessage string 			`yaml:"test_message"`
 }
 
-func ConvertToYaml(db YPatternDB) string {
+func SaveAsYaml(oFile *os.File, db YPatternDB) error {
 	//check if the pattern exists
 	// turn the rule into YAML format
-	y, _ := yaml.Marshal(db)
-	return string(y)
+	en := yaml.NewEncoder(oFile)
+	en.SetIndent(2)
+	y := en.Encode(db)
+	return y
 }
 
 func AddToYaml(pattern sequence.AnalyzerResult, db YPatternDB) YPatternDB{
