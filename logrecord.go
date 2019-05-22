@@ -3,7 +3,6 @@ package sequence
 import (
 	"bufio"
 	"encoding/json"
-	"os"
 	"strings"
 )
 
@@ -70,7 +69,7 @@ func ReadLogRecord(fname string, format string, lr []LogRecord, batchLimit int) 
 
 //if json, this method expects record in the format {"service": "service-name", message: "log message"}
 //eg {"service":"remctld","message":"error receiving initial token: unexpected end of file"}
-func ReadLogRecordAsMap(ifile *os.File, iscan *bufio.Scanner, format string, smap map[string] LogRecordCollection, batchLimit int, mode string) (int, map[string] LogRecordCollection, bool){
+func ReadLogRecordAsMap(iscan *bufio.Scanner, format string, smap map[string] LogRecordCollection, batchLimit int) (int, map[string] LogRecordCollection, bool){
 	var lr LogRecordCollection
 	var count = 0
 	var exit = false

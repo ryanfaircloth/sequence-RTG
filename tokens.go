@@ -62,7 +62,6 @@ const (
 	TokenMac                        // Token is a mac address
 	TokenString                     // Token is a string that represents multiple possible values
 	TokenAlphaNum                   // Token is a string that can have only alphanumeric characters
-	TokenPath                 		// Token is a string that can have only alphanumeric characters and the forward or back slash
 	TokenId                 		// Token is a string that can have only alphanumeric characters and the dash or underscore
 	TokenAlphaOnly					// Token has only A-Z or a-z
 	token__END__                    // All tag types must be inserted before this one
@@ -132,8 +131,6 @@ func name2TokenType(s string) TokenType {
 		return TokenString
 	case "alphanum":
 		return TokenAlphaNum
-	case "path":
-		return TokenPath
 	case "id":
 		return TokenId
 	case "alpha":

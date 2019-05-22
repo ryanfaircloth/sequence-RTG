@@ -1,12 +1,13 @@
 
 [tags]
     [tags.general]
+    "%multiline%"   =   "@ANYSTRING:multiline@"
     "%srcemail%"	=   "@EMAIL:srcemail:@"
-    "%float%"		=   "@FLOAT@"
-    "%integer%"		= 	"@NUMBER@"
-    "%integer%:"	= 	"@NUMBER@:"
-    "(%integer%)"	=	"(@NUMBER@)"
-    "'%integer%'"	=   "'@NUMBER@'"
+    "%float%"		=   "@FLOAT:decimal@"
+    "%integer%"		= 	"@NUMBER:integer@"
+    "%integer%:"	= 	"@NUMBER:integer@:"
+    "(%integer%)"	=	"(@NUMBER:integer@)"
+    "'%integer%'"	=   "'@NUMBER:integer@'"
     "%srcip%"		=   "@IPvANY:srcip@"
     "%srcip%,"		=   "@IPvANY:srcip@,"
     "%dstip%"		=   "@IPvANY:dstip@"
@@ -19,9 +20,8 @@
     "%dstport%" 	= 	"@NUMBER:dstport@"
     "%dstmac%" 		= 	"@MACADDR:dstmac@"
     "%regextime%"	=	"@PCRE:timestamp:[regexnotfound]@"
-	"%string%"	    =   "@ESTRING:: @"           #string types with fieldname
+	"%string%"	    =   "@ESTRING:string: @"           #string types with fieldname
 	"%alphanum%"	=   "@ESTRING:alphanum: @"
-	"%path%"		=   "@ESTRING:path: @"
 	"%id%"			=   "@ESTRING:id: @"
 	"%msgtime%"		= 	"@ESTRING:msgtime: @"
 	"%time%"		=	"@ESTRING:time: @"
@@ -80,6 +80,8 @@
     ";"			=	"@ESTRING:[fieldname]:;@"
     ">"			=	"@ESTRING:[fieldname]:>@"
     "'"			=	"@ESTRING:[fieldname]:'@"
+    "?"			=	"@ESTRING:[fieldname]:?@"
+    "&"			=	"@ESTRING:[fieldname]:&@"
     "no-sp"		=	"@ESTRING:[fieldname]:@"
     "default"   =   "@ESTRING:[fieldname]: @"
 	

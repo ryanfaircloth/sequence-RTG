@@ -148,7 +148,7 @@ func getWithDelimiters(p string, start, end int ) (string, string, string){
 			return p[start-1:end+1], before + after, fieldname
 		case before == "<" && after == ">":
 			return p[start-1:end+1], before + after, fieldname
-		case after == ":" || after == "," || after == ";" || after == ">" || after == "'":
+		case after == ":" || after == "," || after == ";" || after == ">" || after == "'" || after == "?" || after == "&":
 			return p[start:end+1], after, fieldname
 		}
 	}else if end < len(p){
@@ -199,6 +199,14 @@ func SortandSaveLogMessages(lr []sequence.LogRecord, fname string  ){
 	ofile, _ := sequence.OpenOutputFile(fname)
 	defer ofile.Close()
 	for _, r := range lr{
+		fmt.Fprintf(ofile, "%s  %s\n",  r.Service, r.Message )
+	}
+}
+
+func SaveLogMessages(lr sequence.LogRecordCollection, fname string  ){
+	ofile, _ := sequence.OpenOutputFile(fname)
+	defer ofile.Close()
+	for _, r := range lr.Records{
 		fmt.Fprintf(ofile, "%s  %s\n",  r.Service, r.Message )
 	}
 }

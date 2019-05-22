@@ -129,7 +129,7 @@ func (this *Message) Tokenize(isParse bool) (Token, error) {
 			}
 		}
 
-		//check the literal for any signs of it containing a tag
+		//check the literal for any signs of it containing a tag symbol
 		val := this.Data[this.state.start : this.state.start+l]
 		ct := strings.Count(val, "%")
 		idx := strings.Index(val, "%")
@@ -153,6 +153,15 @@ func (this *Message) Tokenize(isParse bool) (Token, error) {
 		if tok.Type == TokenAlphaOnly{
 			tok.Type = TokenLiteral
 		}
+
+		//this is for dealing with multiline strings and setting everything after the \n to a single token
+		if tok.Value == "\n"{
+			tok.Value = this.Data[this.state.start:]
+			this.state.start += len(tok.Value)
+			tok.Type = TokenLiteral
+			tok.Tag = TagMultiLine
+		}
+
 		return tok, nil
 	}
 
@@ -185,7 +194,7 @@ func (this *Message) scanToken(data string) (int, Token, error) {
 
 	this.resetTokenStates()
 
-	// short circuit the time check
+	// short circuit the hex check
 	if l < 3 {
 		hexStop = true
 	}
@@ -300,7 +309,7 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 				this.state.tokenType = TokenLiteral
 				this.state.tokenStop = true
 			}else{
-				this.state.tokenType = TokenPath
+				this.state.tokenType = TokenLiteral
 			}
 
 		case '"', '\'':
@@ -351,7 +360,7 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 			}
 
 		case '\\':
-			this.state.tokenType = TokenPath
+			this.state.tokenType = TokenLiteral
 
 		case '?','&':
 			this.state.tokenType = TokenLiteral
@@ -411,7 +420,7 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 			this.state.tokenType = TokenAlphaNum
 		case '/', '\\':
-			this.state.tokenType = TokenPath
+			this.state.tokenType = TokenLiteral
 		case '-', '_':
 			this.state.tokenType = TokenId
 
@@ -429,7 +438,7 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 		switch r {
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 		case '/', '\\':
-			this.state.tokenType = TokenPath
+			this.state.tokenType = TokenLiteral
 		case '-', '_':
 			//check this is followed by a letter or number
 			//before changing type
@@ -452,20 +461,6 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 			}
 		}
 
-	case TokenPath:
-		switch r {
-		case '/', '\\', '_', '.', '-':
-		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-			//numbers allowed
-		default:
-			if isLetter(r) {
-				//letters allowed
-			} else if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) {
-				this.state.tokenType = TokenLiteral
-			} else {
-				this.state.tokenStop = true
-			}
-		}
 	case TokenId:
 		switch r {
 		case '_', '-':
@@ -473,7 +468,7 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 			//numbers allowed
 		case '/', '\\':
-			this.state.tokenType = TokenPath
+			this.state.tokenType = TokenLiteral
 		default:
 			if isLetter(r) {
 				//letters allowed

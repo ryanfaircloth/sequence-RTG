@@ -174,6 +174,8 @@ func predefineAnalyzerTags(f string, t TagType) {
 	switch f {
 	case "regextime":
 		TagRegExTime = t
+	case "multiline":
+		TagMultiLine = t
 	case "msgid":
 		TagMsgId = t
 	case "msgtime":
@@ -280,6 +282,7 @@ func predefineAnalyzerTags(f string, t TagType) {
 var (
 	TagUnknown    TagType = 0
 	TagRegExTime  TagType = 1 // The timestamp that has spaces and needs a regex for matching
+	TagMultiLine  TagType // This tag is for allowing any string until the end of the string after hitting a \n.
 	TagMsgId      TagType // The message identifier
 	TagMsgTime	  TagType // The timestamp that is a string with no spaces
 	TagSeverity   TagType // The severity of the event, e.g., Emergency, …

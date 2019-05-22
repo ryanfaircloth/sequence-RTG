@@ -3,7 +3,7 @@ version = "0.1"
 # in the original message, the default parser for sequence has this set to false, for syslog-ng set to true.
 markSpaces = true
 
-database = "test2.sdb"
+database = "sequence.sdb"
 createdbcommands = [
         "PRAGMA foreign_keys=OFF;",
 		"CREATE TABLE Services (id STRING (20, 50) PRIMARY KEY NOT NULL, name STRING NOT NULL, date_created DATETIME NOT NULL); " ,
@@ -25,6 +25,7 @@ inclBelThresholdRecs = false
 
 tags = [
     "regextime:time",		    # The timestamp that’s part of the log message (matches the a pcre (Perl-Compatible Regular Expression) defined below) (must be at the top of this list)
+    "multiline:literal",	    # The multiline tag, that consumes the rest of the line
 	"msgid:string",				# The message identifier
 	"msgtime:time",				# The timestamp that’s part of the log message (undefined format)
 	"severity:integer",			# The severity of the event, e.g., Emergency, …

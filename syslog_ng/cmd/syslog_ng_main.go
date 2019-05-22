@@ -18,7 +18,6 @@ var (
 	infile     string
 	outfile    string
 	logfile    string
-	mode    	string
 	loglevel	string
 	errorfile    string
 	outformat  string
@@ -87,6 +86,33 @@ func start(commandType string){
 	readConfig()
 	validateInputs(commandType)
 	profile()
+}
+
+func scan(cmd *cobra.Command, args []string) {
+	start("scan")
+	if infile != "" {
+		scanner := sequence.NewScanner()
+		iscan, ifile, err := sequence.OpenInputFile(infile)
+		if err != nil{
+			standardLogger.HandleFatal(err.Error())
+		}
+		defer ifile.Close()
+
+		ofile,_ := sequence.OpenOutputFile(outfile)
+		defer ofile.Close()
+
+		lrMap := make(map[string]sequence.LogRecordCollection)
+		//We load the file completely
+		_, lrMap, _ = sequence.ReadLogRecordAsMap(iscan, informat, lrMap, batchsize)
+		for _, lrc := range lrMap {
+			for _, l := range lrc.Records {
+				seq := scanMessage(scanner, l.Message)
+				fmt.Fprintf(ofile, "%s\n\n", seq.PrintTokens())
+			}
+		}
+	} else {
+		standardLogger.HandleFatal("Invalid input file or string specified")
+	}
 }
 
 
@@ -200,7 +226,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 		lrMap := make(map[string]sequence.LogRecordCollection)
 		startTime := time.Now()
 		//We load the file completely
-		total, lrMap, exit := sequence.ReadLogRecordAsMap(ifile, iscan, informat, lrMap, batchsize, mode)
+		total, lrMap, exit := sequence.ReadLogRecordAsMap(iscan, informat, lrMap, batchsize)
 		if exit{
 			break
 		}
@@ -283,7 +309,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 		//}
 		standardLogger.HandleInfo(fmt.Sprintf("Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored, time taken: %s", processed, len(amap)+len(pmap), len(amap), err_count, time.Since(startTime)))
 
-		if mode != "cont" || infile != "-" {
+		if batchsize != 0 || infile != "-" {
 			break
 		}
 	}
@@ -323,10 +349,6 @@ func validateInputs(commandType string) {
 		if err != "" {
 			errors = errors + ", " + err
 		}
-		err = sequence.ValidateMode(mode)
-		if err != "" {
-			errors = errors + ", " + err
-		}
 	case "analyzebyservice":
 		//set the formats to lower before we start
 		informat = strings.ToLower(informat)
@@ -341,10 +363,6 @@ func validateInputs(commandType string) {
 			errors = errors + ", " + err
 		}
 		err = sequence.ValidateBatchSize(batchsize)
-		if err != "" {
-			errors = errors + ", " + err
-		}
-		err = sequence.ValidateMode(mode)
 		if err != "" {
 			errors = errors + ", " + err
 		}
@@ -508,6 +526,11 @@ func main() {
 			Short: "sequence is a high performance sequential log analyzer and parser",
 		}
 
+		scanCmd = &cobra.Command{
+			Use:   "scan",
+			Short: "tokenizes a log file or message and output a list of tokens",
+		}
+
 		createDatabaseCmd = &cobra.Command{
 			Use:   "createdatabase",
 			Short: "creates a new sequence database to the location in the config file",
@@ -540,13 +563,14 @@ func main() {
 	sequenceCmd.PersistentFlags().StringVarP(&loglevel, "log-level", "n", "", "defaults to info level, can be 'trace' 'debug', 'info', 'error', 'fatal'")
 	sequenceCmd.PersistentFlags().StringVarP(&errorfile, "std-error-file", "e", "", "this redirects panics etc to a log file not stderr, set to a valid path to enable this")
 	sequenceCmd.PersistentFlags().StringVarP(&parcfgfile, "custom-parser-config", "c", "", "TOML-formatted configuration file, default checks ./custom_parser.toml, then custom_parser.toml in the same directory as program")
-	sequenceCmd.PersistentFlags().StringVarP(&mode, "mode", "m", "", "there are two modes, single (sing) and continuous (cont), single by default, best used with a batch size, used by analyzebyservice")
 
+	scanCmd.Run = scan
 	createDatabaseCmd.Run = createdatabase
 	analyzeCmd.Run = analyze
 	analyzeByServiceCmd.Run = analyzebyservice
 	outToFileCmd.Run = outputtofile
 
+	sequenceCmd.AddCommand(scanCmd)
 	sequenceCmd.AddCommand(createDatabaseCmd)
 	sequenceCmd.AddCommand(analyzeCmd)
 	sequenceCmd.AddCommand(analyzeByServiceCmd)
