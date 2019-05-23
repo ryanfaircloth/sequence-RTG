@@ -83,6 +83,7 @@ func start(commandType string){
 			//standardLogger.HandleFatal(fmt.Sprintf("Error opening file for system errors: %v", err))
 		//}
 	//}
+	standardLogger.HandleInfo(fmt.Sprintf("Starting up: method called %s", commandType))
 	readConfig()
 	validateInputs(commandType)
 	profile()
@@ -168,7 +169,7 @@ func analyze(cmd *cobra.Command, args []string) {
 
 		pseq, err := parser.Parse(seq)
 		if err == nil {
-			pat := strings.TrimSpace(pseq.String())
+			pat, _ := pseq.String()
 			stat, ok := pmap[pat]
 			if !ok {
 				stat = struct {
@@ -187,13 +188,14 @@ func analyze(cmd *cobra.Command, args []string) {
 				standardLogger.LogAnalysisFailed(l)
 				err_count++
 			} else {
-				pat := strings.TrimSpace(aseq.String())
+				pat, pos := aseq.String()
 				stat, ok := amap[pat]
 				if !ok {
 					stat = sequence.AnalyzerResult{}
 				}
 				sequence.AddExampleToAnalyzerResult(&stat, l, threshold)
 				stat.PatternId = sequence.GenerateIDFromPattern(pat, stat.Examples[0].Service)
+				stat.TagPositions = sequence.SplitToString(pos, ",")
 				stat.ExampleCount++
 				amap[pat] = stat
 			}
@@ -273,7 +275,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 				seq := scanMessage(scanner, l.Message)
 				pseq, err := parser.Parse(seq)
 				if err == nil {
-					pat := pseq.String()
+					pat, _ := pseq.String()
 					pmap[pat] = "found"
 				} else {
 					aseq, err := analyzer.Analyze(seq)
@@ -281,12 +283,13 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 						standardLogger.LogAnalysisFailed(l)
 						err_count++
 					} else {
-						pat := aseq.String()
+						pat, pos := aseq.String()
 						ar, ok := amap[pat]
 						if !ok {
 							ar = sequence.AnalyzerResult{}
 						}
 						sequence.AddExampleToAnalyzerResult(&ar, l, threshold)
+						ar.TagPositions = sequence.SplitToString(pos, ",")
 						ar.PatternId = sequence.GenerateIDFromPattern(pat, ar.Examples[0].Service)
 						ar.ExampleCount++
 						amap[pat] = ar
@@ -394,6 +397,7 @@ func scanMessage(scanner *sequence.Scanner, data string) sequence.Sequence {
 	var (
 		seq sequence.Sequence
 		err error
+		pos []int
 	)
 
 	if testJson(data){
@@ -404,7 +408,7 @@ func scanMessage(scanner *sequence.Scanner, data string) sequence.Sequence {
 			seq, err = scanner.ScanJson(data)
 
 		default:
-			seq, err = scanner.Scan(data, false)
+			seq, err = scanner.Scan(data, false, pos)
 		}
 	}
 	if err != nil {
@@ -432,6 +436,7 @@ func buildParser() *sequence.Parser {
 	}
 
 	var files []string
+	var pos []int
 
 	if fi, err := os.Stat(patfile); err != nil {
 		standardLogger.HandleFatal(err.Error())
@@ -457,13 +462,13 @@ func buildParser() *sequence.Parser {
 				continue
 			}
 
-			seq, err := scanner.Scan(line, true)
+			seq, err := scanner.Scan(line, true, pos)
 			if err != nil {
-				standardLogger.HandleFatal(err.Error())
+				standardLogger.HandleError(err.Error())
 			}
 
 			if err := parser.Add(seq); err != nil {
-				standardLogger.HandleFatal(err.Error())
+				standardLogger.HandleError(err.Error())
 			}
 		}
 	}
@@ -478,15 +483,15 @@ func buildParserFromDb(serviceid string) *sequence.Parser {
 	defer db.Close()
 	//load all patterns from the database
 	pmap := sequence.GetPatternsFromDatabaseByService(db, ctx, serviceid)
-
-	for _, pat := range pmap {
-		seq, err := scanner.Scan(pat, true)
+	for _, ar := range pmap {
+		pos := sequence.SplitToInt(ar.TagPositions, ",")
+		seq, err := scanner.Scan(ar.Pattern, true, pos)
 		if err != nil {
-			standardLogger.HandleFatal(err.Error())
+			standardLogger.HandleError(err.Error())
 		}
 
 		if err := parser.Add(seq); err != nil {
-			standardLogger.HandleFatal(err.Error())
+			standardLogger.HandleError(err.Error())
 		}
 	}
 	return parser

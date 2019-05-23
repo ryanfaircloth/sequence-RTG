@@ -242,7 +242,7 @@ func SaveToDatabase(amap map[string]sequence.AnalyzerResult) {
 	if err != nil {
 		logger.HandleFatal("Could not start a transaction to save to the database.")
 	}
-	//technically we should have any existing patterns passed to here, but just in case
+	//technically we should not have any existing patterns passed to here, but just in case
 	//lets check first
 	pmap := sequence.GetPatternsFromDatabase(db, ctx)
 	for pat, result := range amap {

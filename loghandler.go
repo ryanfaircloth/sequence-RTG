@@ -68,7 +68,7 @@ var (
 func (l *StandardLogger) LogAnalysisFailed(lr LogRecord){
 	l.WithFields(logrus.Fields{
 		"id": errorAnalysisFailed.id,
-	}).Errorf(errorAnalysisFailed.message, lr.Message)
+	}).Debugf(errorAnalysisFailed.message, lr.Message)
 }
 
 func (l *StandardLogger) DatabaseInsertFailed(tablename string, id string, reason string){

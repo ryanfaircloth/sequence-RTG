@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"github.com/gofrs/uuid"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/volatiletech/null"
 	"github.com/volatiletech/sqlboiler/boil"
 	"sequence/models"
 	"time"
@@ -92,15 +93,16 @@ func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context) map[st
 	return pmap
 }
 
-func GetPatternsFromDatabaseByService(db *sql.DB, ctx context.Context, sid string) map[string]string{
-	pmap := make(map[string]string)
+func GetPatternsFromDatabaseByService(db *sql.DB, ctx context.Context, sid string) map[string]AnalyzerResult{
+	pmap := make(map[string]AnalyzerResult)
 	// This pulls 'all' of the patterns from the patterns database
 	patterns, err := models.Patterns(models.PatternWhere.ServiceID.EQ(sid)).All(ctx, db)
 	if err !=nil {
 		logger.DatabaseSelectFailed("patterns", "Where Serviceid = " + sid, err.Error())
 	}
 	for _, p := range patterns{
-		pmap[p.ID] = p.SequencePattern
+		ar := AnalyzerResult{Pattern:p.SequencePattern, TagPositions:p.TagPositions.String}
+		pmap[p.ID] = ar
 	}
 	return pmap
 }
@@ -131,9 +133,10 @@ func AddService(ctx context.Context, tx *sql.Tx, id string, name string){
 }
 
 func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, sID string){
+	tp := null.String{String:result.TagPositions, Valid:true}
 	p := models.Pattern{ID:result.PatternId, SequencePattern:result.Pattern, DateCreated:time.Now(),ServiceID:sID, ThresholdReached:result.ThresholdReached,
-		CumulativeMatchCount:int64(result.ExampleCount), OriginalMatchCount:int64(result.ExampleCount), DateLastMatched:time.Now(), IgnorePattern:false}
-	err := p.Insert(ctx, tx, boil.Whitelist("id", "sequence_pattern", "date_created", "threshold_reached", "service_id", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern"))
+		CumulativeMatchCount:int64(result.ExampleCount), OriginalMatchCount:int64(result.ExampleCount), DateLastMatched:time.Now(), IgnorePattern:false, TagPositions:tp}
+	err := p.Insert(ctx, tx, boil.Whitelist("id", "sequence_pattern", "date_created", "threshold_reached", "service_id", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern", "tag_positions"))
 	if err != nil{
 		logger.DatabaseInsertFailed("pattern", result.PatternId, err.Error())
 	}

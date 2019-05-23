@@ -35,6 +35,7 @@ var (
 		matchThresholdValue    string
 		inclBelThresholdRecs   bool
 		database			   string
+		useDatabase			   bool
 		createDbCommands	 []string
 	}
 
@@ -63,6 +64,7 @@ func ReadConfig(file string) error {
 		MatchThresholdValue    string
 		BelowThresholdPath	   string
 		InclBelThresholdRecs   bool
+		UseDatabase			   bool
 		Database 			   string
 		CreateDBCommands	   []string
 
@@ -88,6 +90,7 @@ func ReadConfig(file string) error {
 	config.matchThresholdType  = configInfo.MatchThresholdType
 	config.matchThresholdValue  = configInfo.MatchThresholdValue
 	config.inclBelThresholdRecs = configInfo.InclBelThresholdRecs
+	config.useDatabase = configInfo.UseDatabase
 	config.database = configInfo.Database
 	config.createDbCommands = configInfo.CreateDBCommands
 

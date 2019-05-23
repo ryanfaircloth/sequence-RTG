@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/volatiletech/null"
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries"
 	"github.com/volatiletech/sqlboiler/queries/qm"
@@ -22,15 +23,16 @@ import (
 
 // Pattern is an object representing the database table.
 type Pattern struct {
-	ID                   string    `boil:"id" json:"id" toml:"id" yaml:"id"`
-	SequencePattern      string    `boil:"sequence_pattern" json:"sequence_pattern" toml:"sequence_pattern" yaml:"sequence_pattern"`
-	DateCreated          time.Time `boil:"date_created" json:"date_created" toml:"date_created" yaml:"date_created"`
-	ServiceID            string    `boil:"service_id" json:"service_id" toml:"service_id" yaml:"service_id"`
-	ThresholdReached     bool      `boil:"threshold_reached" json:"threshold_reached" toml:"threshold_reached" yaml:"threshold_reached"`
-	DateLastMatched      time.Time `boil:"date_last_matched" json:"date_last_matched" toml:"date_last_matched" yaml:"date_last_matched"`
-	OriginalMatchCount   int64     `boil:"original_match_count" json:"original_match_count" toml:"original_match_count" yaml:"original_match_count"`
-	CumulativeMatchCount int64     `boil:"cumulative_match_count" json:"cumulative_match_count" toml:"cumulative_match_count" yaml:"cumulative_match_count"`
-	IgnorePattern        bool      `boil:"ignore_pattern" json:"ignore_pattern" toml:"ignore_pattern" yaml:"ignore_pattern"`
+	ID                   string      `boil:"id" json:"id" toml:"id" yaml:"id"`
+	SequencePattern      string      `boil:"sequence_pattern" json:"sequence_pattern" toml:"sequence_pattern" yaml:"sequence_pattern"`
+	TagPositions         null.String `boil:"tag_positions" json:"tag_positions,omitempty" toml:"tag_positions" yaml:"tag_positions,omitempty"`
+	DateCreated          time.Time   `boil:"date_created" json:"date_created" toml:"date_created" yaml:"date_created"`
+	ServiceID            string      `boil:"service_id" json:"service_id" toml:"service_id" yaml:"service_id"`
+	ThresholdReached     bool        `boil:"threshold_reached" json:"threshold_reached" toml:"threshold_reached" yaml:"threshold_reached"`
+	DateLastMatched      time.Time   `boil:"date_last_matched" json:"date_last_matched" toml:"date_last_matched" yaml:"date_last_matched"`
+	OriginalMatchCount   int64       `boil:"original_match_count" json:"original_match_count" toml:"original_match_count" yaml:"original_match_count"`
+	CumulativeMatchCount int64       `boil:"cumulative_match_count" json:"cumulative_match_count" toml:"cumulative_match_count" yaml:"cumulative_match_count"`
+	IgnorePattern        bool        `boil:"ignore_pattern" json:"ignore_pattern" toml:"ignore_pattern" yaml:"ignore_pattern"`
 
 	R *patternR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L patternL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -39,6 +41,7 @@ type Pattern struct {
 var PatternColumns = struct {
 	ID                   string
 	SequencePattern      string
+	TagPositions         string
 	DateCreated          string
 	ServiceID            string
 	ThresholdReached     string
@@ -49,6 +52,7 @@ var PatternColumns = struct {
 }{
 	ID:                   "id",
 	SequencePattern:      "sequence_pattern",
+	TagPositions:         "tag_positions",
 	DateCreated:          "date_created",
 	ServiceID:            "service_id",
 	ThresholdReached:     "threshold_reached",
@@ -59,6 +63,29 @@ var PatternColumns = struct {
 }
 
 // Generated where
+
+type whereHelpernull_String struct{ field string }
+
+func (w whereHelpernull_String) EQ(x null.String) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_String) NEQ(x null.String) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_String) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_String) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+func (w whereHelpernull_String) LT(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_String) LTE(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_String) GT(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_String) GTE(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
 
 type whereHelpertime_Time struct{ field string }
 
@@ -102,6 +129,7 @@ func (w whereHelperint64) GTE(x int64) qm.QueryMod { return qmhelper.Where(w.fie
 var PatternWhere = struct {
 	ID                   whereHelperstring
 	SequencePattern      whereHelperstring
+	TagPositions         whereHelpernull_String
 	DateCreated          whereHelpertime_Time
 	ServiceID            whereHelperstring
 	ThresholdReached     whereHelperbool
@@ -112,6 +140,7 @@ var PatternWhere = struct {
 }{
 	ID:                   whereHelperstring{field: `id`},
 	SequencePattern:      whereHelperstring{field: `sequence_pattern`},
+	TagPositions:         whereHelpernull_String{field: `tag_positions`},
 	DateCreated:          whereHelpertime_Time{field: `date_created`},
 	ServiceID:            whereHelperstring{field: `service_id`},
 	ThresholdReached:     whereHelperbool{field: `threshold_reached`},
@@ -145,8 +174,8 @@ func (*patternR) NewStruct() *patternR {
 type patternL struct{}
 
 var (
-	patternColumns               = []string{"id", "sequence_pattern", "date_created", "service_id", "threshold_reached", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern"}
-	patternColumnsWithoutDefault = []string{"id", "sequence_pattern", "date_created", "service_id", "threshold_reached", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern"}
+	patternColumns               = []string{"id", "sequence_pattern", "tag_positions", "date_created", "service_id", "threshold_reached", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern"}
+	patternColumnsWithoutDefault = []string{"id", "sequence_pattern", "tag_positions", "date_created", "service_id", "threshold_reached", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern"}
 	patternColumnsWithDefault    = []string{}
 	patternPrimaryKeyColumns     = []string{"id"}
 )

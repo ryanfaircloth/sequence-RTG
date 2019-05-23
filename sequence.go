@@ -31,11 +31,15 @@ var (
 type Sequence []Token
 
 // String returns a single line string that represents the pattern for the Sequence
-func (this Sequence) String() string {
+func (this Sequence) String() (string, []int) {
 	var p string
+	var pos []int
+	var start int
 	for _, token := range this {
 		var c string
-
+		if config.markSpaces && token.isSpaceBefore{
+			start += 1
+		}
 		if token.Tag != TagUnknown {
 			c = token.Tag.String()
 
@@ -43,7 +47,6 @@ func (this Sequence) String() string {
 				//append the regex type
 				c += ":" + token.Special
 			}
-
 			if token.until != "" {
 				c += ":-:" + token.until
 			} else {
@@ -52,7 +55,6 @@ func (this Sequence) String() string {
 				} else if token.plus || token.minus || token.star {
 					c += ":"
 				}
-
 				if token.plus {
 					c += ":+"
 				} else if token.minus {
@@ -61,11 +63,10 @@ func (this Sequence) String() string {
 					c += ":*"
 				}
 			}
-
 			c = "%" + c + "%"
+			pos = append(pos, start)
 		} else if token.Type != TokenUnknown && token.Type != TokenLiteral {
 			c = token.Type.String()
-
 			if token.plus {
 				c += ":+"
 			} else if token.minus {
@@ -74,10 +75,7 @@ func (this Sequence) String() string {
 				c += ":*"
 			}
 			c = "%" + c + "%"
-			// This prevents the generic "string" type from over tokenising the patterns
-			//if token.Type == TokenString && !token.isValue{
-			//c = token.Value
-			//}
+			pos = append(pos, start)
 		} else {
 			c = token.Value
 		}
@@ -85,13 +83,15 @@ func (this Sequence) String() string {
 		//if we need one before isSpaceBefore will be set to true
 		if !config.markSpaces{
 			p += c + " "
+			start += 1
 		}else if token.isSpaceBefore{
 			p += " " + c
 		}else{
 			p += c
 		}
+		start += len(c)
 	}
-	return strings.TrimRight(p, " ")
+	return strings.TrimRight(p, " "), pos
 }
 
 // Signature returns a single line string that represents a common pattern for this

@@ -121,7 +121,7 @@ func NewScanner() *Scanner {
 // Scan is not concurrent-safe, and the returned Sequence is only valid until
 // the next time any Scan*() method is called. The best practice would be to
 // create one Scanner for each goroutine.
-func (this *Scanner) Scan(s string, isParse bool) (Sequence, error) {
+func (this *Scanner) Scan(s string, isParse bool, pos []int) (Sequence, error) {
 	this.msg.Data = s
 	this.msg.reset()
 	this.seq = this.seq[:0]
@@ -132,7 +132,7 @@ func (this *Scanner) Scan(s string, isParse bool) (Sequence, error) {
 	)
 
 	spaceBefore := false
-	for tok, err = this.msg.Tokenize(isParse); err == nil; tok, err = this.msg.Tokenize(isParse) {
+	for tok, err = this.msg.Tokenize(isParse, pos); err == nil; tok, err = this.msg.Tokenize(isParse, pos) {
 
 		//convert the alphanum tokens to string token type
 		if tok.Type == TokenAlphaNum || tok.Type == TokenId{
@@ -219,9 +219,11 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 	this.msg.reset()
 	this.seq = this.seq[:0]
 
+
 	var (
 		err error
 		tok Token
+		pos []int
 
 		keys = make([]string, 0, 20) // collection keys
 		arrs = make([]int64, 0, 20)  // array index
@@ -230,7 +232,7 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 		kquote, vquote bool        // quoted key, quoted value
 	)
 
-	for tok, err = this.msg.Tokenize(false); err == nil; tok, err = this.msg.Tokenize(false) {
+	for tok, err = this.msg.Tokenize(false, pos); err == nil; tok, err = this.msg.Tokenize(false, pos) {
 		// glog.Debugf("1. tok=%s, state=%d, kquote=%t, vquote=%t, depth=%d", tok, state, kquote, vquote, len(keys))
 		// glog.Debugln(keys)
 		// glog.Debugln(arrs)

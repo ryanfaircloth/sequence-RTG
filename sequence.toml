@@ -3,12 +3,13 @@ version = "0.1"
 # in the original message, the default parser for sequence has this set to false, for syslog-ng set to true.
 markSpaces = true
 
+usedatabase = true
 database = "sequence.sdb"
 createdbcommands = [
         "PRAGMA foreign_keys=OFF;",
 		"CREATE TABLE Services (id STRING (20, 50) PRIMARY KEY NOT NULL, name STRING NOT NULL, date_created DATETIME NOT NULL); " ,
 		"CREATE TABLE Examples (id STRING PRIMARY KEY NOT NULL, pattern_id STRING (20, 50) REFERENCES Patterns (id) ON DELETE NO ACTION NOT NULL, example_detail STRING (1000) NOT NULL);" ,
-		"CREATE TABLE Patterns (id STRING (20, 50) PRIMARY KEY NOT NULL, sequence_pattern STRING (1000) NOT NULL, date_created DATETIME NOT NULL, service_id STRING (20, 50) REFERENCES Services (id) ON DELETE NO ACTION NOT NULL, threshold_reached BOOLEAN NOT NULL, date_last_matched DATETIME NOT NULL, original_match_count INTEGER NOT NULL, cumulative_match_count INTEGER NOT NULL, ignore_pattern BOOLEAN NOT NULL );",
+		"CREATE TABLE Patterns (id STRING (20, 50) PRIMARY KEY NOT NULL, sequence_pattern STRING (1000) NOT NULL, tag_positions STRING, date_created DATETIME NOT NULL, service_id STRING (20, 50) REFERENCES Services (id) ON DELETE NO ACTION NOT NULL, threshold_reached BOOLEAN NOT NULL, date_last_matched DATETIME NOT NULL, original_match_count INTEGER NOT NULL, cumulative_match_count INTEGER NOT NULL, ignore_pattern BOOLEAN NOT NULL);",
 ]
 
 # Match Threshold is the number of matches for a pattern before the pattern is included in the output pattern file.

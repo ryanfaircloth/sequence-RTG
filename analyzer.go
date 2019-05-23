@@ -85,6 +85,7 @@ type Analyzer struct {
 type AnalyzerResult struct {
 	PatternId string
 	Pattern string
+	TagPositions string
 	ExampleCount int
 	Examples []LogRecord
 	ThresholdReached bool
@@ -111,6 +112,32 @@ type stackAnalyzerNode struct {
 	node  *analyzerNode
 	level int
 	score int
+}
+
+func SplitToString(a []int, sep string) string {
+	if len(a) == 0 {
+		return ""
+	}
+
+	b := make([]string, len(a))
+	for i, v := range a {
+		b[i] = strconv.Itoa(v)
+	}
+	return strings.Join(b, sep)
+}
+
+func SplitToInt(s string, sep string) []int {
+	var p []int
+	if len(s) == 0 {
+		return p
+	}
+
+	a := strings.Split(s, ",")
+	b := make([]int, len(a))
+	for i, v := range a {
+		b[i], _ = strconv.Atoi(v)
+	}
+	return b
 }
 
 func AddExampleToAnalyzerResult(this *AnalyzerResult, lr LogRecord, threshold int){
@@ -728,7 +755,7 @@ func (this *Analyzer) analyzeMessage(seq Sequence) ([]*analyzerNode, error) {
 					// be a full match.
 					toVisit = append(toVisit, stackAnalyzerNode{node, cur.level + 1, cur.score + fullMatchWeight})
 
-				case token.Type == TokenString && token.isValue:
+				case token.Type == TokenString && token.isValue || node.Type == TokenString && node.Token.isValue:
 					toVisit = append(toVisit, stackAnalyzerNode{node, cur.level + 1, cur.score + fullMatchWeight})
 				}
 			}

@@ -17,7 +17,6 @@ package sequence
 import (
 	"fmt"
 	"io"
-	"strings"
 	"unicode"
 )
 
@@ -61,8 +60,17 @@ const (
 	hexColon
 )
 
+func isValidTokenStartPosition( start int, pos []int) bool {
+	for _, p := range pos{
+		if p == start{
+			return true
+		}
+	}
+	return false
+}
+
 // Scan is similar to Tokenize except it returns one token at a time
-func (this *Message) Tokenize(isParse bool) (Token, error) {
+func (this *Message) Tokenize(isParse bool, pos []int) (Token, error) {
 	if this.state.start < this.state.end {
 
 		if !config.markSpaces{
@@ -85,8 +93,8 @@ func (this *Message) Tokenize(isParse bool) (Token, error) {
 		// Let's see if this is a tag token, enclosed in two '%' chars
 		// at least 2 chars left, and the first is a '%'
 		// Don't do this if not in parse mode, picks up things that it shouldn't
-		if isParse{
-			if this.state.start+1 < this.state.end && this.Data[this.state.start] == '%'{
+		if isParse && len(pos) > 0{
+			if this.state.start+1 < this.state.end && this.Data[this.state.start] == '%' && (isValidTokenStartPosition(this.state.start, pos) && config.useDatabase){
 				var i int
 				var r rune
 
@@ -131,20 +139,6 @@ func (this *Message) Tokenize(isParse bool) (Token, error) {
 
 		//check the literal for any signs of it containing a tag symbol
 		val := this.Data[this.state.start : this.state.start+l]
-		ct := strings.Count(val, "%")
-		idx := strings.Index(val, "%")
-		if isParse{
-			//there should be at least 2 or it isn't a tag
-			//this is the first one, not the start
-			if ct > 1 && idx > 0 && idx < len(val){
-				val = val[:idx]
-				l=idx
-			}
-		}else{
-			if ct > 1 && idx >= 0{
-				tok.Special = "%"
-			}
-		}
 		tok.Value = val
 		this.state.tokCount++
 		this.state.prevToken = tok
