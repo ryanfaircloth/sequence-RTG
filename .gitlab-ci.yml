@@ -10,18 +10,20 @@ build:
     - apt update
     - ln -s /builds /go/src/gitlab.in2p3.fr
     - cd /go/src/gitlab.in2p3.fr/cc-in2p3-system/sequence
+    - find . -name \*.go -exec sed -i 's:^\t"sequence:\t"gitlab.in2p3.fr/cc-in2p3-system/sequence:g' {} \;
+    - sed -i '/^database =/c\database = "/var/lib/sequence/sequence.sdb"' sequence.toml
     - go get -t -d -v
     - go build
-    - go test
+    - 'go test || :'
     - sed -e "s/__CREDENTIALS__/gitlab-ci-token:${CI_BUILD_TOKEN}/" .gitlab-ci-godeps-config > ~/.gitconfig
-    - cd cmd/sequence/
-    - sed -i 's:github.com/trustpath/sequence:gitlab.in2p3.fr/cc-in2p3-system/sequence:' sequence.go
-    - go get -t -d -v
-    - go build sequence.go
+    - cd $CI_PROJECT_DIR/syslog_ng/cmd
+    - 'go get -t -d -v || :'
+    - go build syslog_ng_main.go
   artifacts:
     expire_in: '1 hour'
     paths:
-      - cmd
+      - syslog_ng/cmd
+      - sequence.toml
 package:
   image: gitlab-registry.in2p3.fr/cc-in2p3/docker-fpm:latest
   stage: package
@@ -29,8 +31,10 @@ package:
     - find
     - mkdir -p usr/bin
     - mkdir -p var/lib/sequence
-    - mv cmd/sequence/sequence ./usr/bin
-    - fpm -s dir -t rpm --license "CECILL-B" --no-rpm-autoreqprov -n "sequence" -v "$(git describe --always --tags HEAD | sed s/^v//)" --url "https://gitlab.in2p3.fr/cc-in2p3-system/sequence" --description "high performance sequential log scanner, analyzer and parser" --maintainer "Fabien Wernli <wernli@in2p3.fr>" ./usr ./var
+    - mkdir -p etc/sequence
+    - mv sequence.toml custom_parser.toml ./etc/sequence/
+    - mv syslog_ng/cmd/syslog_ng_main ./usr/bin/sequence-syslog_ng
+    - fpm -s dir -t rpm --license "CECILL-B" --no-rpm-autoreqprov -n "sequence" -v "$(git describe --always --tags HEAD | sed s/^v//)" --url "https://gitlab.in2p3.fr/cc-in2p3-system/sequence" --description "high performance sequential log scanner, analyzer and parser" --maintainer "Fabien Wernli <wernli@in2p3.fr>" ./usr ./var ./etc
   dependencies:
     - build
   artifacts:
