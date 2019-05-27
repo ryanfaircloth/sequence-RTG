@@ -312,7 +312,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 		//}
 		standardLogger.HandleInfo(fmt.Sprintf("Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored, time taken: %s", processed, len(amap)+len(pmap), len(amap), err_count, time.Since(startTime)))
 
-		if batchsize != 0 || infile != "-" {
+		if batchsize == 0 || infile != "-" {
 			break
 		}
 	}
