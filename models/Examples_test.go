@@ -545,6 +545,57 @@ func testExampleToOnePatternUsingPattern(t *testing.T) {
 	}
 }
 
+func testExampleToOneServiceUsingService(t *testing.T) {
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var local Example
+	var foreign Service
+
+	seed := randomize.NewSeed()
+	if err := randomize.Struct(seed, &local, exampleDBTypes, false, exampleColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Example struct: %s", err)
+	}
+	if err := randomize.Struct(seed, &foreign, serviceDBTypes, false, serviceColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Service struct: %s", err)
+	}
+
+	if err := foreign.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	local.ServiceID = foreign.ID
+	if err := local.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	check, err := local.Service().One(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if check.ID != foreign.ID {
+		t.Errorf("want: %v, got %v", foreign.ID, check.ID)
+	}
+
+	slice := ExampleSlice{&local}
+	if err = local.L.LoadService(ctx, tx, false, (*[]*Example)(&slice), nil); err != nil {
+		t.Fatal(err)
+	}
+	if local.R.Service == nil {
+		t.Error("struct should have been eager loaded")
+	}
+
+	local.R.Service = nil
+	if err = local.L.LoadService(ctx, tx, true, &local, nil); err != nil {
+		t.Fatal(err)
+	}
+	if local.R.Service == nil {
+		t.Error("struct should have been eager loaded")
+	}
+}
+
 func testExampleToOneSetOpPatternUsingPattern(t *testing.T) {
 	var err error
 
@@ -599,6 +650,63 @@ func testExampleToOneSetOpPatternUsingPattern(t *testing.T) {
 
 		if a.PatternID != x.ID {
 			t.Error("foreign key was wrong value", a.PatternID, x.ID)
+		}
+	}
+}
+func testExampleToOneSetOpServiceUsingService(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Example
+	var b, c Service
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, exampleDBTypes, false, strmangle.SetComplement(examplePrimaryKeyColumns, exampleColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &b, serviceDBTypes, false, strmangle.SetComplement(servicePrimaryKeyColumns, serviceColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &c, serviceDBTypes, false, strmangle.SetComplement(servicePrimaryKeyColumns, serviceColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	for i, x := range []*Service{&b, &c} {
+		err = a.SetService(ctx, tx, i != 0, x)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		if a.R.Service != x {
+			t.Error("relationship struct not set to correct value")
+		}
+
+		if x.R.ServiceExamples[0] != &a {
+			t.Error("failed to append to foreign relationship struct")
+		}
+		if a.ServiceID != x.ID {
+			t.Error("foreign key was wrong value", a.ServiceID)
+		}
+
+		zero := reflect.Zero(reflect.TypeOf(a.ServiceID))
+		reflect.Indirect(reflect.ValueOf(&a.ServiceID)).Set(zero)
+
+		if err = a.Reload(ctx, tx); err != nil {
+			t.Fatal("failed to reload", err)
+		}
+
+		if a.ServiceID != x.ID {
+			t.Error("foreign key was wrong value", a.ServiceID, x.ID)
 		}
 	}
 }
@@ -677,7 +785,7 @@ func testExamplesSelect(t *testing.T) {
 }
 
 var (
-	exampleDBTypes = map[string]string{`ID`: `STRING`, `PatternID`: `STRING (20, 50)`, `ExampleDetail`: `STRING (1000)`}
+	exampleDBTypes = map[string]string{`ID`: `STRING`, `ServiceID`: `STRING`, `PatternID`: `STRING (20, 50)`, `ExampleDetail`: `STRING (1000)`}
 	_              = bytes.MinRead
 )
 

@@ -23,6 +23,7 @@ import (
 // Example is an object representing the database table.
 type Example struct {
 	ID            string `boil:"id" json:"id" toml:"id" yaml:"id"`
+	ServiceID     string `boil:"service_id" json:"service_id" toml:"service_id" yaml:"service_id"`
 	PatternID     string `boil:"pattern_id" json:"pattern_id" toml:"pattern_id" yaml:"pattern_id"`
 	ExampleDetail string `boil:"example_detail" json:"example_detail" toml:"example_detail" yaml:"example_detail"`
 
@@ -32,10 +33,12 @@ type Example struct {
 
 var ExampleColumns = struct {
 	ID            string
+	ServiceID     string
 	PatternID     string
 	ExampleDetail string
 }{
 	ID:            "id",
+	ServiceID:     "service_id",
 	PatternID:     "pattern_id",
 	ExampleDetail: "example_detail",
 }
@@ -53,10 +56,12 @@ func (w whereHelperstring) GTE(x string) qm.QueryMod { return qmhelper.Where(w.f
 
 var ExampleWhere = struct {
 	ID            whereHelperstring
+	ServiceID     whereHelperstring
 	PatternID     whereHelperstring
 	ExampleDetail whereHelperstring
 }{
 	ID:            whereHelperstring{field: `id`},
+	ServiceID:     whereHelperstring{field: `service_id`},
 	PatternID:     whereHelperstring{field: `pattern_id`},
 	ExampleDetail: whereHelperstring{field: `example_detail`},
 }
@@ -64,13 +69,16 @@ var ExampleWhere = struct {
 // ExampleRels is where relationship names are stored.
 var ExampleRels = struct {
 	Pattern string
+	Service string
 }{
 	Pattern: "Pattern",
+	Service: "Service",
 }
 
 // exampleR is where relationships are stored.
 type exampleR struct {
 	Pattern *Pattern
+	Service *Service
 }
 
 // NewStruct creates a new relationship struct
@@ -82,8 +90,8 @@ func (*exampleR) NewStruct() *exampleR {
 type exampleL struct{}
 
 var (
-	exampleColumns               = []string{"id", "pattern_id", "example_detail"}
-	exampleColumnsWithoutDefault = []string{"id", "pattern_id", "example_detail"}
+	exampleColumns               = []string{"id", "service_id", "pattern_id", "example_detail"}
+	exampleColumnsWithoutDefault = []string{"id", "service_id", "pattern_id", "example_detail"}
 	exampleColumnsWithDefault    = []string{}
 	examplePrimaryKeyColumns     = []string{"id"}
 )
@@ -377,6 +385,20 @@ func (o *Example) Pattern(mods ...qm.QueryMod) patternQuery {
 	return query
 }
 
+// Service pointed to by the foreign key.
+func (o *Example) Service(mods ...qm.QueryMod) serviceQuery {
+	queryMods := []qm.QueryMod{
+		qm.Where("id=?", o.ServiceID),
+	}
+
+	queryMods = append(queryMods, mods...)
+
+	query := Services(queryMods...)
+	queries.SetFrom(query.Query, "\"Services\"")
+
+	return query
+}
+
 // LoadPattern allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
 func (exampleL) LoadPattern(ctx context.Context, e boil.ContextExecutor, singular bool, maybeExample interface{}, mods queries.Applicator) error {
@@ -478,6 +500,107 @@ func (exampleL) LoadPattern(ctx context.Context, e boil.ContextExecutor, singula
 	return nil
 }
 
+// LoadService allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for an N-1 relationship.
+func (exampleL) LoadService(ctx context.Context, e boil.ContextExecutor, singular bool, maybeExample interface{}, mods queries.Applicator) error {
+	var slice []*Example
+	var object *Example
+
+	if singular {
+		object = maybeExample.(*Example)
+	} else {
+		slice = *maybeExample.(*[]*Example)
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &exampleR{}
+		}
+		args = append(args, object.ServiceID)
+
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &exampleR{}
+			}
+
+			for _, a := range args {
+				if a == obj.ServiceID {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ServiceID)
+
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(qm.From(`Services`), qm.WhereIn(`id in ?`, args...))
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load Service")
+	}
+
+	var resultSlice []*Service
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice Service")
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results of eager load for Services")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for Services")
+	}
+
+	if len(exampleAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+
+	if len(resultSlice) == 0 {
+		return nil
+	}
+
+	if singular {
+		foreign := resultSlice[0]
+		object.R.Service = foreign
+		if foreign.R == nil {
+			foreign.R = &serviceR{}
+		}
+		foreign.R.ServiceExamples = append(foreign.R.ServiceExamples, object)
+		return nil
+	}
+
+	for _, local := range slice {
+		for _, foreign := range resultSlice {
+			if local.ServiceID == foreign.ID {
+				local.R.Service = foreign
+				if foreign.R == nil {
+					foreign.R = &serviceR{}
+				}
+				foreign.R.ServiceExamples = append(foreign.R.ServiceExamples, local)
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
 // SetPattern of the example to the related item.
 // Sets o.R.Pattern to related.
 // Adds o to related.R.PatternExamples.
@@ -520,6 +643,53 @@ func (o *Example) SetPattern(ctx context.Context, exec boil.ContextExecutor, ins
 		}
 	} else {
 		related.R.PatternExamples = append(related.R.PatternExamples, o)
+	}
+
+	return nil
+}
+
+// SetService of the example to the related item.
+// Sets o.R.Service to related.
+// Adds o to related.R.ServiceExamples.
+func (o *Example) SetService(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Service) error {
+	var err error
+	if insert {
+		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
+			return errors.Wrap(err, "failed to insert into foreign table")
+		}
+	}
+
+	updateQuery := fmt.Sprintf(
+		"UPDATE \"Examples\" SET %s WHERE %s",
+		strmangle.SetParamNames("\"", "\"", 0, []string{"service_id"}),
+		strmangle.WhereClause("\"", "\"", 0, examplePrimaryKeyColumns),
+	)
+	values := []interface{}{related.ID, o.ID}
+
+	if boil.DebugMode {
+		fmt.Fprintln(boil.DebugWriter, updateQuery)
+		fmt.Fprintln(boil.DebugWriter, values)
+	}
+
+	if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+		return errors.Wrap(err, "failed to update local table")
+	}
+
+	o.ServiceID = related.ID
+	if o.R == nil {
+		o.R = &exampleR{
+			Service: related,
+		}
+	} else {
+		o.R.Service = related
+	}
+
+	if related.R == nil {
+		related.R = &serviceR{
+			ServiceExamples: ExampleSlice{o},
+		}
+	} else {
+		related.R.ServiceExamples = append(related.R.ServiceExamples, o)
 	}
 
 	return nil

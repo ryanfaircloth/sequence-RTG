@@ -56,7 +56,7 @@ func AddToYaml(pattern sequence.AnalyzerResult, db YPatternDB) YPatternDB{
 	db.Rules[r.ID] = r
 
 	//look in the ruleset if it exists already
-	rsName := pattern.Examples[0].Service
+	rsName := pattern.Services[0].Name
 	_, ok := db.Rulesets[rsName]
 	if !ok {
 		rs := buildRuleset(pattern)
@@ -69,7 +69,7 @@ func buildRule (result sequence.AnalyzerResult) YRule {
 	rule := YRule{}
 	rule.Values.Seqmatches = result.ExampleCount
 	//get the ruleset from the example (service)
-	rule.Ruleset =	result.Examples[0].Service
+	rule.Ruleset =	result.Services[0].Name
 	rule.Patterns = append(rule.Patterns, replaceTags(result.Pattern))
 	for _, ex := range result.Examples {
 		example := YRuleExample{ex.Service, ex.Message}
@@ -78,7 +78,7 @@ func buildRule (result sequence.AnalyzerResult) YRule {
 	rule.Values.New = true
 	rule.Values.DateCreated = result.DateCreated.Format("2006-01-02")
 	//TODO: Update when date last matched is logging
-	rule.Values.DateLastMatched = time.Now().Format("2006-01-02")
+	rule.Values.DateLastMatched = result.DateLastMatched.Format("2006-01-02")
 	//create a new UUID
 	rule.ID = result.PatternId
 	return rule
@@ -89,10 +89,10 @@ func buildRuleset (result sequence.AnalyzerResult) YRuleset {
 	rs.Pubdate = time.Now().Format("2006-01-02")
 	//get the ruleset from the example (service)
 	rs.Parser =	"sequence"
-	rsName := result.Examples[0].Service
+	rsName := result.Services[0].Name
 	rs.Patterns = append(rs.Patterns, rsName)
 	//create a new UUID
-	rs.ID = sequence.GenerateIDFromService(rsName)
+	rs.ID = result.Services[0].ID
 	return rs
 }
 

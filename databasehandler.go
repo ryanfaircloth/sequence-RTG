@@ -56,6 +56,7 @@ func GetPatternsFromDatabase(db *sql.DB, ctx context.Context) map[string]string{
 	return pmap
 }
 
+//this is for the output to files
 func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context) map[string]AnalyzerResult{
 	pmap := make(map[string]AnalyzerResult)
 	var patterns models.PatternSlice
@@ -73,19 +74,19 @@ func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context) map[st
 	}
 
 	for _, p := range patterns{
-		var s *models.Service
-		s, err = models.Services(models.ServiceWhere.ID.EQ(p.ServiceID)).One(ctx,db)
+		ar := AnalyzerResult{PatternId:p.ID, Pattern:p.SequencePattern, ThresholdReached:p.ThresholdReached, DateCreated:p.DateCreated, DateLastMatched:p.DateLastMatched, ExampleCount:int(p.CumulativeMatchCount)}
+		svcs, err := p.ServiceIdServices().All(ctx, db)
 		if err !=nil {
-			logger.DatabaseSelectFailed("services", "Where id = " + p.ServiceID, err.Error())
+			logger.DatabaseSelectFailed("services", "Where id = " + p.ID, err.Error())
 		}
-		ar := AnalyzerResult{PatternId:p.ID, Pattern:p.SequencePattern, ThresholdReached:p.ThresholdReached, DateCreated:p.DateCreated, ExampleCount:int(p.OriginalMatchCount)}
+		ar.Services = svcs
 		var ex models.ExampleSlice
 		ex, err = p.PatternExamples().All(ctx, db)
 		if err !=nil {
 			logger.DatabaseSelectFailed("examples", "All", err.Error())
 		}
 		for _, e := range ex{
-			lr := LogRecord{Message:e.ExampleDetail, Service:s.Name}
+			lr := LogRecord{Message:e.ExampleDetail}
 			ar.Examples = append(ar.Examples, lr)
 		}
 		pmap[p.ID]=ar
@@ -93,16 +94,24 @@ func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context) map[st
 	return pmap
 }
 
+//this is for the parser
 func GetPatternsFromDatabaseByService(db *sql.DB, ctx context.Context, sid string) map[string]AnalyzerResult{
 	pmap := make(map[string]AnalyzerResult)
 	// This pulls 'all' of the patterns from the patterns database
-	patterns, err := models.Patterns(models.PatternWhere.ServiceID.EQ(sid)).All(ctx, db)
+	svc, err := models.Services(models.ServiceWhere.ID.EQ(sid)).One(ctx, db)
 	if err !=nil {
-		logger.DatabaseSelectFailed("patterns", "Where Serviceid = " + sid, err.Error())
-	}
-	for _, p := range patterns{
-		ar := AnalyzerResult{Pattern:p.SequencePattern, TagPositions:p.TagPositions.String}
-		pmap[p.ID] = ar
+		if err.Error() != "sql: no rows in result set"{
+			logger.DatabaseSelectFailed("services", "Where Serviceid = " + sid, err.Error())
+		}
+	} else {
+		patterns, err := svc.PatternIdPatterns().All(ctx, db)
+		if err !=nil {
+			logger.DatabaseSelectFailed("patterns", "Where Serviceid = " + sid, err.Error())
+		}
+		for _, p := range patterns{
+			ar := AnalyzerResult{Pattern:p.SequencePattern, TagPositions:p.TagPositions.String}
+			pmap[p.ID] = ar
+		}
 	}
 	return pmap
 }
@@ -119,7 +128,6 @@ func GetServicesFromDatabase(db *sql.DB, ctx context.Context) map[string]string{
 	}
 	return smap
 }
-
 func AddService(ctx context.Context, tx *sql.Tx, id string, name string){
 	// This pulls 'all' of the services from the services table
 	var s models.Service
@@ -131,44 +139,32 @@ func AddService(ctx context.Context, tx *sql.Tx, id string, name string){
 		logger.DatabaseInsertFailed("service", id, err.Error())
 	}
 }
-
-func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, sID string){
+func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult){
 	tp := null.String{String:result.TagPositions, Valid:true}
-	p := models.Pattern{ID:result.PatternId, SequencePattern:result.Pattern, DateCreated:time.Now(),ServiceID:sID, ThresholdReached:result.ThresholdReached,
+	p := models.Pattern{ID:result.PatternId, SequencePattern:result.Pattern, DateCreated:time.Now(), ThresholdReached:result.ThresholdReached,
 		CumulativeMatchCount:int64(result.ExampleCount), OriginalMatchCount:int64(result.ExampleCount), DateLastMatched:time.Now(), IgnorePattern:false, TagPositions:tp}
-	err := p.Insert(ctx, tx, boil.Whitelist("id", "sequence_pattern", "date_created", "threshold_reached", "service_id", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern", "tag_positions"))
+	err := p.Insert(ctx, tx, boil.Whitelist("id", "sequence_pattern", "date_created", "threshold_reached", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern", "tag_positions"))
 	if err != nil{
 		logger.DatabaseInsertFailed("pattern", result.PatternId, err.Error())
+	}
+
+	//add the patternid and serviceid to the table
+	for _, s := range result.Services{
+		p.AddServiceIdServices(ctx, tx, false, s)
 	}
 
 	//add all examples if threshold has been reached as these will have already been pruned
 	//otherwise limit to max three.
 	if result.ThresholdReached{
 		for _, e := range result.Examples{
-			id, err := uuid.NewV4()
-			if err !=nil {
-				logger.DatabaseInsertFailed("example", result.PatternId, err.Error())
-			}
-			ex := models.Example{ExampleDetail:e.Message, PatternID:result.PatternId, ID:id.String()}
-			err = ex.Insert(ctx, tx, boil.Infer())
-			if err != nil{
-				logger.DatabaseInsertFailed("example", result.PatternId, err.Error())
-			}
+			insertExample(ctx,tx,e,result.PatternId)
 		}
 	}else{
 		prev := ""
 		count := 0
 		for _, e := range result.Examples{
 			if prev != e.Message{
-				id, err := uuid.NewV4()
-				if err !=nil {
-					logger.DatabaseInsertFailed("example", result.PatternId, err.Error())
-				}
-				ex := models.Example{ExampleDetail:e.Message, PatternID:result.PatternId, ID:id.String()}
-				err = ex.Insert(ctx, tx, boil.Infer())
-				if err != nil{
-					logger.DatabaseInsertFailed("example", result.PatternId, err.Error())
-				}
+				insertExample(ctx,tx,e,result.PatternId)
 				prev = e.Message
 				count++
 			}
@@ -176,5 +172,49 @@ func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, sID stri
 				break
 			}
 		}
+	}
+}
+
+func UpdatePattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult){
+	p, _ := models.FindPattern(ctx, tx, result.PatternId)
+	p.DateLastMatched = time.Now()
+	p.CumulativeMatchCount += int64(result.ExampleCount)
+	_, err := p.Update(ctx, tx, boil.Infer())
+	if err != nil{
+		logger.DatabaseUpdateFailed("pattern", result.PatternId, err.Error())
+	}
+	//add the patternid and serviceid to the table
+	for _, s := range result.Services{
+		p.AddServiceIdServices(ctx, tx, false, s)
+	}
+
+	//if the example count is less than three, add the extra ones if different
+	ct, _ := p.PatternExamples().Count(ctx, tx)
+	if ct < 3 {
+		ex, _ := p.PatternExamples().All(ctx, tx)
+		for _, e := range result.Examples{
+			found := false
+			for _, h := range ex{
+				if h.ExampleDetail == e.Message{
+					found = true
+					break
+				}
+			}
+			if !found{
+				insertExample(ctx,tx,e,result.PatternId)
+			}
+		}
+	}
+}
+
+func insertExample(ctx context.Context, tx *sql.Tx, lr LogRecord, pid string){
+	id, err := uuid.NewV4()
+	if err !=nil {
+		logger.DatabaseInsertFailed("example", pid, err.Error())
+	}
+	ex := models.Example{ExampleDetail:lr.Message, PatternID:pid, ID:id.String(), ServiceID:GenerateIDFromService(lr.Service)}
+	err = ex.Insert(ctx, tx, boil.Infer())
+	if err != nil{
+		logger.DatabaseInsertFailed("example", pid, err.Error())
 	}
 }

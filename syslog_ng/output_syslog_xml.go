@@ -3,8 +3,8 @@ package syslog_ng
 import (
 	"encoding/xml"
 	"sequence"
+	"sequence/models"
 	"strconv"
-	"time"
 )
 
 //This represents a ruleset section in the sys-log ng yaml file
@@ -82,11 +82,11 @@ func AddToRuleset(pattern sequence.AnalyzerResult, document XPatternDB) XPattern
 	rule := buildRuleXML(pattern)
 	//get the ruleset name for the example
 	//it will be the service value
-	rsName := pattern.Examples[0].Service
+	rs := pattern.Services[0]
 	found := false
 	//look in the ruleset if it exists already
 	for i, rls := range document.Rulesets {
-		if rls.Name == rsName {
+		if rls.Name == rs.Name {
 			// found, so add the new rule
 			rls.Rules.Rules = append(rls.Rules.Rules, rule)
 			//remove the old ruleset
@@ -100,7 +100,7 @@ func AddToRuleset(pattern sequence.AnalyzerResult, document XPatternDB) XPattern
 	//if not found make a new ruleset
 	if !found {
 		//create the ruleset
-		rs := buildRulesetXML(rsName)
+		rs := buildRulesetXML(rs)
 		//add the rule
 		rs.Rules.Rules = append(rs.Rules.Rules, rule)
 		//add the ruleset
@@ -117,7 +117,7 @@ func buildRuleXML (result sequence.AnalyzerResult) XRule {
 	rule.Values.Values = append(rule.Values.Values, new)
 	dc := XRuleValue{Name:"seq-created", Value: result.DateCreated.Format("2006-01-02")}
 	rule.Values.Values = append(rule.Values.Values, dc)
-	dlm := XRuleValue{Name:"seq-last-match", Value: time.Now().Format("2006-01-02")}
+	dlm := XRuleValue{Name:"seq-last-match", Value: result.DateLastMatched.Format("2006-01-02")}
 	rule.Values.Values = append(rule.Values.Values, dlm)
 	var p XPattern
 	var e XExample
@@ -137,10 +137,9 @@ func buildRuleXML (result sequence.AnalyzerResult) XRule {
 	return rule
 }
 
-func buildRulesetXML (rsName string) XRuleset {
-	rs := XRuleset{Name:rsName}
-	rs.ID = sequence.GenerateIDFromService(rsName)
-	var p = XPattern{Pattern:rsName}
+func buildRulesetXML (s *models.Service) XRuleset {
+	rs := XRuleset{Name:s.Name, ID:s.ID }
+	var p = XPattern{Pattern:s.Name}
 	rs.Patterns = append(rs.Patterns, p)
 	return rs
 }

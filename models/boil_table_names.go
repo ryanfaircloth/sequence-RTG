@@ -4,11 +4,13 @@
 package models
 
 var TableNames = struct {
-	Examples string
-	Patterns string
-	Services string
+	Examples         string
+	Patterns         string
+	PatternsServices string
+	Services         string
 }{
-	Examples: "Examples",
-	Patterns: "Patterns",
-	Services: "Services",
+	Examples:         "Examples",
+	Patterns:         "Patterns",
+	PatternsServices: "PatternsServices",
+	Services:         "Services",
 }

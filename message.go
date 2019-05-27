@@ -17,6 +17,7 @@ package sequence
 import (
 	"fmt"
 	"io"
+	"strings"
 	"unicode"
 )
 
@@ -150,6 +151,11 @@ func (this *Message) Tokenize(isParse bool, pos []int) (Token, error) {
 
 		//this is for dealing with multiline strings and setting everything after the \n to a single token
 		if tok.Value == "\n"{
+			tok.Value = this.Data[this.state.start:]
+			this.state.start += len(tok.Value)
+			tok.Type = TokenLiteral
+			tok.Tag = TagMultiLine
+		}else if strings.Contains(tok.Value, "\n") && this.state.prevToken.Value != "\""{
 			tok.Value = this.Data[this.state.start:]
 			this.state.start += len(tok.Value)
 			tok.Type = TokenLiteral

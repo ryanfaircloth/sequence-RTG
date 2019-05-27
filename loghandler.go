@@ -60,7 +60,8 @@ var (
 	errorGenericError = Event{200, "%s"}
 	errorAnalysisFailed = Event{201, "Unable to analyze: %s"}
 	errorDbInsertFailed = Event{301, "Failed to insert record into %s table, id: %s, reason: %s"}
-	errorDbSelectFailed = Event{302, "Failed to select record(s) from %s table, query: %s, reason: %s"}
+	errorDbUpdateFailed = Event{302, "Failed to update record in %s table, id: %s, reason: %s"}
+	errorDbSelectFailed = Event{303, "Failed to select record(s) from %s table, query: %s, reason: %s"}
 	errorGenericFatal = Event{400, "Fatal error occurred, reason: %s"}
 	errorGenericPanic = Event{500, "Panic occurred, reason: %s"}
 )
@@ -75,6 +76,12 @@ func (l *StandardLogger) DatabaseInsertFailed(tablename string, id string, reaso
 	l.WithFields(logrus.Fields{
 		"id": errorDbInsertFailed.id,
 	}).Errorf(errorDbInsertFailed.message, tablename, id, reason)
+}
+
+func (l *StandardLogger) DatabaseUpdateFailed(tablename string, query string, reason string){
+	l.WithFields(logrus.Fields{
+		"id": errorDbUpdateFailed.id,
+	}).Errorf(errorDbUpdateFailed.message, tablename, query, reason)
 }
 
 func (l *StandardLogger) DatabaseSelectFailed(tablename string, query string, reason string){

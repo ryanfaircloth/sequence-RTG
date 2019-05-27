@@ -90,7 +90,7 @@ func TestInsert(t *testing.T) {
 // or deadlocks can occur.
 func TestToOne(t *testing.T) {
 	t.Run("ExampleToPatternUsingPattern", testExampleToOnePatternUsingPattern)
-	t.Run("PatternToServiceUsingService", testPatternToOneServiceUsingService)
+	t.Run("ExampleToServiceUsingService", testExampleToOneServiceUsingService)
 }
 
 // TestOneToOne tests cannot be run in parallel
@@ -101,14 +101,16 @@ func TestOneToOne(t *testing.T) {}
 // or deadlocks can occur.
 func TestToMany(t *testing.T) {
 	t.Run("PatternToPatternExamples", testPatternToManyPatternExamples)
-	t.Run("ServiceToServicePatterns", testServiceToManyServicePatterns)
+	t.Run("PatternToServiceIdServices", testPatternToManyServiceIdServices)
+	t.Run("ServiceToServiceExamples", testServiceToManyServiceExamples)
+	t.Run("ServiceToPatternIdPatterns", testServiceToManyPatternIdPatterns)
 }
 
 // TestToOneSet tests cannot be run in parallel
 // or deadlocks can occur.
 func TestToOneSet(t *testing.T) {
 	t.Run("ExampleToPatternUsingPatternExamples", testExampleToOneSetOpPatternUsingPattern)
-	t.Run("PatternToServiceUsingServicePatterns", testPatternToOneSetOpServiceUsingService)
+	t.Run("ExampleToServiceUsingServiceExamples", testExampleToOneSetOpServiceUsingService)
 }
 
 // TestToOneRemove tests cannot be run in parallel
@@ -127,16 +129,24 @@ func TestOneToOneRemove(t *testing.T) {}
 // or deadlocks can occur.
 func TestToManyAdd(t *testing.T) {
 	t.Run("PatternToPatternExamples", testPatternToManyAddOpPatternExamples)
-	t.Run("ServiceToServicePatterns", testServiceToManyAddOpServicePatterns)
+	t.Run("PatternToServiceIdServices", testPatternToManyAddOpServiceIdServices)
+	t.Run("ServiceToServiceExamples", testServiceToManyAddOpServiceExamples)
+	t.Run("ServiceToPatternIdPatterns", testServiceToManyAddOpPatternIdPatterns)
 }
 
 // TestToManySet tests cannot be run in parallel
 // or deadlocks can occur.
-func TestToManySet(t *testing.T) {}
+func TestToManySet(t *testing.T) {
+	t.Run("PatternToServiceIdServices", testPatternToManySetOpServiceIdServices)
+	t.Run("ServiceToPatternIdPatterns", testServiceToManySetOpPatternIdPatterns)
+}
 
 // TestToManyRemove tests cannot be run in parallel
 // or deadlocks can occur.
-func TestToManyRemove(t *testing.T) {}
+func TestToManyRemove(t *testing.T) {
+	t.Run("PatternToServiceIdServices", testPatternToManyRemoveOpServiceIdServices)
+	t.Run("ServiceToPatternIdPatterns", testServiceToManyRemoveOpPatternIdPatterns)
+}
 
 func TestReload(t *testing.T) {
 	t.Run("Examples", testExamplesReload)

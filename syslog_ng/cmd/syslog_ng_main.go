@@ -194,7 +194,7 @@ func analyze(cmd *cobra.Command, args []string) {
 					stat = sequence.AnalyzerResult{}
 				}
 				sequence.AddExampleToAnalyzerResult(&stat, l, threshold)
-				stat.PatternId = sequence.GenerateIDFromPattern(pat, stat.Examples[0].Service)
+				stat.PatternId = sequence.GenerateIDFromPattern(pat)
 				stat.TagPositions = sequence.SplitToString(pos, ",")
 				stat.ExampleCount++
 				amap[pat] = stat
@@ -250,7 +250,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 		err_count := 0
 		processed := 0
 		amap := make(map[string]sequence.AnalyzerResult)
-		pmap := make(map[string]string)
+		pmap := make(map[string]sequence.AnalyzerResult)
 		for svc, lrc := range lrMap {
 			standardLogger.HandleDebug(fmt.Sprintf("Started processing records from service: %s", svc))
 			// For all the log messages, if we can't parse it, then let's add it to the
@@ -275,8 +275,19 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 				seq := scanMessage(scanner, l.Message)
 				pseq, err := parser.Parse(seq)
 				if err == nil {
-					pat, _ := pseq.String()
-					pmap[pat] = "found"
+					//if the pattern is found we might still need to update the pattern/service relationship
+					pat, pos := pseq.String()
+					ar, ok := pmap[pat]
+					if !ok {
+						ar = sequence.AnalyzerResult{}
+					}
+					sequence.AddExampleToAnalyzerResult(&ar, l, threshold)
+					sequence.AddServiceToAnalyzerResult(&ar, l.Service)
+					ar.TagPositions = sequence.SplitToString(pos, ",")
+					ar.PatternId = sequence.GenerateIDFromPattern(pat)
+					ar.Pattern = pat
+					ar.ExampleCount++
+					pmap[pat] = ar
 				} else {
 					aseq, err := analyzer.Analyze(seq)
 					if err != nil {
@@ -289,8 +300,10 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 							ar = sequence.AnalyzerResult{}
 						}
 						sequence.AddExampleToAnalyzerResult(&ar, l, threshold)
+						sequence.AddServiceToAnalyzerResult(&ar, l.Service)
 						ar.TagPositions = sequence.SplitToString(pos, ",")
-						ar.PatternId = sequence.GenerateIDFromPattern(pat, ar.Examples[0].Service)
+						ar.PatternId = sequence.GenerateIDFromPattern(pat)
+						ar.Pattern = pat
 						ar.ExampleCount++
 						amap[pat] = ar
 					}
@@ -302,6 +315,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 		anTime := time.Since(startTime)
 		standardLogger.HandleInfo(fmt.Sprintf("Analysed in: %s\n", anTime))
 		standardLogger.HandleDebug("Starting save to the database.")
+		syslog_ng.SaveExistingToDatabase(pmap)
 		syslog_ng.SaveToDatabase(amap)
 		standardLogger.HandleDebug("Finished save to the database.")
 		//debugging what is coming out as new

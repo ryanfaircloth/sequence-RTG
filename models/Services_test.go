@@ -494,7 +494,85 @@ func testServicesInsertWhitelist(t *testing.T) {
 	}
 }
 
-func testServiceToManyServicePatterns(t *testing.T) {
+func testServiceToManyServiceExamples(t *testing.T) {
+	var err error
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Service
+	var b, c Example
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, serviceDBTypes, true, serviceColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Service struct: %s", err)
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = randomize.Struct(seed, &b, exampleDBTypes, false, exampleColumnsWithDefault...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &c, exampleDBTypes, false, exampleColumnsWithDefault...); err != nil {
+		t.Fatal(err)
+	}
+
+	b.ServiceID = a.ID
+	c.ServiceID = a.ID
+
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	check, err := a.ServiceExamples().All(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bFound, cFound := false, false
+	for _, v := range check {
+		if v.ServiceID == b.ServiceID {
+			bFound = true
+		}
+		if v.ServiceID == c.ServiceID {
+			cFound = true
+		}
+	}
+
+	if !bFound {
+		t.Error("expected to find b")
+	}
+	if !cFound {
+		t.Error("expected to find c")
+	}
+
+	slice := ServiceSlice{&a}
+	if err = a.L.LoadServiceExamples(ctx, tx, false, (*[]*Service)(&slice), nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := len(a.R.ServiceExamples); got != 2 {
+		t.Error("number of eager loaded records wrong, got:", got)
+	}
+
+	a.R.ServiceExamples = nil
+	if err = a.L.LoadServiceExamples(ctx, tx, true, &a, nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := len(a.R.ServiceExamples); got != 2 {
+		t.Error("number of eager loaded records wrong, got:", got)
+	}
+
+	if t.Failed() {
+		t.Logf("%#v", check)
+	}
+}
+
+func testServiceToManyPatternIdPatterns(t *testing.T) {
 	var err error
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
@@ -519,9 +597,6 @@ func testServiceToManyServicePatterns(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	b.ServiceID = a.ID
-	c.ServiceID = a.ID
-
 	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
@@ -529,17 +604,26 @@ func testServiceToManyServicePatterns(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	check, err := a.ServicePatterns().All(ctx, tx)
+	_, err = tx.Exec("insert into \"PatternsServices\" (\"ServiceId\", \"PatternId\") values (?, ?)", a.ID, b.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = tx.Exec("insert into \"PatternsServices\" (\"ServiceId\", \"PatternId\") values (?, ?)", a.ID, c.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	check, err := a.PatternIdPatterns().All(ctx, tx)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	bFound, cFound := false, false
 	for _, v := range check {
-		if v.ServiceID == b.ServiceID {
+		if v.ID == b.ID {
 			bFound = true
 		}
-		if v.ServiceID == c.ServiceID {
+		if v.ID == c.ID {
 			cFound = true
 		}
 	}
@@ -552,18 +636,18 @@ func testServiceToManyServicePatterns(t *testing.T) {
 	}
 
 	slice := ServiceSlice{&a}
-	if err = a.L.LoadServicePatterns(ctx, tx, false, (*[]*Service)(&slice), nil); err != nil {
+	if err = a.L.LoadPatternIdPatterns(ctx, tx, false, (*[]*Service)(&slice), nil); err != nil {
 		t.Fatal(err)
 	}
-	if got := len(a.R.ServicePatterns); got != 2 {
+	if got := len(a.R.PatternIdPatterns); got != 2 {
 		t.Error("number of eager loaded records wrong, got:", got)
 	}
 
-	a.R.ServicePatterns = nil
-	if err = a.L.LoadServicePatterns(ctx, tx, true, &a, nil); err != nil {
+	a.R.PatternIdPatterns = nil
+	if err = a.L.LoadPatternIdPatterns(ctx, tx, true, &a, nil); err != nil {
 		t.Fatal(err)
 	}
-	if got := len(a.R.ServicePatterns); got != 2 {
+	if got := len(a.R.PatternIdPatterns); got != 2 {
 		t.Error("number of eager loaded records wrong, got:", got)
 	}
 
@@ -572,7 +656,82 @@ func testServiceToManyServicePatterns(t *testing.T) {
 	}
 }
 
-func testServiceToManyAddOpServicePatterns(t *testing.T) {
+func testServiceToManyAddOpServiceExamples(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Service
+	var b, c, d, e Example
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, serviceDBTypes, false, strmangle.SetComplement(servicePrimaryKeyColumns, serviceColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	foreigners := []*Example{&b, &c, &d, &e}
+	for _, x := range foreigners {
+		if err = randomize.Struct(seed, x, exampleDBTypes, false, strmangle.SetComplement(examplePrimaryKeyColumns, exampleColumnsWithoutDefault)...); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	foreignersSplitByInsertion := [][]*Example{
+		{&b, &c},
+		{&d, &e},
+	}
+
+	for i, x := range foreignersSplitByInsertion {
+		err = a.AddServiceExamples(ctx, tx, i != 0, x...)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		first := x[0]
+		second := x[1]
+
+		if a.ID != first.ServiceID {
+			t.Error("foreign key was wrong value", a.ID, first.ServiceID)
+		}
+		if a.ID != second.ServiceID {
+			t.Error("foreign key was wrong value", a.ID, second.ServiceID)
+		}
+
+		if first.R.Service != &a {
+			t.Error("relationship was not added properly to the foreign slice")
+		}
+		if second.R.Service != &a {
+			t.Error("relationship was not added properly to the foreign slice")
+		}
+
+		if a.R.ServiceExamples[i*2] != first {
+			t.Error("relationship struct slice not set to correct value")
+		}
+		if a.R.ServiceExamples[i*2+1] != second {
+			t.Error("relationship struct slice not set to correct value")
+		}
+
+		count, err := a.ServiceExamples().Count(ctx, tx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if want := int64((i + 1) * 2); count != want {
+			t.Error("want", want, "got", count)
+		}
+	}
+}
+func testServiceToManyAddOpPatternIdPatterns(t *testing.T) {
 	var err error
 
 	ctx := context.Background()
@@ -609,7 +768,7 @@ func testServiceToManyAddOpServicePatterns(t *testing.T) {
 	}
 
 	for i, x := range foreignersSplitByInsertion {
-		err = a.AddServicePatterns(ctx, tx, i != 0, x...)
+		err = a.AddPatternIdPatterns(ctx, tx, i != 0, x...)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -617,34 +776,186 @@ func testServiceToManyAddOpServicePatterns(t *testing.T) {
 		first := x[0]
 		second := x[1]
 
-		if a.ID != first.ServiceID {
-			t.Error("foreign key was wrong value", a.ID, first.ServiceID)
+		if first.R.ServiceIdServices[0] != &a {
+			t.Error("relationship was not added properly to the slice")
 		}
-		if a.ID != second.ServiceID {
-			t.Error("foreign key was wrong value", a.ID, second.ServiceID)
-		}
-
-		if first.R.Service != &a {
-			t.Error("relationship was not added properly to the foreign slice")
-		}
-		if second.R.Service != &a {
-			t.Error("relationship was not added properly to the foreign slice")
+		if second.R.ServiceIdServices[0] != &a {
+			t.Error("relationship was not added properly to the slice")
 		}
 
-		if a.R.ServicePatterns[i*2] != first {
+		if a.R.PatternIdPatterns[i*2] != first {
 			t.Error("relationship struct slice not set to correct value")
 		}
-		if a.R.ServicePatterns[i*2+1] != second {
+		if a.R.PatternIdPatterns[i*2+1] != second {
 			t.Error("relationship struct slice not set to correct value")
 		}
 
-		count, err := a.ServicePatterns().Count(ctx, tx)
+		count, err := a.PatternIdPatterns().Count(ctx, tx)
 		if err != nil {
 			t.Fatal(err)
 		}
 		if want := int64((i + 1) * 2); count != want {
 			t.Error("want", want, "got", count)
 		}
+	}
+}
+
+func testServiceToManySetOpPatternIdPatterns(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Service
+	var b, c, d, e Pattern
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, serviceDBTypes, false, strmangle.SetComplement(servicePrimaryKeyColumns, serviceColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	foreigners := []*Pattern{&b, &c, &d, &e}
+	for _, x := range foreigners {
+		if err = randomize.Struct(seed, x, patternDBTypes, false, strmangle.SetComplement(patternPrimaryKeyColumns, patternColumnsWithoutDefault)...); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err = a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	err = a.SetPatternIdPatterns(ctx, tx, false, &b, &c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err := a.PatternIdPatterns().Count(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 2 {
+		t.Error("count was wrong:", count)
+	}
+
+	err = a.SetPatternIdPatterns(ctx, tx, true, &d, &e)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err = a.PatternIdPatterns().Count(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 2 {
+		t.Error("count was wrong:", count)
+	}
+
+	// The following checks cannot be implemented since we have no handle
+	// to these when we call Set(). Leaving them here as wishful thinking
+	// and to let people know there's dragons.
+	//
+	// if len(b.R.ServiceIdServices) != 0 {
+	// 	t.Error("relationship was not removed properly from the slice")
+	// }
+	// if len(c.R.ServiceIdServices) != 0 {
+	// 	t.Error("relationship was not removed properly from the slice")
+	// }
+	if d.R.ServiceIdServices[0] != &a {
+		t.Error("relationship was not added properly to the slice")
+	}
+	if e.R.ServiceIdServices[0] != &a {
+		t.Error("relationship was not added properly to the slice")
+	}
+
+	if a.R.PatternIdPatterns[0] != &d {
+		t.Error("relationship struct slice not set to correct value")
+	}
+	if a.R.PatternIdPatterns[1] != &e {
+		t.Error("relationship struct slice not set to correct value")
+	}
+}
+
+func testServiceToManyRemoveOpPatternIdPatterns(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Service
+	var b, c, d, e Pattern
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, serviceDBTypes, false, strmangle.SetComplement(servicePrimaryKeyColumns, serviceColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	foreigners := []*Pattern{&b, &c, &d, &e}
+	for _, x := range foreigners {
+		if err = randomize.Struct(seed, x, patternDBTypes, false, strmangle.SetComplement(patternPrimaryKeyColumns, patternColumnsWithoutDefault)...); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	err = a.AddPatternIdPatterns(ctx, tx, true, foreigners...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err := a.PatternIdPatterns().Count(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 4 {
+		t.Error("count was wrong:", count)
+	}
+
+	err = a.RemovePatternIdPatterns(ctx, tx, foreigners[:2]...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err = a.PatternIdPatterns().Count(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 2 {
+		t.Error("count was wrong:", count)
+	}
+
+	if len(b.R.ServiceIdServices) != 0 {
+		t.Error("relationship was not removed properly from the slice")
+	}
+	if len(c.R.ServiceIdServices) != 0 {
+		t.Error("relationship was not removed properly from the slice")
+	}
+	if d.R.ServiceIdServices[0] != &a {
+		t.Error("relationship was not added properly to the foreign struct")
+	}
+	if e.R.ServiceIdServices[0] != &a {
+		t.Error("relationship was not added properly to the foreign struct")
+	}
+
+	if len(a.R.PatternIdPatterns) != 2 {
+		t.Error("should have preserved two relationships")
+	}
+
+	// Removal doesn't do a stable deletion for performance so we have to flip the order
+	if a.R.PatternIdPatterns[1] != &d {
+		t.Error("relationship to d should have been preserved")
+	}
+	if a.R.PatternIdPatterns[0] != &e {
+		t.Error("relationship to e should have been preserved")
 	}
 }
 

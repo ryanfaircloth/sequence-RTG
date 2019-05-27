@@ -19,6 +19,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math"
+	"sequence/models"
 	"strconv"
 	"strings"
 	"sync"
@@ -83,6 +84,7 @@ type Analyzer struct {
 //pattern to be used as the starting block for
 //all conversions
 type AnalyzerResult struct {
+	Services models.ServiceSlice
 	PatternId string
 	Pattern string
 	TagPositions string
@@ -90,6 +92,7 @@ type AnalyzerResult struct {
 	Examples []LogRecord
 	ThresholdReached bool
 	DateCreated time.Time
+	DateLastMatched time.Time
 }
 
 
@@ -140,8 +143,18 @@ func SplitToInt(s string, sep string) []int {
 	return b
 }
 
+func AddServiceToAnalyzerResult(this *AnalyzerResult, service string){
+	for _, s := range this.Services{
+		if s.Name == service{
+			return
+		}
+	}
+	s:= models.Service{ID:GenerateIDFromService(service), Name:service, DateCreated:time.Now()}
+	this.Services = append(this.Services, &s)
+}
+
 func AddExampleToAnalyzerResult(this *AnalyzerResult, lr LogRecord, threshold int){
-	if this.ThresholdReached{
+	if this.ThresholdReached && len(this.Examples) >= 3{
 		//nothing to here
 		return
 	}
@@ -187,9 +200,9 @@ func TruncateExamples(this *AnalyzerResult){
 //this is so that the same pattern will have the same id
 //in all files and the id is reproducible
 //returns a sha1 hash as the id
-func GenerateIDFromPattern(pattern string, service string) string{
+func GenerateIDFromPattern(pattern string) string{
 	h := sha1.New()
-	h.Write([]byte(pattern+service))
+	h.Write([]byte(pattern))
 	sha := h.Sum(nil)  // "sha" is uint8 type, encoded in base16
 	shaStr := hex.EncodeToString(sha)  // String representation
 	return shaStr
