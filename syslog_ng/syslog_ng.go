@@ -8,6 +8,7 @@ import (
 	"sequence"
 	"sequence/models"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -46,16 +47,13 @@ func readConfig(file string) error {
 func replaceTags(pattern string) string{
 	s := strings.Fields(pattern)
 	var new []string
+	mtc := make(map[string]int)
 	for _, p := range s{
 		if val, ok := tags.general[p]; ok {
-			fieldname := p[1:len(p)-1]
-			p=val
-			//replace any field names that have a custom value in the config
-			p = checkForCustomFieldName(p, fieldname)
+			p, mtc = getUpdatedTag(p, mtc, val, "")
 		}else{
-			p=getSpecial(p)
+			p, mtc = getSpecial(p, mtc)
 		}
-
 		//reconstruct
 		new = append(new, p)
 	}
@@ -83,7 +81,32 @@ func replaceTags(pattern string) string{
 	return result
 }
 
-func getSpecial(p string) string {
+func getUpdatedTag(p string, mtc map[string]int, tag string, del string) (string, map[string]int){
+	tok := ""
+	xchars := len(del)
+	if xchars == 2{
+		tok = p[2:len(p)-2]
+	}else if xchars == 1 {
+		tok = p[1:len(p)-2]
+	}else{
+		tok = p[1:len(p)-1]
+	}
+	//replace any field names that have a custom value in the config
+	tok = checkForCustomFieldName(tok)
+	fieldname := tok
+	//check if there is more than one in the pattern and number
+	if t, ok := mtc[tok]; ok {
+		fieldname = fieldname + strconv.Itoa(t)
+		mtc[tok] = t+1
+		p = strings.Replace(tag, "[fieldname]", fieldname, 1)
+	}else{
+		mtc[tok] = 1
+		p = strings.Replace(tag, "[fieldname]", fieldname, 1)
+	}
+	return p, mtc
+}
+
+func getSpecial(p string, mtc map[string]int) (string, map[string]int) {
 	//first get the indexes of the % function
 	k := p
 	index := suffixarray.New([]byte(p))
@@ -95,6 +118,7 @@ func getSpecial(p string) string {
 	for i, off := range offsets {
 		if i % 2 == 0 && i < len(offsets)-1{
 			s, del, fieldname := getWithDelimiters(p, off, offsets[i+1]+1)
+			fieldname = checkForCustomFieldName(fieldname)
 			//check if a time regex tag, this needs some manipulation
 			if strings.Contains(s, sequence.TagRegExTime.String()) && del == ""{
 				r, rg := getTimeRegex(s)
@@ -112,18 +136,18 @@ func getSpecial(p string) string {
 					fieldname = sequence.TagRegExTime.String()
 				}
 				if val, ok := tags.delstr[del]; ok {
-					val = strings.Replace(val, "[fieldname]", fieldname, 1)
+					val, mtc = getUpdatedTag(s, mtc, val, del)
 					k = strings.Replace(k, s, val, 1)
 				}
 			}else{
 				if val, ok := tags.general[s]; ok {
+					val, mtc = getUpdatedTag(s, mtc, val, del)
 					k = strings.Replace(k, s, val, 1)
 				}
 			}
-			k = checkForCustomFieldName(k, fieldname)
 		}
 	}
-	return k
+	return k, mtc
 }
 
 func CreateRulesetName(slice models.ServiceSlice) (string, string){
@@ -145,11 +169,11 @@ func CreateRulesetName(slice models.ServiceSlice) (string, string){
 	return rname, sequence.GenerateIDFromString(rname)
 }
 
-func checkForCustomFieldName(s string, f string) string{
+func checkForCustomFieldName(f string) string{
 	if val, ok := tags.cfield[f]; ok{
-		s = strings.Replace(s, f, val, 1)
+		return val
 	}
-	return s
+	return f
 }
 
 func getWithDelimiters(p string, start, end int ) (string, string, string){
@@ -175,7 +199,7 @@ func getWithDelimiters(p string, start, end int ) (string, string, string){
 		after :=  p[end:end+1]
 		if after == ":" || after == "," || after == ";" {
 			return p[start:end+1], after, fieldname
-		} else if after != "%"{
+		}else if after != "%"{
 			return p[start:end], "no-sp", fieldname
 		}
 	}
