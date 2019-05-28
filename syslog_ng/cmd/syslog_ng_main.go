@@ -194,7 +194,7 @@ func analyze(cmd *cobra.Command, args []string) {
 					stat = sequence.AnalyzerResult{}
 				}
 				sequence.AddExampleToAnalyzerResult(&stat, l, threshold)
-				stat.PatternId = sequence.GenerateIDFromPattern(pat)
+				stat.PatternId = sequence.GenerateIDFromString(pat)
 				stat.TagPositions = sequence.SplitToString(pos, ",")
 				stat.ExampleCount++
 				amap[pat] = stat
@@ -257,7 +257,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 			// analyzer for pattern analysis, this requires the previous pattern file/folder
 			//	to be passed in
 			analyzer := sequence.NewAnalyzer()
-			sid := sequence.GenerateIDFromService(svc)
+			sid := sequence.GenerateIDFromString(svc)
 			standardLogger.HandleDebug("Started building parser using patterns from database")
 			parser := buildParserFromDb(sid)
 			standardLogger.HandleDebug("Completed building parser and starting to check if matches existing patterns")
@@ -284,7 +284,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 					sequence.AddExampleToAnalyzerResult(&ar, l, threshold)
 					sequence.AddServiceToAnalyzerResult(&ar, l.Service)
 					ar.TagPositions = sequence.SplitToString(pos, ",")
-					ar.PatternId = sequence.GenerateIDFromPattern(pat)
+					ar.PatternId = sequence.GenerateIDFromString(pat)
 					ar.Pattern = pat
 					ar.ExampleCount++
 					pmap[pat] = ar
@@ -302,7 +302,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 						sequence.AddExampleToAnalyzerResult(&ar, l, threshold)
 						sequence.AddServiceToAnalyzerResult(&ar, l.Service)
 						ar.TagPositions = sequence.SplitToString(pos, ",")
-						ar.PatternId = sequence.GenerateIDFromPattern(pat)
+						ar.PatternId = sequence.GenerateIDFromString(pat)
 						ar.Pattern = pat
 						ar.ExampleCount++
 						amap[pat] = ar

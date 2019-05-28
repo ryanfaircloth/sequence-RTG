@@ -51,25 +51,32 @@ func SaveAsYaml(oFile *os.File, db YPatternDB) error {
 }
 
 func AddToYaml(pattern sequence.AnalyzerResult, db YPatternDB) YPatternDB{
-	//every pattern should be unique
-	r := buildRule(pattern)
-	db.Rules[r.ID] = r
-
-	//look in the ruleset if it exists already
+	//do we have a special case where it belongs to more that one service
 	rsName := pattern.Services[0].Name
+	rsID := pattern.Services[0].ID
+	if len(pattern.Services) > 1{
+		rsName, rsID = CreateRulesetName(pattern.Services)
+	}
+	//look in the ruleset if it exists already
 	_, ok := db.Rulesets[rsName]
 	if !ok {
-		rs := buildRuleset(pattern)
+		rs := buildRuleset(pattern,rsID)
 		db.Rulesets[rsName] = rs
 	}
+
+	//every pattern should be unique
+	r := buildRule(pattern, rsName)
+	db.Rules[r.ID] = r
+
+
 	return db
 }
 
-func buildRule (result sequence.AnalyzerResult) YRule {
+func buildRule (result sequence.AnalyzerResult, rsName string) YRule {
 	rule := YRule{}
 	rule.Values.Seqmatches = result.ExampleCount
 	//get the ruleset from the example (service)
-	rule.Ruleset =	result.Services[0].Name
+	rule.Ruleset = rsName
 	rule.Patterns = append(rule.Patterns, replaceTags(result.Pattern))
 	for _, ex := range result.Examples {
 		example := YRuleExample{ex.Service, ex.Message}
@@ -84,15 +91,16 @@ func buildRule (result sequence.AnalyzerResult) YRule {
 	return rule
 }
 
-func buildRuleset (result sequence.AnalyzerResult) YRuleset {
+func buildRuleset (result sequence.AnalyzerResult, rsID string) YRuleset {
 	rs := YRuleset{}
 	rs.Pubdate = time.Now().Format("2006-01-02")
 	//get the ruleset from the example (service)
 	rs.Parser =	"sequence"
-	rsName := result.Services[0].Name
-	rs.Patterns = append(rs.Patterns, rsName)
+	for _, s := range result.Services{
+		rs.Patterns = append(rs.Patterns, s.Name)
+	}
 	//create a new UUID
-	rs.ID = result.Services[0].ID
+	rs.ID = rsID
 	return rs
 }
 

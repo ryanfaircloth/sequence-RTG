@@ -212,7 +212,7 @@ func insertExample(ctx context.Context, tx *sql.Tx, lr LogRecord, pid string){
 	if err !=nil {
 		logger.DatabaseInsertFailed("example", pid, err.Error())
 	}
-	ex := models.Example{ExampleDetail:lr.Message, PatternID:pid, ID:id.String(), ServiceID:GenerateIDFromService(lr.Service)}
+	ex := models.Example{ExampleDetail:lr.Message, PatternID:pid, ID:id.String(), ServiceID:GenerateIDFromString(lr.Service)}
 	err = ex.Insert(ctx, tx, boil.Infer())
 	if err != nil{
 		logger.DatabaseInsertFailed("example", pid, err.Error())

@@ -19,7 +19,7 @@ type XPatternDB struct{
 type XRuleset struct{
 	ID string `xml:"id,attr"`
 	Name string `xml:"name,attr"`
-	Patterns []XPattern  `xml:"patterns"`
+	Patterns XPatterns  `xml:"patterns"`
 	Rules XRules `xml:"rules"`
 }
 
@@ -35,6 +35,11 @@ type XRule struct{
 	Examples XExamples  `xml:"examples"`
 	Values   XRuleValues `xml:"values"`
 	ID       string      `xml:"id,attr"`
+}
+
+//this is needed for the xml to format properly
+type XPatterns struct {
+	Patterns []string `xml:"pattern"`
 }
 
 type XPattern struct {
@@ -82,11 +87,15 @@ func AddToRuleset(pattern sequence.AnalyzerResult, document XPatternDB) XPattern
 	rule := buildRuleXML(pattern)
 	//get the ruleset name for the example
 	//it will be the service value
-	rs := pattern.Services[0]
+	rs := pattern.Services[0].Name
+	rsID := pattern.Services[0].ID
+	if len(pattern.Services) > 1{
+		rs, rsID = CreateRulesetName(pattern.Services)
+	}
 	found := false
 	//look in the ruleset if it exists already
 	for i, rls := range document.Rulesets {
-		if rls.Name == rs.Name {
+		if rls.Name == rs {
 			// found, so add the new rule
 			rls.Rules.Rules = append(rls.Rules.Rules, rule)
 			//remove the old ruleset
@@ -100,7 +109,7 @@ func AddToRuleset(pattern sequence.AnalyzerResult, document XPatternDB) XPattern
 	//if not found make a new ruleset
 	if !found {
 		//create the ruleset
-		rs := buildRulesetXML(rs)
+		rs := buildRulesetXML(rsID, rs, pattern.Services)
 		//add the rule
 		rs.Rules.Rules = append(rs.Rules.Rules, rule)
 		//add the ruleset
@@ -137,10 +146,11 @@ func buildRuleXML (result sequence.AnalyzerResult) XRule {
 	return rule
 }
 
-func buildRulesetXML (s *models.Service) XRuleset {
-	rs := XRuleset{Name:s.Name, ID:s.ID }
-	var p = XPattern{Pattern:s.Name}
-	rs.Patterns = append(rs.Patterns, p)
+func buildRulesetXML (rsID string, rsName string, slice models.ServiceSlice) XRuleset {
+	rs := XRuleset{Name:rsName, ID:rsID}
+	for _, s := range slice{
+		rs.Patterns.Patterns = append(rs.Patterns.Patterns, s.Name)
+	}
 	return rs
 }
 

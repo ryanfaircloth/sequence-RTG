@@ -149,7 +149,7 @@ func AddServiceToAnalyzerResult(this *AnalyzerResult, service string){
 			return
 		}
 	}
-	s:= models.Service{ID:GenerateIDFromService(service), Name:service, DateCreated:time.Now()}
+	s:= models.Service{ID:GenerateIDFromString(service), Name:service, DateCreated:time.Now()}
 	this.Services = append(this.Services, &s)
 }
 
@@ -200,17 +200,9 @@ func TruncateExamples(this *AnalyzerResult){
 //this is so that the same pattern will have the same id
 //in all files and the id is reproducible
 //returns a sha1 hash as the id
-func GenerateIDFromPattern(pattern string) string{
+func GenerateIDFromString(pattern string) string{
 	h := sha1.New()
 	h.Write([]byte(pattern))
-	sha := h.Sum(nil)  // "sha" is uint8 type, encoded in base16
-	shaStr := hex.EncodeToString(sha)  // String representation
-	return shaStr
-}
-
-func GenerateIDFromService(service string) string{
-	h := sha1.New()
-	h.Write([]byte(service))
 	sha := h.Sum(nil)  // "sha" is uint8 type, encoded in base16
 	shaStr := hex.EncodeToString(sha)  // String representation
 	return shaStr

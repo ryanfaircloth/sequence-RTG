@@ -6,6 +6,7 @@ import (
 	"index/suffixarray"
 	"os"
 	"sequence"
+	"sequence/models"
 	"sort"
 	"strings"
 	"time"
@@ -123,6 +124,25 @@ func getSpecial(p string) string {
 		}
 	}
 	return k
+}
+
+func CreateRulesetName(slice models.ServiceSlice) (string, string){
+	//order the services, so concat is always in the same order
+	sort.Slice(slice, func(i, j int) bool {
+		return slice[i].Name < slice[j].Name
+	})
+	rname := ""
+	for _, s := range slice{
+		//try a couple of small intelligent guesses
+		d := strings.Split(s.Name, "-")
+		if rname != d[0]{
+			if len(rname)>0{
+				rname += "_"
+			}
+			rname += d[0]
+		}
+	}
+	return rname, sequence.GenerateIDFromString(rname)
 }
 
 func checkForCustomFieldName(s string, f string) string{
