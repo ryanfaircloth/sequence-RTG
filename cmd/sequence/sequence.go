@@ -184,7 +184,7 @@ func analyze(cmd *cobra.Command, args []string) {
 
 		pseq, err := parser.Parse(seq)
 		if err == nil {
-			pat := pseq.String()
+			pat, _ := pseq.String()
 			stat, ok := pmap[pat]
 			if !ok {
 				stat = struct {
@@ -200,7 +200,7 @@ func analyze(cmd *cobra.Command, args []string) {
 			if err != nil {
 				log.Printf("Error analyzing: %s", line)
 			} else {
-				pat := aseq.String()
+				pat, _  := aseq.String()
 				stat, ok := amap[pat]
 				if !ok {
 					stat = struct {

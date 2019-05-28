@@ -85,9 +85,9 @@ func TestMessageScanHexString(t *testing.T) {
 
 func TestScannerSignature(t *testing.T) {
 	scanner := NewScanner()
-
+	var pos []int
 	for _, tc := range sigtests {
-		seq, err := scanner.Scan(tc.data, false)
+		seq, err := scanner.Scan(tc.data, false, pos)
 		require.NoError(t, err, tc.data)
 		require.Equal(t, tc.sig, seq.Signature(), tc.data+"\n"+seq.PrintTokens())
 	}
@@ -118,7 +118,7 @@ func benchmarkScanner(b *testing.B, data string, stype string) {
 	scanner := NewScanner()
 	l := int64(len(data))
 
-	var benchFunc func(string, bool) (Sequence, error)
+	var benchFunc func(string, bool, []int) (Sequence, error)
 
 	switch stype {
 	case "json":
@@ -130,15 +130,16 @@ func benchmarkScanner(b *testing.B, data string, stype string) {
 
 	b.ReportAllocs()
 	b.ResetTimer()
-
+	var pos []int
 	for i := 0; i < b.N; i++ {
 		b.SetBytes(l)
-		benchFunc(data, false)
+		benchFunc(data, false, pos)
 	}
 }
 
 func runTestCases(t *testing.T, tests []testCase) {
 	scanner := NewScanner()
+	var pos []int
 
 	for _, tc := range tests {
 		var (
@@ -151,7 +152,7 @@ func runTestCases(t *testing.T, tests []testCase) {
 			seq, err = scanner.ScanJson(tc.data)
 
 		default:
-			seq, err = scanner.Scan(tc.data, false)
+			seq, err = scanner.Scan(tc.data, false, pos)
 		}
 
 		require.NoError(t, err, tc.data)
@@ -284,7 +285,7 @@ var (
 		},
 		{
 			"9.26.157.45 - - [16/jan/2003:21:22:59 -0500] \"get /wssamples/ http/1.1\" 200 1576",
-			"%ipv4%--[%time%]\"%path%\"%integer%%integer%",
+			"%ipv4%--[%time%]\"\"%integer%%integer%",
 		},
 		{
 			"209.36.88.3 - - [03/may/2004:01:19:07 +0000] \"get http://npkclzicp.xihudohtd.ngm.au/abramson/eiyscmeqix.ac;jsessionid=b0l0v000u0?sid=00000000&sy=afr&kw=goldman&pb=fin&dt=selectrange&dr=0month&so=relevance&st=nw&ss=afr&sf=article&rc=00&clspage=0&docid=fin0000000r0jl000d00 http/1.0\" 200 27981",
