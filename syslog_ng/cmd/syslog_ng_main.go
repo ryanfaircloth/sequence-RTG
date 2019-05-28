@@ -335,7 +335,13 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 
 func outputtofile(cmd *cobra.Command, args []string) {
 	start("outputtofile")
-	syslog_ng.OutputToFiles(outformat, outfile, parcfgfile)
+	startTime := time.Now()
+	processed, top5, err := syslog_ng.OutputToFiles(outformat, outfile, parcfgfile)
+	if err != nil{
+		standardLogger.HandleError(err.Error())
+	} else {
+		standardLogger.HandleInfo(fmt.Sprintf("Output %d patterns to file, the top 5 matched patterns are %s, time taken: %s", processed, top5, time.Since(startTime)))
+	}
 }
 
 func validateInputs(commandType string) {

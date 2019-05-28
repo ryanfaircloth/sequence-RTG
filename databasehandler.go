@@ -7,6 +7,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/volatiletech/null"
 	"github.com/volatiletech/sqlboiler/boil"
+	"github.com/volatiletech/sqlboiler/queries/qm"
 	"sequence/models"
 	"time"
 )
@@ -57,20 +58,29 @@ func GetPatternsFromDatabase(db *sql.DB, ctx context.Context) map[string]string{
 }
 
 //this is for the output to files
-func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context) map[string]AnalyzerResult{
+func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context) (map[string]AnalyzerResult, string){
+	var (
+		patterns models.PatternSlice
+		err error
+		top5 string
+	)
 	pmap := make(map[string]AnalyzerResult)
-	var patterns models.PatternSlice
-	var err error
 	if config.matchThresholdValue != "0"{
-		patterns, err = models.Patterns(models.PatternWhere.ThresholdReached.EQ(true)).All(ctx, db)
+		patterns, err = models.Patterns(models.PatternWhere.ThresholdReached.EQ(true) , qm.OrderBy(models.PatternColumns.CumulativeMatchCount + " DESC")).All(ctx, db)
 		if err !=nil {
 			logger.DatabaseSelectFailed("patterns", "Where threshold_reached=true", err.Error())
 		}
 	}else{
-		patterns, err = models.Patterns().All(ctx, db)
+		patterns, err = models.Patterns(qm.OrderBy(models.PatternColumns.CumulativeMatchCount + " DESC")).All(ctx, db)
 		if err !=nil {
 			logger.DatabaseSelectFailed("patterns", "All", err.Error())
 		}
+	}
+
+	//get the top 5 for logging
+	p5 := patterns[:5]
+	for _, d := range p5{
+		top5 += d.ID + ", "
 	}
 
 	for _, p := range patterns{
@@ -86,12 +96,13 @@ func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context) map[st
 			logger.DatabaseSelectFailed("examples", "All", err.Error())
 		}
 		for _, e := range ex{
-			lr := LogRecord{Message:e.ExampleDetail}
+			s, _ := e.Service().One(ctx, db)
+			lr := LogRecord{Message:e.ExampleDetail, Service:s.Name}
 			ar.Examples = append(ar.Examples, lr)
 		}
 		pmap[p.ID]=ar
 	}
-	return pmap
+	return pmap, top5
 }
 
 //this is for the parser

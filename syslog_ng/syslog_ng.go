@@ -344,7 +344,7 @@ func SaveToDatabase(amap map[string]sequence.AnalyzerResult) {
 
 }
 
-func OutputToFiles(outformat string, outfile string, config string) error{
+func OutputToFiles(outformat string, outfile string, config string) (int, string, error){
 
 	var (
 			txtFile *os.File
@@ -354,6 +354,8 @@ func OutputToFiles(outformat string, outfile string, config string) error{
 	    	yPattDB YPatternDB
 			vals []int
 			err error
+			count int
+			top5 string
 		)
 
 	if config == ""{
@@ -361,12 +363,12 @@ func OutputToFiles(outformat string, outfile string, config string) error{
 	}
 	//read the config to load the tags
 	if err = readConfig(config); err != nil{
-		return err
+		return count, top5, err
 	}
 	db, ctx := sequence.OpenDbandSetContext()
 	defer db.Close()
-	patmap := sequence.GetPatternsWithExamplesFromDatabase(db,ctx)
-
+	patmap, top5 := sequence.GetPatternsWithExamplesFromDatabase(db,ctx)
+    count = len(patmap)
 	outformats := strings.Split(outformat, ",")
 	//open the output files for saving data and add any headers
 	var fname string
@@ -378,7 +380,7 @@ func OutputToFiles(outformat string, outfile string, config string) error{
 			}
 			txtFile, err = sequence.OpenOutputFile(fname)
 			if err != nil{
-				return err
+				return count, top5, err
 			}
 			defer txtFile.Close()
 		}
@@ -390,7 +392,7 @@ func OutputToFiles(outformat string, outfile string, config string) error{
 			yamlFile, err = sequence.OpenOutputFile(fname)
 			defer yamlFile.Close()
 			if err != nil{
-				return err
+				return count, top5, err
 			}
 			yPattDB = YPatternDB{}
 			yPattDB.Rulesets = make(map[string]YRuleset)
@@ -404,7 +406,7 @@ func OutputToFiles(outformat string, outfile string, config string) error{
 			xmlFile, err = sequence.OpenOutputFile(fname)
 			defer xmlFile.Close()
 			if err != nil{
-				return err
+				return count, top5, err
 			}
 			fmt.Fprintf(xmlFile, "<?xml version='1.0' encoding='UTF-8'?>\n")
 			xPattDB = XPatternDB{Version: "4", Pubdate:time.Now().Format("2006-01-02 15:04:05")}
@@ -442,7 +444,7 @@ func OutputToFiles(outformat string, outfile string, config string) error{
 		}
 	}
 
-	return err
+	return count, top5, err
 }
 
 
