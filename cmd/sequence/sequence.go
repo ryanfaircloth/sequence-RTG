@@ -406,6 +406,7 @@ func scanMessage(scanner *sequence.Scanner, data string) sequence.Sequence {
 	var (
 		seq sequence.Sequence
 		err error
+		pos []int
 	)
 
 
@@ -414,7 +415,7 @@ func scanMessage(scanner *sequence.Scanner, data string) sequence.Sequence {
 			seq, err = scanner.ScanJson(data)
 
 		default:
-			seq, err = scanner.Scan(data, false)
+			seq, err = scanner.Scan(data, false, pos)
 	}
 
 
@@ -452,8 +453,8 @@ func buildParser() *sequence.Parser {
 			if len(line) == 0 || line[0] == '#' {
 				continue
 			}
-
-			seq, err := scanner.Scan(line, true)
+			var pos []int
+			seq, err := scanner.Scan(line, true, pos)
 			if err != nil {
 				log.Fatal(err)
 			}
