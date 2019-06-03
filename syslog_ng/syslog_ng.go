@@ -45,9 +45,13 @@ func readConfig(file string) error {
 //first we replace the easy ones that are surrounded by spaces
 //then we deal with the compound ones
 func replaceTags(pattern string) string{
+	//make sure @ are escaped @@ before we start
+	pattern = strings.Replace(pattern, "@", "@@", -1)
 	s := strings.Fields(pattern)
 	var new []string
 	mtc := make(map[string]int)
+
+
 	for _, p := range s{
 		if val, ok := tags.general[p]; ok {
 			p, mtc = getUpdatedTag(p, mtc, val, "")
@@ -207,12 +211,12 @@ func getWithDelimiters(p string, start, end int, last int) (string, string, stri
 			return p[start-1:end+1], before + after, fieldname, end
 		case before == "<" && after == ">":
 			return p[start-1:end+1], before + after, fieldname, end
-		case after !="%":
+		case after !="%" && after !="@":
 			return p[start:end+1], after, fieldname, end
 		}
 	}else if end < len(p){
 		after :=  p[end:end+1]
-		if after != "%" {
+		if after != "%" && after !="@" {
 			return p[start:end+1], after, fieldname, end
 		}
 	}
