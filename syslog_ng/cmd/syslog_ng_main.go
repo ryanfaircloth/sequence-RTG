@@ -203,11 +203,8 @@ func analyze(cmd *cobra.Command, args []string) {
 		processed++
 	}
 
-	syslog_ng.SaveToDatabase(amap)
-
-	standardLogger.HandleInfo(fmt.Sprintf("Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored\n", len(lr), len(pmap)+len(amap), len(amap), err_count))
-	anTime := time.Since(startTime)
-	standardLogger.HandleInfo(fmt.Sprintf("Analysed in: %s\n", anTime))
+	new := syslog_ng.SaveToDatabase(amap)
+	standardLogger.AnalyzeInfo(processed, len(amap)+len(pmap), err_count, new, time.Since(startTime))
 }
 
 func createdatabase(cmd *cobra.Command, args []string){
@@ -324,8 +321,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 		//for pat, stat := range amap {
 		//fmt.Fprintf(oFile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.ExampleCount, stat.Examples[0].Message)
 		//}
-		standardLogger.HandleInfo(fmt.Sprintf("Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored, time taken: %s", processed, len(amap)+len(pmap), new, err_count, time.Since(startTime)))
-
+		standardLogger.AnalyzeInfo(processed, len(amap)+len(pmap), err_count, new, time.Since(startTime))
 		if batchsize == 0 || infile != "-" {
 			break
 		}
@@ -340,7 +336,8 @@ func outputtofile(cmd *cobra.Command, args []string) {
 	if err != nil{
 		standardLogger.HandleError(err.Error())
 	} else {
-		standardLogger.HandleInfo(fmt.Sprintf("Output %d patterns to file, the top 5 matched patterns are %s, time taken: %s", processed, top5, time.Since(startTime)))
+		standardLogger.OutputToFileInfo(processed, top5, time.Since(startTime) )
+		//standardLogger.HandleInfo(fmt.Sprintf("Output %d patterns to file, the top 5 matched patterns are %s, time taken: %s", processed, top5, time.Since(startTime)))
 	}
 }
 

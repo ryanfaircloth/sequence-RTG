@@ -3,6 +3,7 @@ package sequence
 import (
 	"github.com/sirupsen/logrus"
 	"os"
+	"time"
 )
 
 //this log wrapper makes it easy to change logging library in one
@@ -55,68 +56,88 @@ func NewLogger(fname string, level string) *StandardLogger {
 
 // Declare variables to store log messages as new Events
 var (
-	errorGenericDebug = Event{000, "%s"}
-	errorGenericInfo = Event{100, "%s"}
-	errorGenericError = Event{200, "%s"}
-	errorAnalysisFailed = Event{201, "Unable to analyze: %s"}
-	errorDbInsertFailed = Event{301, "Failed to insert record into %s table, id: %s, reason: %s"}
-	errorDbUpdateFailed = Event{302, "Failed to update record in %s table, id: %s, reason: %s"}
-	errorDbSelectFailed = Event{303, "Failed to select record(s) from %s table, query: %s, reason: %s"}
-	errorGenericFatal = Event{400, "Fatal error occurred, reason: %s"}
-	errorGenericPanic = Event{500, "Panic occurred, reason: %s"}
+	eventGenericDebug   = Event{000, "%s"}
+	eventGenericInfo    = Event{100, "%s"}
+	eventAnalyzeInfo    = Event{101, "Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored, time taken: %s"}
+	eventOutputInfo     = Event{102, "Output %d patterns to file, the top 5 matched patterns are %s, time taken: %s"}
+	eventGenericError   = Event{200, "%s"}
+	eventAnalysisFailed = Event{201, "Unable to analyze: %s"}
+	eventDbInsertFailed = Event{301, "Failed to insert record into %s table, id: %s, reason: %s"}
+	eventDbUpdateFailed = Event{302, "Failed to update record in %s table, id: %s, reason: %s"}
+	eventDbSelectFailed = Event{303, "Failed to select record(s) from %s table, query: %s, reason: %s"}
+	eventGenericFatal   = Event{400, "Fatal error occurred, reason: %s"}
+	eventGenericPanic   = Event{500, "Panic occurred, reason: %s"}
 )
 
 func (l *StandardLogger) LogAnalysisFailed(lr LogRecord){
 	l.WithFields(logrus.Fields{
-		"id": errorAnalysisFailed.id,
-	}).Debugf(errorAnalysisFailed.message, lr.Message)
+		"id": eventAnalysisFailed.id,
+	}).Debugf(eventAnalysisFailed.message, lr.Message)
 }
 
 func (l *StandardLogger) DatabaseInsertFailed(tablename string, id string, reason string){
 	l.WithFields(logrus.Fields{
-		"id": errorDbInsertFailed.id,
-	}).Errorf(errorDbInsertFailed.message, tablename, id, reason)
+		"id": eventDbInsertFailed.id,
+	}).Errorf(eventDbInsertFailed.message, tablename, id, reason)
 }
 
 func (l *StandardLogger) DatabaseUpdateFailed(tablename string, query string, reason string){
 	l.WithFields(logrus.Fields{
-		"id": errorDbUpdateFailed.id,
-	}).Errorf(errorDbUpdateFailed.message, tablename, query, reason)
+		"id": eventDbUpdateFailed.id,
+	}).Errorf(eventDbUpdateFailed.message, tablename, query, reason)
 }
 
 func (l *StandardLogger) DatabaseSelectFailed(tablename string, query string, reason string){
 	l.WithFields(logrus.Fields{
-		"id": errorDbSelectFailed.id,
-	}).Errorf(errorDbSelectFailed.message, tablename, query, reason)
+		"id": eventDbSelectFailed.id,
+	}).Errorf(eventDbSelectFailed.message, tablename, query, reason)
+}
+
+func (l *StandardLogger) AnalyzeInfo(analyzedCount int, patternsCount int, new int, errCount int, taken time.Duration){
+	l.WithFields(logrus.Fields{
+		"id":           	eventAnalyzeInfo.id,
+		"analyzed_msg": 	analyzedCount,
+		"patterns_found":	patternsCount,
+		"patterns_new":		new,
+		"errored_msg":		errCount,
+	}).Infof(eventAnalyzeInfo.message, analyzedCount, patternsCount, new, errCount, taken)
+}
+
+func (l *StandardLogger) OutputToFileInfo(outputCount int, top5 string, taken time.Duration){
+	l.WithFields(logrus.Fields{
+		"id":           	eventOutputInfo.id,
+		"output_patterns": 	outputCount,
+		"top_5":			top5,
+	}).Infof(eventOutputInfo.message, outputCount, top5, taken)
 }
 
 func (l *StandardLogger) HandleFatal(err string){
 	l.WithFields(logrus.Fields{
-		"id": errorGenericFatal.id,
-	}).Fatalf(errorGenericFatal.message, err)
+		"id": eventGenericFatal.id,
+	}).Fatalf(eventGenericFatal.message, err)
 }
 
 func (l *StandardLogger) HandlePanic(err string){
 	l.WithFields(logrus.Fields{
-		"id": errorGenericPanic.id,
-	}).Panicf(errorGenericPanic.message, err)
+		"id": eventGenericPanic.id,
+	}).Panicf(eventGenericPanic.message, err)
 }
 
 func (l *StandardLogger) HandleInfo(message string){
 	l.WithFields(logrus.Fields{
-		"id": errorGenericInfo.id,
-	}).Infof(errorGenericInfo.message, message)
+		"id": eventGenericInfo.id,
+	}).Infof(eventGenericInfo.message, message)
 }
 
 func (l *StandardLogger) HandleError(message string){
 	l.WithFields(logrus.Fields{
-		"id": errorGenericError.id,
-	}).Errorf(errorGenericError.message, message)
+		"id": eventGenericError.id,
+	}).Errorf(eventGenericError.message, message)
 }
 
 func (l *StandardLogger) HandleDebug(message string){
 	l.WithFields(logrus.Fields{
-		"id": errorGenericDebug.id,
-	}).Debugf(errorGenericDebug.message, message)
+		"id": eventGenericDebug.id,
+	}).Debugf(eventGenericDebug.message, message)
 }
 
