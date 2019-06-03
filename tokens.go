@@ -83,7 +83,6 @@ var tokens = [...]struct {
 	{"mac"},
 	{"string"},
 	{"alphanum"},
-	{"path"},
 	{"id"},
 	{"alpha"},
 	{"token__END__"},

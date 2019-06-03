@@ -298,8 +298,9 @@ func SaveExistingToDatabase(rmap map[string]sequence.AnalyzerResult) {
 
 }
 
-func SaveToDatabase(amap map[string]sequence.AnalyzerResult) {
+func SaveToDatabase(amap map[string]sequence.AnalyzerResult) int {
 	db, ctx := sequence.OpenDbandSetContext()
+	new := 0
 	defer db.Close()
 	//exisitng services
 	smap := sequence.GetServicesFromDatabase(db, ctx)
@@ -336,12 +337,14 @@ func SaveToDatabase(amap map[string]sequence.AnalyzerResult) {
 		_, found := pmap[result.PatternId]
 		if !found{
 			sequence.AddPattern(ctx, tx, result)
+			new++
 		}else{
 			sequence.UpdatePattern(ctx, tx, result)
 		}
 	}
 	tx.Commit()
 
+	return new
 }
 
 func OutputToFiles(outformat string, outfile string, config string) (int, string, error){

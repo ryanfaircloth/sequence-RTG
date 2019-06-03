@@ -316,7 +316,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 		standardLogger.HandleInfo(fmt.Sprintf("Analysed in: %s\n", anTime))
 		standardLogger.HandleDebug("Starting save to the database.")
 		syslog_ng.SaveExistingToDatabase(pmap)
-		syslog_ng.SaveToDatabase(amap)
+		new := syslog_ng.SaveToDatabase(amap)
 		standardLogger.HandleDebug("Finished save to the database.")
 		//debugging what is coming out as new
 		//oFile, _:= sequence.OpenOutputFile("C:\\data\\debug.txt")
@@ -324,7 +324,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 		//for pat, stat := range amap {
 		//fmt.Fprintf(oFile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.ExampleCount, stat.Examples[0].Message)
 		//}
-		standardLogger.HandleInfo(fmt.Sprintf("Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored, time taken: %s", processed, len(amap)+len(pmap), len(amap), err_count, time.Since(startTime)))
+		standardLogger.HandleInfo(fmt.Sprintf("Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored, time taken: %s", processed, len(amap)+len(pmap), new, err_count, time.Since(startTime)))
 
 		if batchsize == 0 || infile != "-" {
 			break

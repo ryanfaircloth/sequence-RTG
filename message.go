@@ -70,8 +70,18 @@ func isValidTokenStartPosition( start int, pos []int) bool {
 	return false
 }
 
+func getNextTokenStartPosition( start int, pos []int) int {
+	for _, p := range pos{
+		if p > start{
+			return p - start
+		}
+	}
+	return 0
+}
+
 // Scan is similar to Tokenize except it returns one token at a time
 func (this *Message) Tokenize(isParse bool, pos []int) (Token, error) {
+	var nt = 0
 	if this.state.start < this.state.end {
 
 		if !config.markSpaces{
@@ -94,7 +104,7 @@ func (this *Message) Tokenize(isParse bool, pos []int) (Token, error) {
 		// Let's see if this is a tag token, enclosed in two '%' chars
 		// at least 2 chars left, and the first is a '%'
 		// Don't do this if not in parse mode, picks up things that it shouldn't
-		if isParse && len(pos) > 0{
+		if isParse && len(pos) > 0 {
 			if this.state.start+1 < this.state.end && this.Data[this.state.start] == '%' && (isValidTokenStartPosition(this.state.start, pos) && config.useDatabase){
 				var i int
 				var r rune
@@ -116,11 +126,13 @@ func (this *Message) Tokenize(isParse bool, pos []int) (Token, error) {
 
 					return tok, nil
 				}
+			} else{
+				nt = getNextTokenStartPosition(this.state.start, pos)
 			}
 		}
 
 
-		l, tok, err := this.scanToken(this.Data[this.state.start:])
+		l, tok, err := this.scanToken(this.Data[this.state.start:], nt)
 		if err != nil {
 			return Token{}, err
 		} else if l == 0 {
@@ -183,7 +195,7 @@ func (this *Message) skipSpace(data string) int {
 	return i
 }
 
-func (this *Message) scanToken(data string) (int, Token, error) {
+func (this *Message) scanToken(data string, nt int) (int, Token, error) {
 	var (
 		tnode                                  = timeFsmRoot
 		tokenStop, timeStop, hexStop, hexValid bool
@@ -212,6 +224,14 @@ func (this *Message) scanToken(data string) (int, Token, error) {
 		var s = ""
 		if i < len(data)-1{
 			s = data[i+1:i+2]
+		}
+
+		//this is for scanning patterns we break if we hit a know pattern position
+		//as the % char is a known literal it has to be forcibly broken here
+		if i > 0 && i == nt{
+			tokenStop = true
+			hexStop = true
+			timeStop = true
 		}
 
 		if !tokenStop {
