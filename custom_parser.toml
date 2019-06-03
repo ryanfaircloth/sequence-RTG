@@ -77,12 +77,11 @@
     "'"			=	"@ESTRING:[fieldname]:'@"
     "?"			=	"@ESTRING:[fieldname]:?@"
     "&"			=	"@ESTRING:[fieldname]:&@"
-    "no-sp"		=	"@ESTRING:[fieldname]:@"
-    "default"   =   "@ESTRING:[fieldname]: @"
+    "default"	=	"@ESTRING:[fieldname]:[del]@"
+
 	
 	#only need to add the tags here that you wish to change the name of, otherwise the sequence value is used.
 	[tags.fieldname]
 	"msgtime"	    =   "timestamp"
-	"action"        =   "action-test"
 	"float"         =   "decimal"
 	

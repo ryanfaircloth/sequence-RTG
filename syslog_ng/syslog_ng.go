@@ -107,6 +107,11 @@ func getUpdatedTag(p string, mtc map[string]int, tag string, del string) (string
 }
 
 func getSpecial(p string, mtc map[string]int) (string, map[string]int) {
+	var(
+		last = -1
+		fieldname, del, s string
+	)
+
 	//first get the indexes of the % function
 	k := p
 	index := suffixarray.New([]byte(p))
@@ -117,7 +122,7 @@ func getSpecial(p string, mtc map[string]int) (string, map[string]int) {
 
 	for i, off := range offsets {
 		if i % 2 == 0 && i < len(offsets)-1{
-			s, del, fieldname := getWithDelimiters(p, off, offsets[i+1]+1)
+			s, del, fieldname, last = getWithDelimiters(p, off, offsets[i+1]+1, last)
 			fieldname = checkForCustomFieldName(fieldname)
 			//check if a time regex tag, this needs some manipulation
 			if strings.Contains(s, sequence.TagRegExTime.String()) && del == ""{
@@ -138,6 +143,13 @@ func getSpecial(p string, mtc map[string]int) (string, map[string]int) {
 				if val, ok := tags.delstr[del]; ok {
 					val, mtc = getUpdatedTag(s, mtc, val, del)
 					k = strings.Replace(k, s, val, 1)
+				}else{
+					//this means we have a custom delimiter instead of a space
+					if val, ok := tags.delstr["default"]; ok {
+						val, mtc = getUpdatedTag(s, mtc, val, del)
+						val = strings.Replace(val, "[del]", del, 1)
+						k = strings.Replace(k, s, val, 1)
+					}
 				}
 			}else{
 				if val, ok := tags.general[s]; ok {
@@ -176,34 +188,35 @@ func checkForCustomFieldName(f string) string{
 	return f
 }
 
-func getWithDelimiters(p string, start, end int ) (string, string, string){
+func getWithDelimiters(p string, start, end int, last int) (string, string, string, int){
 	fieldname := p[start+1:end-1]
-	//integer fields are not considered strings so can bypass this
-	if fieldname == "integer"{
-		return p[start:end], "", fieldname
+	before := ""
+	//integer and ip fields are not considered strings so can bypass this
+	if fieldname == "integer" || fieldname == "srcip" || fieldname == "dstip"{
+		return p[start:end], "", fieldname, end-1
 	}
 	if start > 0 && end < len(p) {
-		before := p[start-1:start]
+		if last != start-1{
+			before = p[start-1:start]
+		}
 		after :=  p[end:end+1]
 		switch {
 		case before == after && (before == "\"" || before == "'" || before == "`"):
-			return p[start-1:end+1], before + after, fieldname
+			return p[start-1:end+1], before + after, fieldname, end
 		case (before == "(" && after == ")") || (before == "[" && after == "]") :
-			return p[start-1:end+1], before + after, fieldname
+			return p[start-1:end+1], before + after, fieldname, end
 		case before == "<" && after == ">":
-			return p[start-1:end+1], before + after, fieldname
-		case after == ":" || after == "," || after == ";" || after == ">" || after == "'" || after == "?" || after == "&":
-			return p[start:end+1], after, fieldname
+			return p[start-1:end+1], before + after, fieldname, end
+		case after !="%":
+			return p[start:end+1], after, fieldname, end
 		}
 	}else if end < len(p){
 		after :=  p[end:end+1]
-		if after == ":" || after == "," || after == ";" {
-			return p[start:end+1], after, fieldname
-		}else if after != "%"{
-			return p[start:end], "no-sp", fieldname
+		if after != "%" {
+			return p[start:end+1], after, fieldname, end
 		}
 	}
-	return p[start:end], "", fieldname
+	return p[start:end], "", fieldname, end-1
 }
 
 func getTimeRegex(p string) (string, string){
@@ -371,6 +384,7 @@ func OutputToFiles(outformat string, outfile string, config string) (int, string
 	db, ctx := sequence.OpenDbandSetContext()
 	defer db.Close()
 	patmap, top5 := sequence.GetPatternsWithExamplesFromDatabase(db,ctx)
+	logger.HandleInfo(fmt.Sprintf("Found %d patterns for output", len(patmap)))
     count = len(patmap)
 	outformats := strings.Split(outformat, ",")
 	//open the output files for saving data and add any headers
