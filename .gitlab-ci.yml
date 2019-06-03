@@ -13,12 +13,12 @@ build:
     - find . -name \*.go -exec sed -i 's:^\t"sequence:\t"gitlab.in2p3.fr/cc-in2p3-system/sequence:g' {} \;
     - sed -i '/^database =/c\database = "/var/lib/sequence/sequence.sdb"' sequence.toml
     - go get -t -d -v
-    - go build
+    - go build --ldflags "-X gitlab.in2p3.fr/cc-in2p3-system/sequence.Version=$(git describe --always --tags HEAD)"
     - 'go test || :'
     - sed -e "s/__CREDENTIALS__/gitlab-ci-token:${CI_BUILD_TOKEN}/" .gitlab-ci-godeps-config > ~/.gitconfig
     - cd $CI_PROJECT_DIR/syslog_ng/cmd
     - 'go get -t -d -v || :'
-    - go build syslog_ng_main.go
+    - go build --ldflags "-X gitlab.in2p3.fr/cc-in2p3-system/sequence.Version=$(git describe --always --tags HEAD)" syslog_ng_main.go
   artifacts:
     expire_in: '1 hour'
     paths:
