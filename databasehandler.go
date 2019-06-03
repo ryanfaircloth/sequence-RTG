@@ -78,10 +78,17 @@ func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context) (map[s
 	}
 
 	//get the top 5 for logging
-	p5 := patterns[:5]
-	for _, d := range p5{
-		top5 += d.ID + ", "
+	if len(patterns) >= 5{
+		p5 := patterns[:5]
+		for _, d := range p5{
+			top5 += d.ID + ", "
+		}
+	}else{
+		for _, d := range patterns{
+			top5 += d.ID + ", "
+		}
 	}
+
 
 	for _, p := range patterns{
 		ar := AnalyzerResult{PatternId:p.ID, Pattern:p.SequencePattern, ThresholdReached:p.ThresholdReached, DateCreated:p.DateCreated, DateLastMatched:p.DateLastMatched, ExampleCount:int(p.CumulativeMatchCount)}
