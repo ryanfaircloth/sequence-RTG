@@ -72,24 +72,28 @@ var (
 func (l *StandardLogger) LogAnalysisFailed(lr LogRecord){
 	l.WithFields(logrus.Fields{
 		"id": eventAnalysisFailed.id,
+		"version": Version,
 	}).Debugf(eventAnalysisFailed.message, lr.Message)
 }
 
 func (l *StandardLogger) DatabaseInsertFailed(tablename string, id string, reason string){
 	l.WithFields(logrus.Fields{
 		"id": eventDbInsertFailed.id,
+		"version": Version,
 	}).Errorf(eventDbInsertFailed.message, tablename, id, reason)
 }
 
 func (l *StandardLogger) DatabaseUpdateFailed(tablename string, query string, reason string){
 	l.WithFields(logrus.Fields{
 		"id": eventDbUpdateFailed.id,
+		"version": Version,
 	}).Errorf(eventDbUpdateFailed.message, tablename, query, reason)
 }
 
 func (l *StandardLogger) DatabaseSelectFailed(tablename string, query string, reason string){
 	l.WithFields(logrus.Fields{
 		"id": eventDbSelectFailed.id,
+		"version": Version,
 	}).Errorf(eventDbSelectFailed.message, tablename, query, reason)
 }
 
@@ -100,6 +104,7 @@ func (l *StandardLogger) AnalyzeInfo(analyzedCount int, patternsCount int, new i
 		"patterns_found":	patternsCount,
 		"patterns_new":		new,
 		"errored_msg":		errCount,
+		"version": 			Version,
 	}).Infof(eventAnalyzeInfo.message, analyzedCount, patternsCount, new, errCount, taken)
 }
 
@@ -108,36 +113,42 @@ func (l *StandardLogger) OutputToFileInfo(outputCount int, top5 string, taken ti
 		"id":           	eventOutputInfo.id,
 		"output_patterns": 	outputCount,
 		"top_5":			top5,
+		"version": 			Version,
 	}).Infof(eventOutputInfo.message, outputCount, top5, taken)
 }
 
 func (l *StandardLogger) HandleFatal(err string){
 	l.WithFields(logrus.Fields{
 		"id": eventGenericFatal.id,
+		"version": Version,
 	}).Fatalf(eventGenericFatal.message, err)
 }
 
 func (l *StandardLogger) HandlePanic(err string){
 	l.WithFields(logrus.Fields{
 		"id": eventGenericPanic.id,
+		"version": Version,
 	}).Panicf(eventGenericPanic.message, err)
 }
 
 func (l *StandardLogger) HandleInfo(message string){
 	l.WithFields(logrus.Fields{
 		"id": eventGenericInfo.id,
+		"version": Version,
 	}).Infof(eventGenericInfo.message, message)
 }
 
 func (l *StandardLogger) HandleError(message string){
 	l.WithFields(logrus.Fields{
 		"id": eventGenericError.id,
+		"version": Version,
 	}).Errorf(eventGenericError.message, message)
 }
 
 func (l *StandardLogger) HandleDebug(message string){
 	l.WithFields(logrus.Fields{
 		"id": eventGenericDebug.id,
+		"version": Version,
 	}).Debugf(eventGenericDebug.message, message)
 }
 
