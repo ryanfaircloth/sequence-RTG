@@ -315,9 +315,12 @@ func SaveExistingToDatabase(rmap map[string]sequence.AnalyzerResult) {
 
 }
 
-func SaveToDatabase(amap map[string]sequence.AnalyzerResult) int {
+func SaveToDatabase(amap map[string]sequence.AnalyzerResult) (int, int) {
+	var (
+		new = 0
+		saved = 0
+	)
 	db, ctx := sequence.OpenDbandSetContext()
-	new := 0
 	defer db.Close()
 	//exisitng services
 	smap := sequence.GetServicesFromDatabase(db, ctx)
@@ -347,13 +350,17 @@ func SaveToDatabase(amap map[string]sequence.AnalyzerResult) int {
 	if err != nil {
 		logger.HandleFatal("Could not start a transaction to save to the database.")
 	}
+
+	tr := sequence.GetSaveThreshold()
 	//technically we should not have any existing patterns passed to here, but just in case
 	//lets check first
 	pmap := sequence.GetPatternsFromDatabase(db, ctx)
 	for _, result := range amap {
 		_, found := pmap[result.PatternId]
 		if !found{
-			sequence.AddPattern(ctx, tx, result)
+			if sequence.AddPattern(ctx, tx, result, tr){
+				saved++
+			}
 			new++
 		}else{
 			sequence.UpdatePattern(ctx, tx, result)
@@ -361,7 +368,7 @@ func SaveToDatabase(amap map[string]sequence.AnalyzerResult) int {
 	}
 	tx.Commit()
 
-	return new
+	return new, saved
 }
 
 func OutputToFiles(outformat string, outfile string, config string) (int, string, error){

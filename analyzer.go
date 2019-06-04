@@ -103,6 +103,7 @@ type analyzerNode struct {
 	level int
 
 	isKey   bool
+	isSpaceBefore   bool
 	isValue bool
 
 	leaf bool
@@ -231,6 +232,16 @@ func GetThreshold(numTotal int) int {
 	return 0
 }
 
+func GetSaveThreshold() int {
+	//check that the pattern has reached the save threshold example limit
+	tr, err := strconv.Atoi(config.saveThreshold)
+	if err != nil{
+		logger.HandleError("Save Threshold value cannot be parsed to an integer. Setting it to 0")
+		tr = 0
+	}
+	return tr
+}
+
 func (this *stackAnalyzerNode) String() string {
 	return fmt.Sprintf("level=%d, score=%d, token=%v, leaf=%t", this.level, this.score, this.node.Token, this.node.leaf)
 }
@@ -356,12 +367,16 @@ func (this *Analyzer) Add(seq Sequence) error {
 		case token.Tag == TagUnknown && (token.Type == TokenLiteral || token.Type == TokenAlphaOnly) :
 			// if the tag type is unknown, and the token type is literal or plain text, that
 			// means this is some type of string we parsed from the message.
-
+			//if we are marking spaces then " literal" and "literal" need to be stored as different tokens
+			space := ""
+			if token.isSpaceBefore{
+				space = " "
+			}
 			// If we have gotten here, it means we found a string that we cannot
 			// determine if it's a fixed literal, or a changing variable. So we have
 			// to keep this in the literal map to track it.
 			// If we have seen this literal before, then there's already a node
-			if j, ok := this.litmaps[i][token.Value]; ok {
+			if j, ok := this.litmaps[i][space+token.Value]; ok {
 				foundNode = this.levels[i][j]
 			} else {
 				// Otherwise we create a new node for this first time literal,
@@ -374,8 +389,11 @@ func (this *Analyzer) Add(seq Sequence) error {
 				foundNode.level = i
 				foundNode.index = len(this.levels[i]) - 1
 				foundNode.Tag = TagUnknown
-				this.litmaps[i][foundNode.Value] = foundNode.index
+				//when adding to this map we must add the space before if it is marked true,
+				// or we get incorrect patterns
+				this.litmaps[i][space + foundNode.Value] = foundNode.index
 				foundNode.isKey = token.isKey
+				foundNode.isSpaceBefore = token.isSpaceBefore
 			}
 		}
 

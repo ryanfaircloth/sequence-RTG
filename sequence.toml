@@ -21,9 +21,10 @@ createdbcommands = [
 matchThresholdType = "percent"
 matchThresholdValue = "0.001"
 
-# if using a threshold, and you save the messages for the patterns do not reach the threshold
-# this flag allows you to use them in the next run
-inclBelThresholdRecs = false
+# This is useful when starting pattern analysis with live data
+# Messages that fail to analyze will often bloat the database, so setting this to a number like 3
+# prevents saving bad patterns, however it also prevents the saving of good patterns with a very low frequency.
+saveThreshold = "3"
 
 tags = [
     "regextime:time",		    # The timestamp that’s part of the log message (matches the a pcre (Perl-Compatible Regular Expression) defined below) (must be at the top of this list)

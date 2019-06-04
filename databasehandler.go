@@ -157,13 +157,18 @@ func AddService(ctx context.Context, tx *sql.Tx, id string, name string){
 		logger.DatabaseInsertFailed("service", id, err.Error())
 	}
 }
-func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult){
+func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, tr int) bool {
+	if tr > result.ExampleCount{
+		//do not add the pattern
+		return false
+	}
 	tp := null.String{String:result.TagPositions, Valid:true}
 	p := models.Pattern{ID:result.PatternId, SequencePattern:result.Pattern, DateCreated:time.Now(), ThresholdReached:result.ThresholdReached,
 		CumulativeMatchCount:int64(result.ExampleCount), OriginalMatchCount:int64(result.ExampleCount), DateLastMatched:time.Now(), IgnorePattern:false, TagPositions:tp}
 	err := p.Insert(ctx, tx, boil.Whitelist("id", "sequence_pattern", "date_created", "threshold_reached", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern", "tag_positions"))
 	if err != nil{
 		logger.DatabaseInsertFailed("pattern", result.PatternId, err.Error())
+		return false
 	}
 
 	//add the patternid and serviceid to the table
@@ -191,6 +196,8 @@ func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult){
 			}
 		}
 	}
+
+	return true
 }
 
 func UpdatePattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult){

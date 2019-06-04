@@ -33,6 +33,7 @@ var (
   		markSpaces bool
 		matchThresholdType     string
 		matchThresholdValue    string
+		saveThreshold		   string
 		inclBelThresholdRecs   bool
 		database			   string
 		useDatabase			   bool
@@ -63,7 +64,7 @@ func ReadConfig(file string) error {
 		MatchThresholdType     string
 		MatchThresholdValue    string
 		BelowThresholdPath	   string
-		InclBelThresholdRecs   bool
+		SaveThreshold		   string
 		UseDatabase			   bool
 		Database 			   string
 		CreateDBCommands	   []string
@@ -89,7 +90,7 @@ func ReadConfig(file string) error {
 	config.markSpaces  = configInfo.MarkSpaces
 	config.matchThresholdType  = configInfo.MatchThresholdType
 	config.matchThresholdValue  = configInfo.MatchThresholdValue
-	config.inclBelThresholdRecs = configInfo.InclBelThresholdRecs
+	config.saveThreshold = configInfo.SaveThreshold
 	config.useDatabase = configInfo.UseDatabase
 	config.database = configInfo.Database
 	config.createDbCommands = configInfo.CreateDBCommands

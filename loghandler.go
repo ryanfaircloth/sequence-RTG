@@ -58,7 +58,7 @@ func NewLogger(fname string, level string) *StandardLogger {
 var (
 	eventGenericDebug   = Event{000, "%s"}
 	eventGenericInfo    = Event{100, "%s"}
-	eventAnalyzeInfo    = Event{101, "Analyzed %d messages, found %d unique patterns, %d are new. %d messages errored, time taken: %s"}
+	eventAnalyzeInfo    = Event{101, "Analyzed %d messages, found %d unique patterns, %d are new, %d saved to the database. %d messages errored, time taken: %s"}
 	eventOutputInfo     = Event{102, "Output %d patterns to file, the top 5 matched patterns are %s, time taken: %s"}
 	eventGenericError   = Event{200, "%s"}
 	eventAnalysisFailed = Event{201, "Unable to analyze: %s"}
@@ -97,15 +97,16 @@ func (l *StandardLogger) DatabaseSelectFailed(tablename string, query string, re
 	}).Errorf(eventDbSelectFailed.message, tablename, query, reason)
 }
 
-func (l *StandardLogger) AnalyzeInfo(analyzedCount int, patternsCount int, new int, errCount int, taken time.Duration){
+func (l *StandardLogger) AnalyzeInfo(analyzedCount int, patternsCount int, new int, saved int, errCount int, taken time.Duration){
 	l.WithFields(logrus.Fields{
 		"id":           	eventAnalyzeInfo.id,
 		"analyzed_msg": 	analyzedCount,
 		"patterns_found":	patternsCount,
 		"patterns_new":		new,
+		"patterns_saved":	saved,
 		"errored_msg":		errCount,
 		"version": 			Version,
-	}).Infof(eventAnalyzeInfo.message, analyzedCount, patternsCount, new, errCount, taken)
+	}).Infof(eventAnalyzeInfo.message, analyzedCount, patternsCount, new, saved, errCount, taken)
 }
 
 func (l *StandardLogger) OutputToFileInfo(outputCount int, top5 string, taken time.Duration){
