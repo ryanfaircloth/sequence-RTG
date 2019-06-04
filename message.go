@@ -162,9 +162,15 @@ func (this *Message) Tokenize(isParse bool, pos []int) (Token, error) {
 		}
 
 		//this is for dealing with multiline strings and setting everything after the \n to a single token
+		//these can be super long so I have truncated it at 50 chars for the value as it is not really used.
 		if tok.Value == "\n"{
-			tok.Value = this.Data[this.state.start:]
-			this.state.start += len(tok.Value)
+			l = len(this.Data[this.state.start:])
+			if l > 15{
+				tok.Value = this.Data[this.state.start:this.state.start+15]
+			}else{
+				tok.Value = this.Data[this.state.start:]
+			}
+			this.state.start += l
 			tok.Type = TokenLiteral
 			tok.Tag = TagMultiLine
 		}else if strings.Contains(tok.Value, "\n") && this.state.prevToken.Value != "\""{
