@@ -280,7 +280,13 @@ func (this *Message) scanToken(data string, nt int) (int, Token, error) {
 
 					return hexLen, Token{Type:TokenIPv6, Tag:tagType}, nil
 				} else {
-					return hexLen, Token{Type:TokenLiteral, Tag:tagType}, nil
+					//sometimes adds a space on the end
+					if r == ' '{
+						return hexLen-1, Token{Type:TokenLiteral, Tag:tagType}, nil
+					}else{
+						return hexLen, Token{Type:TokenLiteral, Tag:tagType}, nil
+					}
+
 				}
 			}
 
