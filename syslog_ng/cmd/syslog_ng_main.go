@@ -28,6 +28,7 @@ var (
 	format     string
 	parcfgfile string
 	batchsize  int
+	threshold  int
 	standardLogger *sequence.StandardLogger
 
 	quit chan struct{}
@@ -211,6 +212,13 @@ func createdatabase(cmd *cobra.Command, args []string){
 	start("createdatabase")
 	sequence.CreateDatabase(outfile)
 }
+
+func purgepatterns(cmd *cobra.Command, args []string) {
+	start("purgepatterns")
+	rf := sequence.PurgePatternsfromDatabase(int64(threshold))
+	standardLogger.HandleInfo(fmt.Sprintf("%d patterns and their examples removed from the database", rf))
+}
+
 
 func analyzebyservice(cmd *cobra.Command, args []string) {
 	start("analyzebyservice")
@@ -402,6 +410,10 @@ func validateInputs(commandType string) {
 		if err != "" {
 			errors = errors + ", " + err
 		}
+	case "purgepatterns":
+		if threshold <= 0 {
+			errors = "Threshold must be greater than zero or no records will be deleted."
+		}
 	}
 
 	if errors != ""{
@@ -558,6 +570,11 @@ func main() {
 			Short: "creates a new sequence database to the location in the config file",
 		}
 
+		purgePatternsCmd = &cobra.Command{
+			Use:   "purgepatterns",
+			Short: "deletes patterns and their examples under a threshold",
+		}
+
 		analyzeCmd = &cobra.Command{
 			Use:   "analyze",
 			Short: "analyzes a log file and output a list of patterns that will match all the log messages",
@@ -585,15 +602,18 @@ func main() {
 	sequenceCmd.PersistentFlags().StringVarP(&loglevel, "log-level", "n", "", "defaults to info level, can be 'trace' 'debug', 'info', 'error', 'fatal'")
 	sequenceCmd.PersistentFlags().StringVarP(&errorfile, "std-error-file", "e", "", "this redirects panics etc to a log file not stderr, set to a valid path to enable this")
 	sequenceCmd.PersistentFlags().StringVarP(&parcfgfile, "custom-parser-config", "c", "", "TOML-formatted configuration file, default checks ./custom_parser.toml, then custom_parser.toml in the same directory as program")
+	sequenceCmd.PersistentFlags().IntVarP(&threshold, "below-threshold", "t", 0, "this is used with the purge patterns command, any patterns with cumulative match count less than the threshold will be deleted")
 
 	scanCmd.Run = scan
 	createDatabaseCmd.Run = createdatabase
+	purgePatternsCmd.Run = purgepatterns
 	analyzeCmd.Run = analyze
 	analyzeByServiceCmd.Run = analyzebyservice
 	outToFileCmd.Run = outputtofile
 
 	sequenceCmd.AddCommand(scanCmd)
 	sequenceCmd.AddCommand(createDatabaseCmd)
+	sequenceCmd.AddCommand(purgePatternsCmd)
 	sequenceCmd.AddCommand(analyzeCmd)
 	sequenceCmd.AddCommand(analyzeByServiceCmd)
 	sequenceCmd.AddCommand(outToFileCmd)

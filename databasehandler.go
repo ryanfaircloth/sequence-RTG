@@ -31,6 +31,34 @@ func CreateDatabase(fname string){
 	tx.Commit()
 }
 
+func PurgePatternsfromDatabase(threshold int64) int64 {
+	database, ctx := OpenDbandSetContext()
+	tx, err := database.Begin()
+	if err != nil {
+		logger.HandleError(err.Error())
+	}
+	patterns, _ := models.Patterns(models.PatternWhere.CumulativeMatchCount.LT(threshold)).All(ctx, tx)
+	for _, pat := range patterns{
+		svc, err := pat.ServiceIdServices().All(ctx, tx)
+		if err != nil {
+			logger.HandleError(err.Error())
+		}
+		for _, s := range svc{
+			pat.RemoveServiceIdServices(ctx, tx, s)
+		}
+		pat.PatternExamples().DeleteAll(ctx, tx)
+	}
+	if len(patterns)> 0{
+		rowsAff, err := patterns.DeleteAll(ctx, tx)
+		if err != nil {
+			logger.HandleFatal(err.Error())
+		}
+		tx.Commit()
+		return rowsAff
+	}
+	return 0
+}
+
 func OpenDbandSetContext()(*sql.DB, context.Context){
 	// Get a handle to the SQLite database, using mattn/go-sqlite3
 	db, err := sql.Open("sqlite3", config.database)
