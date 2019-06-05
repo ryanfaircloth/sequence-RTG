@@ -2,6 +2,7 @@ package syslog_ng
 
 import (
 	"encoding/xml"
+	"fmt"
 	"sequence"
 	"sequence/models"
 	"strconv"
@@ -54,13 +55,23 @@ type XExamples struct {
 type XExample struct {
 	XMLName  xml.Name `xml:"example"`
 	TestMessage XTestMessage `xml:"test_message"`
-	TestValues []string `xml:"test_values"`
+	TestValues XTestValues `xml:"test_values"`
+}
+
+type XTestValues struct{
+	Values []XTestValue `xml:"test_values"`
 }
 
 type XTestMessage struct {
 	XMLName  xml.Name `xml:"test_message"`
 	TestMessage string `xml:",chardata"`
 	Program string `xml:"program,attr"`
+}
+
+type XTestValue struct {
+	XMLName  xml.Name `xml:"test_value"`
+	Value string `xml:",chardata"`
+	Key	string `xml:"name,attr"`
 }
 
 type XRuleValues struct {
@@ -136,6 +147,14 @@ func buildRuleXML (result sequence.AnalyzerResult) XRule {
 		t.TestMessage = ex.Message
 		t.Program = ex.Service
 		e.TestMessage = t
+		m, err := ExtractTestValuesForTokens(ex.Message, result)
+		if err != nil{
+			logger.HandleError(fmt.Sprintf("Unable to make test_values map for examples for pattern %s", result.PatternId))
+		}else{
+			for key, val := range m{
+				e.TestValues.Values = append(e.TestValues.Values, XTestValue{Key:key, Value:val})
+			}
+		}
 		rule.Examples.Examples = append(rule.Examples.Examples, e)
 	}
 	p.Pattern = replaceTags(result.Pattern)
