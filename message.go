@@ -171,13 +171,11 @@ func (this *Message) Tokenize(isParse bool, pos []int) (Token, error) {
 				tok.Value = this.Data[this.state.start:]
 			}
 			this.state.start += l
-			tok.Type = TokenLiteral
-			tok.Tag = TagMultiLine
+			tok.Type = TokenMultiLine
 		}else if strings.Contains(tok.Value, "\n") && this.state.prevToken.Value != "\""{
 			tok.Value = this.Data[this.state.start:]
 			this.state.start += len(tok.Value)
-			tok.Type = TokenLiteral
-			tok.Tag = TagMultiLine
+			tok.Type = TokenMultiLine
 		}
 
 		return tok, nil

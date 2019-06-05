@@ -64,6 +64,7 @@ const (
 	TokenAlphaNum                   // Token is a string that can have only alphanumeric characters
 	TokenId                 		// Token is a string that can have only alphanumeric characters and the dash or underscore
 	TokenAlphaOnly					// Token has only A-Z or a-z
+	TokenMultiLine					// Token represents every thing after the first \n in a message
 	token__END__                    // All tag types must be inserted before this one
 	token__host__                   // Token is a host name
 	token__email__                  // Token is an email address
@@ -85,6 +86,7 @@ var tokens = [...]struct {
 	{"alphanum"},
 	{"id"},
 	{"alpha"},
+	{"multiline"},
 	{"token__END__"},
 	{"token__host__"},
 	{"token__email__"},
@@ -134,6 +136,8 @@ func name2TokenType(s string) TokenType {
 		return TokenId
 	case "alpha":
 		return TokenAlphaOnly
+	case "multiline":
+		return TokenMultiLine
 	case "token__END__":
 		return token__END__
 	case "token__host__":
