@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"
@@ -108,7 +107,7 @@ func scan(cmd *cobra.Command, args []string) {
 		_, lrMap, _ = sequence.ReadLogRecordAsMap(iscan, informat, lrMap, batchsize)
 		for _, lrc := range lrMap {
 			for _, l := range lrc.Records {
-				seq := scanMessage(scanner, l.Message)
+				seq, _ := sequence.ScanMessage(scanner, l.Message, format)
 				fmt.Fprintf(ofile, "%s\n\n", seq.PrintTokens())
 			}
 		}
@@ -120,7 +119,7 @@ func scan(cmd *cobra.Command, args []string) {
 
 func analyze(cmd *cobra.Command, args []string) {
 	start("analyze")
-	parser := buildParser()
+	parser := sequence.BuildParser(patfile)
 	analyzer := sequence.NewAnalyzer()
 	scanner := sequence.NewScanner()
 
@@ -138,8 +137,7 @@ func analyze(cmd *cobra.Command, args []string) {
 	// analyzer for pattern analysis, this requires the previous pattern file/folder
 	//	to be passed in
 	for _, r := range lr {
-		//TODO Fix this so it doesn't scan twice or parse twice
-		seq := scanMessage(scanner, r.Message)
+		seq, _ := sequence.ScanMessage(scanner, r.Message, format)
 		if _, err := parser.Parse(seq); err != nil {
 			analyzer.Add(seq)
 		}
@@ -165,8 +163,7 @@ func analyze(cmd *cobra.Command, args []string) {
 	processed := 0
 
 	for _, l := range lr {
-		//TODO Fix this so it doesn't scan twice or parse twice
-		seq := scanMessage(scanner, l.Message)
+		seq, err:= sequence.ScanMessage(scanner, l.Message, format)
 
 		pseq, err := parser.Parse(seq)
 		if err == nil {
@@ -264,11 +261,11 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 			analyzer := sequence.NewAnalyzer()
 			sid := sequence.GenerateIDFromString(svc)
 			standardLogger.HandleDebug("Started building parser using patterns from database")
-			parser := buildParserFromDb(sid)
+			parser := sequence.BuildParserFromDb(sid)
 			standardLogger.HandleDebug("Completed building parser and starting to check if matches existing patterns")
 			for _, l := range lrc.Records {
 				//TODO Fix this so it doesn't scan twice or parse twice
-				seq := scanMessage(scanner, l.Message)
+				seq, _ := sequence.ScanMessage(scanner, l.Message, format)
 				_, err := parser.Parse(seq)
 				if err != nil {
 					analyzer.Add(seq)
@@ -277,7 +274,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 			analyzer.Finalize()
 			standardLogger.HandleDebug("Added new patterns and finalised. Starting individual analysis")
 			for _, l := range lrc.Records {
-				seq := scanMessage(scanner, l.Message)
+				seq, _ := sequence.ScanMessage(scanner, l.Message, format)
 				pseq, err := parser.Parse(seq)
 				if err == nil {
 					//if the pattern is found we might still need to update the pattern/service relationship
@@ -420,112 +417,6 @@ func validateInputs(commandType string) {
 		standardLogger.HandleFatal(errors)
 	}
 }
-
-
-func scanMessage(scanner *sequence.Scanner, data string) sequence.Sequence {
-	var (
-		seq sequence.Sequence
-		err error
-		pos []int
-	)
-
-	if testJson(data){
-		seq, err = scanner.ScanJson(data)
-	} else {
-		switch format {
-		case "json":
-			seq, err = scanner.ScanJson(data)
-
-		default:
-			seq, err = scanner.Scan(data, false, pos)
-		}
-	}
-	if err != nil {
-		standardLogger.HandleError(err.Error())
-	}
-	return seq
-}
-
-func testJson(data string)bool{
-	data = strings.TrimSpace(data)
-	var js string
-	if data[:1] == "{" && data[len(data)-1:] == "}"{
-		//try to marshall the json
-		return json.Unmarshal([]byte(data), &js) == nil
-	}
-	return false
-}
-
-
-func buildParser() *sequence.Parser {
-	parser := sequence.NewParser()
-
-	if patfile == "" {
-		return parser
-	}
-
-	var files []string
-	var pos []int
-
-	if fi, err := os.Stat(patfile); err != nil {
-		standardLogger.HandleFatal(err.Error())
-	} else if fi.Mode().IsDir() {
-		files, err = sequence.GetDirOfFiles(patfile)
-	} else {
-		files = append(files, patfile)
-	}
-
-	scanner := sequence.NewScanner()
-
-	for _, file := range files {
-		// Open pattern file
-		pscan, pfile, err:= sequence.OpenInputFile(file)
-		defer pfile.Close()
-		if err != nil {
-			standardLogger.HandleFatal(err.Error())
-		}
-
-		for pscan.Scan() {
-			line := pscan.Text()
-			if len(line) == 0 || line[0] == '#' {
-				continue
-			}
-
-			seq, err := scanner.Scan(line, true, pos)
-			if err != nil {
-				standardLogger.HandleError(err.Error())
-			}
-
-			if err := parser.Add(seq); err != nil {
-				standardLogger.HandleError(err.Error())
-			}
-		}
-	}
-
-	return parser
-}
-
-func buildParserFromDb(serviceid string) *sequence.Parser {
-	parser := sequence.NewParser()
-	scanner := sequence.NewScanner()
-	db, ctx := sequence.OpenDbandSetContext()
-	defer db.Close()
-	//load all patterns from the database
-	pmap := sequence.GetPatternsFromDatabaseByService(db, ctx, serviceid)
-	for _, ar := range pmap {
-		pos := sequence.SplitToInt(ar.TagPositions, ",")
-		seq, err := scanner.Scan(ar.Pattern, true, pos)
-		if err != nil {
-			standardLogger.HandleError(err.Error())
-		}
-
-		if err := parser.Add(seq); err != nil {
-			standardLogger.HandleError(err.Error())
-		}
-	}
-	return parser
-}
-
 
 func readConfig() {
 	if cfgfile == "" {

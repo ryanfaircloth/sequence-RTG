@@ -475,5 +475,42 @@ func OutputToFiles(outformat string, outfile string, config string) (int, string
 	return count, top5, err
 }
 
+func ExtractTestValuesForTokens(message string, ar sequence.AnalyzerResult) (map[string]string, error){
+	var (
+		tok string
+	)
+	scanner := sequence.NewScanner()
+	parser := sequence.NewParser()
+	pos := sequence.SplitToInt(ar.TagPositions, ",")
+	//scan the pattern
+	seq, err := scanner.Scan(ar.Pattern, true, pos)
+	//add to the parser
+	err = parser.Add(seq)
+	//scan the example
+	mseq, _ := sequence.ScanMessage(scanner, message, "")
+	//parse the example
+	pseq, _ := parser.Parse(mseq)
+	m := make(map[string]string)
+	mtc := make(map[string]int)
+	for _, p := range pseq{
+		if p.Type != sequence.TokenLiteral && p.Type != sequence.TokenMultiLine{
+			if p.Tag == 0 {
+				tok = p.Type.String()
+			}else{
+				tok = p.Tag.String()
+			}
+			if t, ok := mtc[tok]; ok {
+				m[tok + strconv.Itoa(t)] = p.Value
+				mtc[tok] = t+1
+			}else{
+				m[tok] = p.Value
+				mtc[tok] = 1
+			}
+		}
+	}
+	return m, err
+}
+
+
 
 

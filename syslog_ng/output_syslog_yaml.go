@@ -1,6 +1,7 @@
 package syslog_ng
 
 import (
+	"fmt"
 	"gopkg.in/yaml.v3"
 	"os"
 	"sequence"
@@ -37,8 +38,9 @@ type YRuleset struct{
 }
 
 type YRuleExample struct {
-	Program string 				`yaml:"program"`
-	TestMessage string 			`yaml:"test_message"`
+	Program string 				 `yaml:"program"`
+	TestMessage string 			 `yaml:"test_message"`
+	TextValues map[string]string `yaml:"test_values"`
 }
 
 func SaveAsYaml(oFile *os.File, db YPatternDB) error {
@@ -79,12 +81,17 @@ func buildRule (result sequence.AnalyzerResult, rsName string) YRule {
 	rule.Ruleset = rsName
 	rule.Patterns = append(rule.Patterns, replaceTags(result.Pattern))
 	for _, ex := range result.Examples {
-		example := YRuleExample{ex.Service, ex.Message}
+		m, err := ExtractTestValuesForTokens(ex.Message, result)
+		if err != nil{
+			//make an empty map, log an error and continue
+			m = make(map[string]string)
+			logger.HandleError(fmt.Sprintf("Unable to make test_values map for examples for pattern %s", result.PatternId))
+		}
+		example := YRuleExample{ex.Service, ex.Message, m}
 		rule.Examples = append(rule.Examples, example)
 	}
 	rule.Values.New = true
 	rule.Values.DateCreated = result.DateCreated.Format("2006-01-02")
-	//TODO: Update when date last matched is logging
 	rule.Values.DateLastMatched = result.DateLastMatched.Format("2006-01-02")
 	//create a new UUID
 	rule.ID = result.PatternId
