@@ -236,12 +236,6 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 		}
 		standardLogger.HandleInfo(fmt.Sprintf("Read in %d records successfully, starting analysis..", total))
 
-		if sequence.GetIncludeBelowThreshold() {
-			//var reused = 0
-			//TODO change to get these from the db
-			//reused, lrMap = sequence.ReadLogRecordAsMap(sequence.GetBelowThresholdPath(), informat, lrMap, 0)
-			//total += reused
-		}
 		//get the threshold for including the pattern in the
 		//output files
 		threshold := sequence.GetThreshold(total)

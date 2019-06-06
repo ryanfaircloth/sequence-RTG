@@ -763,7 +763,7 @@ func (this *Analyzer) analyzeMessage(seq Sequence) ([]*analyzerNode, error) {
 					toVisit = append(toVisit, stackAnalyzerNode{node, cur.level + 1, cur.score + fullMatchWeight})
 
 				case node.Type == TokenString && token.Type == TokenLiteral &&
-					(len(token.Value) != 1 || (len(token.Value) == 1 && unicode.IsLetter(rune(token.Value[0])))):
+					(len(token.Value) != 1 || (len(token.Value) == 1 && unicode.IsLetter(rune(token.Value[0])))|| token.Value == "/"):
 					// If the node is a string and token is a non-one-character literal,
 					// then it's considered a partial match, since a literal is
 					// technically a string.
