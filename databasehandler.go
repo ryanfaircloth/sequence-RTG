@@ -271,3 +271,102 @@ func insertExample(ctx context.Context, tx *sql.Tx, lr LogRecord, pid string){
 		logger.DatabaseInsertFailed("example", pid, err.Error())
 	}
 }
+
+func SaveExistingToDatabase(rmap map[string]AnalyzerResult) {
+	db, ctx := OpenDbandSetContext()
+	defer db.Close()
+	//exisitng services
+	smap := GetServicesFromDatabase(db, ctx)
+	//services to be added to db
+	nmap := make(map[string]string)
+	//add the patterns and examples
+	for _, result := range rmap {
+		for _, s := range result.Services{
+			//check the services if it exists and if not append.
+			_, ok := smap[s.ID]
+			if !ok{
+				nmap[s.ID] = s.Name
+			}
+		}
+	}
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		logger.HandleFatal("Could not start a transaction to save to the database.")
+	}
+	//start with the service, so not to cause a primary key violation
+	for sid, m := range nmap{
+		AddService(ctx, tx, sid, m)
+	}
+	tx.Commit()
+
+	tx, err = db.BeginTx(ctx, nil)
+	if err != nil {
+		logger.HandleFatal("Could not start a transaction to save to the database.")
+	}
+	//here we want to update the existing patterns with count and last matched
+	pmap := GetPatternsFromDatabase(db, ctx)
+	for _, result := range rmap {
+		_, found := pmap[result.PatternId]
+		if found{
+			UpdatePattern(ctx, tx, result)
+		}
+	}
+	tx.Commit()
+
+}
+
+func SaveToDatabase(amap map[string]AnalyzerResult) (int, int) {
+	var (
+		new = 0
+		saved = 0
+	)
+	db, ctx := OpenDbandSetContext()
+	defer db.Close()
+	//exisitng services
+	smap := GetServicesFromDatabase(db, ctx)
+	//services to be added to db
+	nmap := make(map[string]string)
+	//add the patterns and examples
+	for _, result := range amap {
+		for _, s := range result.Services{
+			//check the services if it exists and if not append.
+			_, ok := smap[s.ID]
+			if !ok{
+				nmap[s.ID] = s.Name
+			}
+		}
+	}
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		logger.HandleFatal("Could not start a transaction to save to the database.")
+	}
+	//start with the service, so not to cause a primary key violation
+	for sid, m := range nmap{
+		AddService(ctx, tx, sid, m)
+	}
+	tx.Commit()
+
+	tx, err = db.BeginTx(ctx, nil)
+	if err != nil {
+		logger.HandleFatal("Could not start a transaction to save to the database.")
+	}
+
+	tr := GetSaveThreshold()
+	//technically we should not have any existing patterns passed to here, but just in case
+	//lets check first
+	pmap := GetPatternsFromDatabase(db, ctx)
+	for _, result := range amap {
+		_, found := pmap[result.PatternId]
+		if !found{
+			if AddPattern(ctx, tx, result, tr){
+				saved++
+			}
+			new++
+		}else{
+			UpdatePattern(ctx, tx, result)
+		}
+	}
+	tx.Commit()
+
+	return new, saved
+}
