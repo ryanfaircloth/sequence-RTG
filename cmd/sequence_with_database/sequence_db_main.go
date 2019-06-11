@@ -343,7 +343,7 @@ func outputforsyslog(cmd *cobra.Command, args []string) {
 func outputforgrok(cmd *cobra.Command, args []string) {
 	start("outputtofile")
 	startTime := time.Now()
-	processed, top5, err := grok_logstash.OutputToFiles(outformat, outfile, parcfgfile)
+	processed, top5, err := grok_logstash.OutputToFiles(outfile, parcfgfile)
 	if err != nil{
 		standardLogger.HandleError(err.Error())
 	} else {

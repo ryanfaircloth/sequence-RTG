@@ -15,7 +15,7 @@
     "%dstport%" 	= 	"%{INT:[fieldname]}"
     "%dstmac%" 		= 	"%{MAC:[fieldname]}"
     "%regextime%"	=	"%{DATA:[fieldname]}"
-	"%string%"	    =   "%{DATA:[fieldname]}"        #string types with fieldname
+	"%string%"	    =   "%{DATA:[fieldname]}"        
 	"%alphanum%"	=   "%{DATA:[fieldname]}"
 	"%id%"			=   "%{DATA:[fieldname]}"
 	"%msgtime%"		= 	"%{DATA:[fieldname]}"
@@ -54,7 +54,7 @@
 	"%command%" 	= 	"%{DATA:[fieldname]}"
 	"%object%" 		= 	"%{DATA:[fieldname]}"
 	"%method%" 		= 	"%{DATA:[fieldname]}"
-	"%status%" 		= 	"%{DATA:[fieldname]}"
+	"%status%" 		= 	"%{LOGLEVEL:[fieldname]}"
 	"%reason%" 		= 	"%{DATA:[fieldname]}"
 	"%bytesrecv%" 	= 	"%{DATA:[fieldname]}"
 	"%bytessent%" 	= 	"%{DATA:[fieldname]}"
