@@ -1,4 +1,4 @@
-package syslog_ng
+package syslog_ng_pattern_db
 
 import (
 	"testing"

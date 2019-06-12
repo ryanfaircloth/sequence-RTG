@@ -1,4 +1,4 @@
-package grok_logstash
+package logstash_grok
 
 import (
 	"fmt"

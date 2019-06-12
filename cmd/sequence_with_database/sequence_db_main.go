@@ -7,8 +7,8 @@ import (
 	"os/signal"
 	"runtime/pprof"
 	"sequence"
-	"sequence/grok_logstash"
-	"sequence/syslog_ng"
+	"sequence/logstash_grok"
+	"sequence/syslog_ng_pattern_db"
 	"strings"
 	"time"
 )
@@ -147,7 +147,7 @@ func analyze(cmd *cobra.Command, args []string) {
 
 	//Uncomment this to sort the slice by the service
 	//Useful for debugging
-	//syslog_ng.SortLogMessages(lr)
+	//syslog_ng_pattern_db.SortLogMessages(lr)
 
 	//these are existing patterns
 	pmap := make(map[string]struct {
@@ -329,10 +329,10 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 }
 
 
-func outputforsyslog(cmd *cobra.Command, args []string) {
+func outputforpatterndb(cmd *cobra.Command, args []string) {
 	start("outputtofile")
 	startTime := time.Now()
-	processed, top5, err := syslog_ng.OutputToFiles(outformat, outfile, parcfgfile)
+	processed, top5, err := syslog_ng_pattern_db.OutputToFiles(outformat, outfile, parcfgfile)
 	if err != nil{
 		standardLogger.HandleError(err.Error())
 	} else {
@@ -343,7 +343,7 @@ func outputforsyslog(cmd *cobra.Command, args []string) {
 func outputforgrok(cmd *cobra.Command, args []string) {
 	start("outputtofile")
 	startTime := time.Now()
-	processed, top5, err := grok_logstash.OutputToFiles(outfile, parcfgfile)
+	processed, top5, err := logstash_grok.OutputToFiles(outfile, parcfgfile)
 	if err != nil{
 		standardLogger.HandleError(err.Error())
 	} else {
@@ -441,10 +441,10 @@ func readConfig() {
 	if err := sequence.ReadConfig(cfgfile); err != nil {
 		standardLogger.HandleFatal(err.Error())
 	}
-	//set the logger for the sequence, syslog_ng and logstash grok modules
+	//set the logger for the sequence, syslog_ng_pattern_db and logstash grok modules
 	sequence.SetLogger(standardLogger)
-	syslog_ng.SetLogger(standardLogger)
-	grok_logstash.SetLogger(standardLogger)
+	syslog_ng_pattern_db.SetLogger(standardLogger)
+	logstash_grok.SetLogger(standardLogger)
 }
 
 func main() {
@@ -482,9 +482,9 @@ func main() {
 			Short: "analyzes a log file and output a list of patterns that will match all the log messages",
 		}
 
-		outForSyslogCmd = &cobra.Command{
-			Use:   "outputforsyslog",
-			Short: "outputs a list of patterns to the files in the formats requested for syslog_ng",
+		outForpPatternDbCmd = &cobra.Command{
+			Use:   "outputforpatterndb",
+			Short: "outputs a list of patterns to the files in the formats requested for syslog_ng_pattern_db",
 		}
 
 		outForGrokCmd = &cobra.Command{
@@ -511,7 +511,7 @@ func main() {
 	purgePatternsCmd.Run = purgepatterns
 	analyzeCmd.Run = analyze
 	analyzeByServiceCmd.Run = analyzebyservice
-	outForSyslogCmd.Run = outputforsyslog
+	outForpPatternDbCmd.Run = outputforpatterndb
 	outForGrokCmd.Run = outputforgrok
 
 	sequenceCmd.AddCommand(scanCmd)
@@ -519,7 +519,7 @@ func main() {
 	sequenceCmd.AddCommand(purgePatternsCmd)
 	sequenceCmd.AddCommand(analyzeCmd)
 	sequenceCmd.AddCommand(analyzeByServiceCmd)
-	sequenceCmd.AddCommand(outForSyslogCmd)
+	sequenceCmd.AddCommand(outForpPatternDbCmd)
 	sequenceCmd.AddCommand(outForGrokCmd)
 
 	sequenceCmd.Execute()
