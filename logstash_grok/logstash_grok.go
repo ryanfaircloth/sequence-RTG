@@ -22,19 +22,22 @@ func SetLogger(log *sequence.StandardLogger) {
 
 func readConfig(file string) error {
 	var configInfo struct{
-		Tags struct {
-			General  		map[string]string
-			DelimitedString	map[string]string
-			Fieldname  		map[string]string
+		Grok struct {
+			Tags struct {
+				General  		map[string]string
+				DelimitedString	map[string]string
+				Fieldname  		map[string]string
+			}
 		}
 	}
+
 	if _, err := toml.DecodeFile(file, &configInfo); err != nil {
 		return err
 	}
 
-	tags.general = configInfo.Tags.General
-	tags.delstr = configInfo.Tags.DelimitedString
-	tags.cfield = configInfo.Tags.Fieldname
+	tags.general = configInfo.Grok.Tags.General
+	tags.delstr = configInfo.Grok.Tags.DelimitedString
+	tags.cfield = configInfo.Grok.Tags.Fieldname
 
 	return nil
 }
@@ -47,7 +50,7 @@ func OutputToFiles(outfile string, config string) (int, string, error){
 	)
 
 	if config == ""{
-		config = "./custom_parser.toml"
+		config = "./sequence.toml"
 	}
 	//read the config to load the tags
 	if err = readConfig(config); err != nil{

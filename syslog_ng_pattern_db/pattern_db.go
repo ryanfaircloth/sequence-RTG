@@ -13,8 +13,6 @@ import (
 	"time"
 )
 
-
-
 var(
 	tags struct {
 		general map[string]string
@@ -32,19 +30,21 @@ func SetLogger(log *sequence.StandardLogger) {
 
 func readConfig(file string) error {
 	var configInfo struct{
-		Tags struct {
-			General  		map[string]string
-			DelimitedString	map[string]string
-			Fieldname  		map[string]string
+		Patterndb struct {
+			Tags struct {
+				General  		map[string]string
+				DelimitedString	map[string]string
+				Fieldname  		map[string]string
+			}
 		}
 	}
 	if _, err := toml.DecodeFile(file, &configInfo); err != nil {
 		return err
 	}
 
-	tags.general = configInfo.Tags.General
-	tags.delstr = configInfo.Tags.DelimitedString
-	tags.cfield = configInfo.Tags.Fieldname
+	tags.general = configInfo.Patterndb.Tags.General
+	tags.delstr = configInfo.Patterndb.Tags.DelimitedString
+	tags.cfield = configInfo.Patterndb.Tags.Fieldname
 
 	return nil
 }
@@ -204,7 +204,7 @@ func getWithDelimiters(p string, start, end int, last int) (string, string, stri
 	fieldname := p[start+1:end-1]
 	before := ""
 	//integer and ip fields are not considered strings so can bypass this
-	if fieldname == "integer" || fieldname == "srcip" || fieldname == "dstip"{
+	if fieldname == "integer" || fieldname == "srcip" || fieldname == "dstip" || fieldname == "float" || fieldname == "ipv6"{
 		return p[start:end], "", fieldname, end-1
 	}
 	if start > 0 && end < len(p) {
@@ -297,7 +297,7 @@ func OutputToFiles(outformat string, outfile string, config string) (int, string
 		)
 
 	if config == ""{
-		config = "./custom_parser.toml"
+		config = "./sequence.toml"
 	}
 	//read the config to load the tags
 	if err = readConfig(config); err != nil{

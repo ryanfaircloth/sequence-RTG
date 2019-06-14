@@ -26,7 +26,6 @@ var (
 	cpuprofile string
 	workers    int
 	format     string
-	parcfgfile string
 	batchsize  int
 	threshold  int
 	standardLogger *sequence.StandardLogger
@@ -332,7 +331,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 func outputforpatterndb(cmd *cobra.Command, args []string) {
 	start("outputtofile")
 	startTime := time.Now()
-	processed, top5, err := syslog_ng_pattern_db.OutputToFiles(outformat, outfile, parcfgfile)
+	processed, top5, err := syslog_ng_pattern_db.OutputToFiles(outformat, outfile, cfgfile)
 	if err != nil{
 		standardLogger.HandleError(err.Error())
 	} else {
@@ -343,7 +342,7 @@ func outputforpatterndb(cmd *cobra.Command, args []string) {
 func outputforgrok(cmd *cobra.Command, args []string) {
 	start("outputtofile")
 	startTime := time.Now()
-	processed, top5, err := logstash_grok.OutputToFiles(outfile, parcfgfile)
+	processed, top5, err := logstash_grok.OutputToFiles(outfile, cfgfile)
 	if err != nil{
 		standardLogger.HandleError(err.Error())
 	} else {
@@ -503,7 +502,6 @@ func main() {
 	sequenceCmd.PersistentFlags().StringVarP(&logfile, "log-file", "l", "", "location of log file if different from the exe directory")
 	sequenceCmd.PersistentFlags().StringVarP(&loglevel, "log-level", "n", "", "defaults to info level, can be 'trace' 'debug', 'info', 'error', 'fatal'")
 	sequenceCmd.PersistentFlags().StringVarP(&errorfile, "std-error-file", "e", "", "this redirects panics etc to a log file not stderr, set to a valid path to enable this")
-	sequenceCmd.PersistentFlags().StringVarP(&parcfgfile, "custom-parser-config", "c", "", "TOML-formatted configuration file, default checks ./custom_parser.toml, then custom_parser.toml in the same directory as program")
 	sequenceCmd.PersistentFlags().IntVarP(&threshold, "below-threshold", "t", 0, "this is used with the purge patterns command, any patterns with cumulative match count less than the threshold will be deleted")
 
 	scanCmd.Run = scan
