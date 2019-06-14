@@ -77,7 +77,7 @@ func OutputToFiles(outfile string, config string) (int, string, error){
 	//match => { "message" => "Duration: %{NUMBER:duration}", "Speed: %{NUMBER:speed}" }
 	//add_tag => [ "id_value", "pattern_id" ]
 	for _, result := range patmap {
-		fmt.Fprintf(txtFile, "\tgrok {\n \t\tmatch => { \"message\" => \"%s\"}\n\t\tadd_tag => [ \"%s\", \"pattern_id\" ]\n\t}\n", replaceTags(result.Pattern), result.PatternId)
+		fmt.Fprintf(txtFile, "\tgrok {\n \t\tmatch => {\"message\" => \"%s\"}\n\t\tadd_tag => [\"%s\", \"pattern_id\"]\n\t}\n", replaceTags(result.Pattern), result.PatternId)
 	}
 	fmt.Fprintf(txtFile, "}\n")
 	return 0, top5, nil
