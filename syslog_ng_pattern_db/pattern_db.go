@@ -401,9 +401,9 @@ func ExtractTestValuesForTokens(message string, ar sequence.AnalyzerResult) (map
 	for _, p := range pseq{
 		if p.Type != sequence.TokenLiteral && p.Type != sequence.TokenMultiLine{
 			if p.Tag == 0 {
-				tok = p.Type.String()
+				tok = checkForCustomFieldName(p.Type.String())
 			}else{
-				tok = p.Tag.String()
+				tok = checkForCustomFieldName(p.Tag.String())
 			}
 			if t, ok := mtc[tok]; ok {
 				m[tok + strconv.Itoa(t)] = p.Value
