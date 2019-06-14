@@ -32,7 +32,7 @@ package:
     - mkdir -p usr/bin
     - mkdir -p var/lib/sequence
     - mkdir -p etc/sequence
-    - mv sequence.toml custom_parser.toml ./etc/sequence/
+    - mv sequence.toml ./etc/sequence/
     - mv cmd/sequence_with_database/sequence_db_main ./usr/bin/sequence-syslog_ng
     - fpm -s dir -t rpm --license "CECILL-B" --no-rpm-autoreqprov -n "sequence" -v "$(git describe --always --tags HEAD | sed s/^v//)" --url "https://gitlab.in2p3.fr/cc-in2p3-system/sequence" --description "high performance sequential log scanner, analyzer and parser" --maintainer "Fabien Wernli <wernli@in2p3.fr>" ./usr ./var ./etc
   dependencies:
