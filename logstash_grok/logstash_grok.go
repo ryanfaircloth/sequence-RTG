@@ -71,20 +71,15 @@ func OutputToFiles(outfile string, config string) (int, string, error){
 		return count, top5, err
 	}
 	defer txtFile.Close()
-	fmt.Fprintf(txtFile, "filter {\n \t grok {\n \t\t match => { \"message\" => [")
+	fmt.Fprintf(txtFile, "filter {\n")
 
 	//add all the patterns here
-	//match => { "message" => [ "Duration: %{NUMBER:duration}", "Speed: %{NUMBER:speed}" ] }
-	i := 1
+	//match => { "message" => "Duration: %{NUMBER:duration}", "Speed: %{NUMBER:speed}" }
+	//add_tag => [ "id_value", "pattern_id" ]
 	for _, result := range patmap {
-		if i == len(patmap){
-			fmt.Fprintf(txtFile, "\"%s\"\n\t\t\t", replaceTags(result.Pattern))
-		}else{
-			fmt.Fprintf(txtFile, "\"%s\",\n\t\t\t\t", replaceTags(result.Pattern))
-		}
-		i++
+		fmt.Fprintf(txtFile, "\tgrok {\n \t\tmatch => { \"message\" => \"%s\"}\n\t\tadd_tag => [ \"%s\", \"pattern_id\" ]\n\t}\n", replaceTags(result.Pattern), result.PatternId)
 	}
-	fmt.Fprintf(txtFile, "]\n \t\t}\n \t }\n }\n")
+	fmt.Fprintf(txtFile, "}\n")
 	return 0, top5, nil
 }
 
