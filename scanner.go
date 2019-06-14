@@ -134,8 +134,8 @@ func (this *Scanner) Scan(s string, isParse bool, pos []int) (Sequence, error) {
 	spaceBefore := false
 	for tok, err = this.msg.Tokenize(isParse, pos); err == nil; tok, err = this.msg.Tokenize(isParse, pos) {
 
-		//convert the alphanum tokens to string token type
-		if tok.Type == TokenAlphaNum || tok.Type == TokenId{
+		//convert the alphanum tokens to literal token type
+		if tok.Type == TokenAlphaNum {
 			tok.Type = TokenLiteral
 		}
 
@@ -279,7 +279,7 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 				state = jsonObjectEnd
 
 			default:
-				if tok.Type == TokenLiteral || tok.Type == TokenId{
+				if tok.Type == TokenLiteral {
 					//glog.Debugf("depth=%d, keys=%v", len(keys), keys)
 					switch len(keys) {
 					case 0:

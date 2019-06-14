@@ -854,7 +854,7 @@ func markSequenceKV(seq Sequence) Sequence {
 			// if the key index is greater or equal to 0, which means there's
 			// a token before the "=", if it's a literal or id, then it's very likely
 			// a key, so let's mark that
-			if ki >= 0 && (seq[ki].Type == TokenLiteral ||  seq[ki].Type == TokenString  || seq[ki].Type == TokenId) {
+			if ki >= 0 && (seq[ki].Type == TokenLiteral ||  seq[ki].Type == TokenString ) {
 				if seq[ki].Type == TokenString {
 					seq[ki].Type = TokenLiteral
 				}

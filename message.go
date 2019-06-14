@@ -451,8 +451,6 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 			this.state.tokenType = TokenAlphaNum
 		case '/', '\\':
 			this.state.tokenType = TokenLiteral
-		case '-', '_':
-			this.state.tokenType = TokenId
 
 		default:
 			if isLetter(r) {
@@ -467,19 +465,8 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 	case TokenAlphaNum:
 		switch r {
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-		case '/', '\\':
+		case '/', '\\', '-', '_':
 			this.state.tokenType = TokenLiteral
-		case '-', '_':
-			//check this is followed by a letter or number
-			//before changing type
-			if nr != ""{
-				n := []rune(nr)[0]
-				if isDigit(n) || isLetter(n){
-					this.state.tokenType = TokenId
-				}else{
-					this.state.tokenStop = true
-				}
-			}
 
 		default:
 			if isLetter(r) {
@@ -491,40 +478,10 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 			}
 		}
 
-	case TokenId:
-		switch r {
-		case '_', '-':
-			// underscore and dash allowed
-		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-			//numbers allowed
-		case '/', '\\':
-			this.state.tokenType = TokenLiteral
-		default:
-			if isLetter(r) {
-				//letters allowed
-			} else if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) {
-				this.state.tokenType = TokenLiteral
-			} else {
-				this.state.tokenStop = true
-			}
-		}
-
 	case TokenInteger:
 		switch r {
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
 			//no need to change type
-		case '_', '-':
-			//check this is followed by a letter or number
-			//before changing type
-			if nr != ""{
-				//this conversion happens only when needed as it is expensive wrt time
-				n := []rune(nr)[0]
-				if isDigit(n) || isLetter(n){
-					this.state.tokenType = TokenId
-				}else{
-					this.state.tokenStop = true
-				}
-			}
 		case '.':
 			// this should be the ONLY dot this switch case should see
 			this.state.dots++

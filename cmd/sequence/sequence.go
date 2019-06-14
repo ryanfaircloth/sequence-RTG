@@ -406,7 +406,7 @@ func scanMessage(scanner *sequence.Scanner, data string) sequence.Sequence {
 	var (
 		seq sequence.Sequence
 		err error
-		pos []int
+		pos = make([]int, 0)
 	)
 
 
