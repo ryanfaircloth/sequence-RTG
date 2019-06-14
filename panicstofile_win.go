@@ -6,7 +6,7 @@
 //
 // +build windows
 
-package syslog_ng_pattern_db
+package sequence
 
 import (
 	"os"

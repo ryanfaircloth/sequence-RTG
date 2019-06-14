@@ -59,7 +59,6 @@ func replaceTags(pattern string) string{
 	var new []string
 	mtc := make(map[string]int)
 
-
 	for _, p := range s{
 		if val, ok := tags.general[p]; ok {
 			p, mtc = getUpdatedTag(p, mtc, val, "")
@@ -280,8 +279,6 @@ func SaveLogMessages(lr sequence.LogRecordCollection, fname string  ){
 	}
 }
 
-
-
 func OutputToFiles(outformat string, outfile string, config string) (int, string, error){
 
 	var (
@@ -290,7 +287,6 @@ func OutputToFiles(outformat string, outfile string, config string) (int, string
 			yamlFile *os.File
 			xPattDB XPatternDB
 	    	yPattDB YPatternDB
-			vals []int
 			err error
 			count int
 			top5 string
@@ -353,7 +349,6 @@ func OutputToFiles(outformat string, outfile string, config string) (int, string
 	}
 	//add the patterns and examples
 	for _, result := range patmap {
-		vals = append(vals, result.ExampleCount)
 		for _, fmat := range outformats {
 			if fmat == "" || fmat == "txt"{
 				fmt.Fprintf(txtFile, "# %s\n %s\n# %d log messages matched\n# %s\n\n", result.PatternId, result.Pattern, result.ExampleCount, result.Examples[0].Message)
