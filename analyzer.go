@@ -90,7 +90,6 @@ type AnalyzerResult struct {
 	TagPositions string
 	ExampleCount int
 	Examples []LogRecord
-	ThresholdReached bool
 	DateCreated time.Time
 	DateLastMatched time.Time
 }
@@ -155,47 +154,21 @@ func AddServiceToAnalyzerResult(this *AnalyzerResult, service string){
 }
 
 func AddExampleToAnalyzerResult(this *AnalyzerResult, lr LogRecord, threshold int){
-	if this.ThresholdReached && len(this.Examples) >= 3{
+	if len(this.Examples) >= 3{
 		//nothing to here
 		return
 	}
-	if threshold <= 1{
-		this.ThresholdReached = true
-	}
-	//we keep a minimum of three
-	if len(this.Examples) > threshold && len(this.Examples) > 3{
-		//truncate the messages to three different ones
-		TruncateExamples(this)
-		this.ThresholdReached = true
-	}else{
-		this.Examples = append(this.Examples, lr)
-	}
-}
-
-func TruncateExamples(this *AnalyzerResult){
-	var keep []LogRecord
 	var found = false
-	for i, ex := range this.Examples{
-		//append the first one
-		if i==0 {
-			keep = append(keep, ex)
-			continue
-		}
-		for _, k := range keep{
-			if k.Message == ex.Message{
-				found = true
-				break
-			}
-		}
-		if !found{
-			keep = append(keep, ex)
-		}
-		//cap this at 3 TODO:Maybe check for sameness/differentness and select the best examples
-		if len(keep) == 3{
+	//check it is unique and add, else don't
+	for _, ex := range this.Examples{
+		if lr.Message == ex.Message{
+			found = true
 			break
 		}
 	}
-	this.Examples = keep
+	if !found{
+		this.Examples = append(this.Examples, lr)
+	}
 }
 
 //this is so that the same pattern will have the same id

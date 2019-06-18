@@ -27,7 +27,6 @@ type Pattern struct {
 	SequencePattern      string      `boil:"sequence_pattern" json:"sequence_pattern" toml:"sequence_pattern" yaml:"sequence_pattern"`
 	TagPositions         null.String `boil:"tag_positions" json:"tag_positions,omitempty" toml:"tag_positions" yaml:"tag_positions,omitempty"`
 	DateCreated          time.Time   `boil:"date_created" json:"date_created" toml:"date_created" yaml:"date_created"`
-	ThresholdReached     bool        `boil:"threshold_reached" json:"threshold_reached" toml:"threshold_reached" yaml:"threshold_reached"`
 	DateLastMatched      time.Time   `boil:"date_last_matched" json:"date_last_matched" toml:"date_last_matched" yaml:"date_last_matched"`
 	OriginalMatchCount   int64       `boil:"original_match_count" json:"original_match_count" toml:"original_match_count" yaml:"original_match_count"`
 	CumulativeMatchCount int64       `boil:"cumulative_match_count" json:"cumulative_match_count" toml:"cumulative_match_count" yaml:"cumulative_match_count"`
@@ -42,7 +41,6 @@ var PatternColumns = struct {
 	SequencePattern      string
 	TagPositions         string
 	DateCreated          string
-	ThresholdReached     string
 	DateLastMatched      string
 	OriginalMatchCount   string
 	CumulativeMatchCount string
@@ -52,7 +50,6 @@ var PatternColumns = struct {
 	SequencePattern:      "sequence_pattern",
 	TagPositions:         "tag_positions",
 	DateCreated:          "date_created",
-	ThresholdReached:     "threshold_reached",
 	DateLastMatched:      "date_last_matched",
 	OriginalMatchCount:   "original_match_count",
 	CumulativeMatchCount: "cumulative_match_count",
@@ -105,15 +102,6 @@ func (w whereHelpertime_Time) GTE(x time.Time) qm.QueryMod {
 	return qmhelper.Where(w.field, qmhelper.GTE, x)
 }
 
-type whereHelperbool struct{ field string }
-
-func (w whereHelperbool) EQ(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
-func (w whereHelperbool) NEQ(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
-func (w whereHelperbool) LT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
-func (w whereHelperbool) LTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
-func (w whereHelperbool) GT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
-func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
-
 type whereHelperint64 struct{ field string }
 
 func (w whereHelperint64) EQ(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
@@ -123,12 +111,20 @@ func (w whereHelperint64) LTE(x int64) qm.QueryMod { return qmhelper.Where(w.fie
 func (w whereHelperint64) GT(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
 func (w whereHelperint64) GTE(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
 
+type whereHelperbool struct{ field string }
+
+func (w whereHelperbool) EQ(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperbool) NEQ(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperbool) LT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperbool) LTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperbool) GT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+
 var PatternWhere = struct {
 	ID                   whereHelperstring
 	SequencePattern      whereHelperstring
 	TagPositions         whereHelpernull_String
 	DateCreated          whereHelpertime_Time
-	ThresholdReached     whereHelperbool
 	DateLastMatched      whereHelpertime_Time
 	OriginalMatchCount   whereHelperint64
 	CumulativeMatchCount whereHelperint64
@@ -138,7 +134,6 @@ var PatternWhere = struct {
 	SequencePattern:      whereHelperstring{field: `sequence_pattern`},
 	TagPositions:         whereHelpernull_String{field: `tag_positions`},
 	DateCreated:          whereHelpertime_Time{field: `date_created`},
-	ThresholdReached:     whereHelperbool{field: `threshold_reached`},
 	DateLastMatched:      whereHelpertime_Time{field: `date_last_matched`},
 	OriginalMatchCount:   whereHelperint64{field: `original_match_count`},
 	CumulativeMatchCount: whereHelperint64{field: `cumulative_match_count`},
@@ -169,8 +164,8 @@ func (*patternR) NewStruct() *patternR {
 type patternL struct{}
 
 var (
-	patternColumns               = []string{"id", "sequence_pattern", "tag_positions", "date_created", "threshold_reached", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern"}
-	patternColumnsWithoutDefault = []string{"id", "sequence_pattern", "tag_positions", "date_created", "threshold_reached", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern"}
+	patternColumns               = []string{"id", "sequence_pattern", "tag_positions", "date_created", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern"}
+	patternColumnsWithoutDefault = []string{"id", "sequence_pattern", "tag_positions", "date_created", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern"}
 	patternColumnsWithDefault    = []string{}
 	patternPrimaryKeyColumns     = []string{"id"}
 )

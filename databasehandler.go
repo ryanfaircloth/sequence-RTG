@@ -7,8 +7,10 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/volatiletech/null"
 	"github.com/volatiletech/sqlboiler/boil"
+	"github.com/volatiletech/sqlboiler/queries"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 	"sequence/models"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -95,7 +97,14 @@ func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context) (map[s
 	)
 	pmap := make(map[string]AnalyzerResult)
 	if config.matchThresholdValue != "0"{
-		patterns, err = models.Patterns(models.PatternWhere.ThresholdReached.EQ(true) , qm.OrderBy(models.PatternColumns.CumulativeMatchCount + " DESC")).All(ctx, db)
+		var threshold int64
+		if config.matchThresholdType == "count"{
+			threshold, _ = strconv.ParseInt(config.matchThresholdValue, 10, 64)
+		}else{
+			total := getRecordProcessed(db, ctx)
+			threshold = int64(GetThreshold(total))
+		}
+		patterns, err = models.Patterns(models.PatternWhere.CumulativeMatchCount.GTE(threshold) , qm.OrderBy(models.PatternColumns.CumulativeMatchCount + " DESC")).All(ctx, db)
 		if err !=nil {
 			logger.DatabaseSelectFailed("patterns", "Where threshold_reached=true", err.Error())
 		}
@@ -120,7 +129,7 @@ func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context) (map[s
 
 
 	for _, p := range patterns{
-		ar := AnalyzerResult{PatternId:p.ID, Pattern:p.SequencePattern, ThresholdReached:p.ThresholdReached, DateCreated:p.DateCreated, DateLastMatched:p.DateLastMatched, ExampleCount:int(p.CumulativeMatchCount)}
+		ar := AnalyzerResult{PatternId:p.ID, Pattern:p.SequencePattern, DateCreated:p.DateCreated, DateLastMatched:p.DateLastMatched, ExampleCount:int(p.CumulativeMatchCount)}
 		svcs, err := p.ServiceIdServices().All(ctx, db)
 		if err !=nil {
 			logger.DatabaseSelectFailed("services", "Where id = " + p.ID, err.Error())
@@ -139,6 +148,22 @@ func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context) (map[s
 		pmap[p.ID]=ar
 	}
 	return pmap, top5
+}
+
+// this sums the cumulative pattern couln in the pattern table
+func getRecordProcessed(db *sql.DB, ctx context.Context) int{
+	// Custom struct for selecting a subset of data
+	type Info struct {
+		MessageSum int `boil:"message_sum"`
+	}
+
+	var info Info
+
+	err := queries.Raw("SELECT sum(cumulative_match_count) as message_sum FROM Patterns", 5).Bind(ctx, db, &info)
+	if err !=nil {
+		logger.DatabaseSelectFailed("patterns", "sum(cumulative_match_count)", err.Error())
+	}
+	return info.MessageSum
 }
 
 //this is for the parser
@@ -192,9 +217,9 @@ func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, tr int) 
 		return false
 	}
 	tp := null.String{String:result.TagPositions, Valid:true}
-	p := models.Pattern{ID:result.PatternId, SequencePattern:result.Pattern, DateCreated:time.Now(), ThresholdReached:result.ThresholdReached,
+	p := models.Pattern{ID:result.PatternId, SequencePattern:result.Pattern, DateCreated:time.Now(),
 		CumulativeMatchCount:int64(result.ExampleCount), OriginalMatchCount:int64(result.ExampleCount), DateLastMatched:time.Now(), IgnorePattern:false, TagPositions:tp}
-	err := p.Insert(ctx, tx, boil.Whitelist("id", "sequence_pattern", "date_created", "threshold_reached", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern", "tag_positions"))
+	err := p.Insert(ctx, tx, boil.Whitelist("id", "sequence_pattern", "date_created", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern", "tag_positions"))
 	if err != nil{
 		logger.DatabaseInsertFailed("pattern", result.PatternId, err.Error())
 		return false
@@ -204,28 +229,9 @@ func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, tr int) 
 	for _, s := range result.Services{
 		p.AddServiceIdServices(ctx, tx, false, s)
 	}
-
-	//add all examples if threshold has been reached as these will have already been pruned
-	//otherwise limit to max three.
-	if result.ThresholdReached{
-		for _, e := range result.Examples{
-			insertExample(ctx,tx,e,result.PatternId)
-		}
-	}else{
-		prev := ""
-		count := 0
-		for _, e := range result.Examples{
-			if prev != e.Message{
-				insertExample(ctx,tx,e,result.PatternId)
-				prev = e.Message
-				count++
-			}
-			if count >= 3{
-				break
-			}
-		}
+	for _, e := range result.Examples{
+		insertExample(ctx,tx,e,result.PatternId)
 	}
-
 	return true
 }
 

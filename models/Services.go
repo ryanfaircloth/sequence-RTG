@@ -556,7 +556,7 @@ func (serviceL) LoadPatternIdPatterns(ctx context.Context, e boil.ContextExecuto
 		one := new(Pattern)
 		var localJoinCol string
 
-		err = results.Scan(&one.ID, &one.SequencePattern, &one.TagPositions, &one.DateCreated, &one.ThresholdReached, &one.DateLastMatched, &one.OriginalMatchCount, &one.CumulativeMatchCount, &one.IgnorePattern, &localJoinCol)
+		err = results.Scan(&one.ID, &one.SequencePattern, &one.TagPositions, &one.DateCreated, &one.DateLastMatched, &one.OriginalMatchCount, &one.CumulativeMatchCount, &one.IgnorePattern, &localJoinCol)
 		if err != nil {
 			return errors.Wrap(err, "failed to scan eager loaded results for Patterns")
 		}

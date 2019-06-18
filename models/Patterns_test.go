@@ -1033,7 +1033,7 @@ func testPatternsSelect(t *testing.T) {
 }
 
 var (
-	patternDBTypes = map[string]string{`ID`: `STRING (20, 50)`, `SequencePattern`: `STRING (1000)`, `TagPositions`: `STRING`, `DateCreated`: `DATETIME`, `ThresholdReached`: `BOOLEAN`, `DateLastMatched`: `DATETIME`, `OriginalMatchCount`: `INTEGER`, `CumulativeMatchCount`: `INTEGER`, `IgnorePattern`: `BOOLEAN`}
+	patternDBTypes = map[string]string{`ID`: `STRING (20, 50)`, `SequencePattern`: `STRING (1000)`, `TagPositions`: `STRING`, `DateCreated`: `DATETIME`, `DateLastMatched`: `DATETIME`, `OriginalMatchCount`: `INTEGER`, `CumulativeMatchCount`: `INTEGER`, `IgnorePattern`: `BOOLEAN`}
 	_              = bytes.MinRead
 )
 
