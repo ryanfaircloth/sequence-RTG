@@ -398,7 +398,13 @@ func ExtractTestValuesForTokens(message string, ar sequence.AnalyzerResult) (map
 	pseq, _ := parser.Parse(mseq)
 	m := make(map[string]string)
 	mtc := make(map[string]int)
-	for _, p := range pseq{
+	space := ""
+	for i, p := range pseq{
+		if i == 0 && p.IsSpaceBefore{
+			space = " "
+		}else{
+			space = ""
+		}
 		if p.Type != sequence.TokenLiteral && p.Type != sequence.TokenMultiLine{
 			if p.Tag == 0 {
 				tok = checkForCustomFieldName(p.Type.String())
@@ -406,10 +412,10 @@ func ExtractTestValuesForTokens(message string, ar sequence.AnalyzerResult) (map
 				tok = checkForCustomFieldName(p.Tag.String())
 			}
 			if t, ok := mtc[tok]; ok {
-				m[tok + strconv.Itoa(t)] = p.Value
+				m[tok + strconv.Itoa(t)] = space + p.Value
 				mtc[tok] = t+1
 			}else{
-				m[tok] = p.Value
+				m[tok] = space + p.Value
 				mtc[tok] = 1
 			}
 		}

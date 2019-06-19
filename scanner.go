@@ -145,7 +145,7 @@ func (this *Scanner) Scan(s string, isParse bool, pos []int) (Sequence, error) {
 				spaceBefore = true
 				continue
 			} else{
-				tok.isSpaceBefore = spaceBefore
+				tok.IsSpaceBefore = spaceBefore
 				spaceBefore = false
 				this.insertToken(tok)
 			}

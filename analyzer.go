@@ -342,7 +342,7 @@ func (this *Analyzer) Add(seq Sequence) error {
 			// means this is some type of string we parsed from the message.
 			//if we are marking spaces then " literal" and "literal" need to be stored as different tokens
 			space := ""
-			if token.isSpaceBefore{
+			if token.IsSpaceBefore{
 				space = " "
 			}
 			// If we have gotten here, it means we found a string that we cannot
@@ -366,7 +366,7 @@ func (this *Analyzer) Add(seq Sequence) error {
 				// or we get incorrect patterns
 				this.litmaps[i][space + foundNode.Value] = foundNode.index
 				foundNode.isKey = token.isKey
-				foundNode.isSpaceBefore = token.isSpaceBefore
+				foundNode.isSpaceBefore = token.IsSpaceBefore
 			}
 		}
 
