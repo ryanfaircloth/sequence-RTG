@@ -202,12 +202,19 @@ func analyze(cmd *cobra.Command, args []string) {
 	}
 
 	new, saved := sequence.SaveToDatabase(amap)
-	standardLogger.AnalyzeInfo(processed, len(amap)+len(pmap), new, saved, err_count, time.Since(startTime))
+	standardLogger.AnalyzeInfo(processed, len(amap)+len(pmap), new, saved, err_count, time.Since(startTime), time.Since(startTime))
 }
 
 func createdatabase(cmd *cobra.Command, args []string){
 	start("createdatabase")
 	sequence.CreateDatabase(outfile)
+	standardLogger.HandleInfo(fmt.Sprintf("Database created successfully"))
+}
+
+func updatedatabase(cmd *cobra.Command, args []string){
+	start("updatedatabase")
+	sequence.UpdateDatabase()
+	standardLogger.HandleInfo(fmt.Sprintf("Database updated successfully"))
 }
 
 func purgepatterns(cmd *cobra.Command, args []string) {
@@ -235,10 +242,6 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 			break
 		}
 		standardLogger.HandleInfo(fmt.Sprintf("Read in %d records successfully, starting analysis..", total))
-
-		//get the threshold for including the pattern in the
-		//output files
-		threshold := sequence.GetThreshold(total)
 		standardLogger.HandleDebug(fmt.Sprintf("Threshhold equals %d ", threshold))
 		//Here we group by service and process
 		//We lose the cross service patterns but we get better
@@ -247,6 +250,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 		processed := 0
 		amap := make(map[string]sequence.AnalyzerResult)
 		pmap := make(map[string]sequence.AnalyzerResult)
+		anStartTime := time.Now()
 		for svc, lrc := range lrMap {
 			standardLogger.HandleDebug(fmt.Sprintf("Started processing records from service: %s", svc))
 			// For all the log messages, if we can't parse it, then let's add it to the
@@ -308,7 +312,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 			}
 			//fmt.Printf("Processed: %d\n", processed)
 		}
-		anTime := time.Since(startTime)
+		anTime := time.Since(anStartTime)
 		standardLogger.HandleInfo(fmt.Sprintf("Analysed in: %s\n", anTime))
 		standardLogger.HandleDebug("Starting save to the database.")
 		sequence.SaveExistingToDatabase(pmap)
@@ -320,7 +324,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 		//for pat, stat := range amap {
 		//fmt.Fprintf(oFile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.ExampleCount, stat.Examples[0].Message)
 		//}
-		standardLogger.AnalyzeInfo(processed, len(amap)+len(pmap), new, saved, err_count, time.Since(startTime))
+		standardLogger.AnalyzeInfo(processed, len(amap)+len(pmap), new, saved, err_count, time.Since(startTime), anTime)
 		if batchsize == 0 || infile != "-" {
 			break
 		}
@@ -466,6 +470,11 @@ func main() {
 			Short: "creates a new sequence database to the location in the config file",
 		}
 
+		updateDatabaseCmd = &cobra.Command{
+			Use:   "updatedatabase",
+			Short: "runs the updates in the config file on the database",
+		}
+
 		purgePatternsCmd = &cobra.Command{
 			Use:   "purgepatterns",
 			Short: "deletes patterns and their examples under a threshold",
@@ -506,6 +515,7 @@ func main() {
 
 	scanCmd.Run = scan
 	createDatabaseCmd.Run = createdatabase
+	updateDatabaseCmd.Run = updatedatabase
 	purgePatternsCmd.Run = purgepatterns
 	analyzeCmd.Run = analyze
 	analyzeByServiceCmd.Run = analyzebyservice
@@ -514,6 +524,7 @@ func main() {
 
 	sequenceCmd.AddCommand(scanCmd)
 	sequenceCmd.AddCommand(createDatabaseCmd)
+	sequenceCmd.AddCommand(updateDatabaseCmd)
 	sequenceCmd.AddCommand(purgePatternsCmd)
 	sequenceCmd.AddCommand(analyzeCmd)
 	sequenceCmd.AddCommand(analyzeByServiceCmd)

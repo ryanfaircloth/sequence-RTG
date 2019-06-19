@@ -38,6 +38,7 @@ var (
 		database			   string
 		useDatabase			   bool
 		createDbCommands	 []string
+		updateDbCommands	 []string
 	}
 
 	timesettings struct {
@@ -58,20 +59,21 @@ var (
 
 func ReadConfig(file string) error {
 	var configInfo struct {
-		Version     string
-		Tags        []string
-		MarkSpaces 	bool
-		MatchThresholdType     string
-		MatchThresholdValue    string
-		BelowThresholdPath	   string
-		SaveThreshold		   string
-		UseDatabase			   bool
-		Database 			   string
-		CreateDBCommands	   []string
+		Version             string
+		Tags                []string
+		MarkSpaces          bool
+		MatchThresholdType  string
+		MatchThresholdValue string
+		BelowThresholdPath  string
+		SaveThreshold       string
+		UseDatabase         bool
+		Database            string
+		CreateDBCommands    []string
+		UpdateDBCommands    []string
 
 		Timesettings struct {
-			Formats  map[string][]string
-			Regex map[string]string
+			Formats map[string][]string
+			Regex   map[string]string
 		}
 
 		Analyzer struct {
@@ -87,18 +89,19 @@ func ReadConfig(file string) error {
 	config.tagIDs = make(map[string]TagType, 30)
 	config.tagNames = config.tagNames[:0]
 	config.tagTypes = config.tagTypes[:0]
-	config.markSpaces  = configInfo.MarkSpaces
-	config.matchThresholdType  = configInfo.MatchThresholdType
-	config.matchThresholdValue  = configInfo.MatchThresholdValue
+	config.markSpaces = configInfo.MarkSpaces
+	config.matchThresholdType = configInfo.MatchThresholdType
+	config.matchThresholdValue = configInfo.MatchThresholdValue
 	config.saveThreshold = configInfo.SaveThreshold
 	config.useDatabase = configInfo.UseDatabase
 	config.database = configInfo.Database
 	config.createDbCommands = configInfo.CreateDBCommands
+	config.updateDbCommands = configInfo.UpdateDBCommands
 
 	timesettings.formats = make(map[int][]string, len(configInfo.Timesettings.Formats))
-	for i, f := range configInfo.Timesettings.Formats{
+	for i, f := range configInfo.Timesettings.Formats {
 		x, err := strconv.Atoi(i)
-		if err == nil{
+		if err == nil {
 			timesettings.formats[x] = f
 		}
 	}
@@ -159,10 +162,6 @@ func ReadConfig(file string) error {
 	allTypesCount = TokenTypesCount + TagTypesCount
 
 	return nil
-}
-
-func GetIncludeBelowThreshold() bool{
-	return config.inclBelThresholdRecs
 }
 
 func GetTimeSettingsRegExValue(id string) (string, bool){

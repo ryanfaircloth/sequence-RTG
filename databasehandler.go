@@ -34,6 +34,25 @@ func CreateDatabase(fname string){
 	tx.Commit()
 }
 
+func UpdateDatabase(){
+	database, err := sql.Open("sqlite3", config.database)
+	if err != nil{
+		logger.HandleFatal(err.Error())
+	}
+	tx, err := database.Begin()
+	if err != nil {
+		logger.HandleFatal(err.Error())
+	}
+	query := config.updateDbCommands
+	for _, q := range query{
+		_, err = database.Exec(q)
+		if err != nil{
+			logger.HandleFatal(err.Error())
+		}
+	}
+	tx.Commit()
+}
+
 func PurgePatternsfromDatabase(threshold int64) int64 {
 	database, ctx := OpenDbandSetContext()
 	tx, err := database.Begin()
