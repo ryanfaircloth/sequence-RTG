@@ -55,6 +55,8 @@ func readConfig(file string) error {
 func replaceTags(pattern string) string{
 	//make sure @ are escaped @@ before we start
 	pattern = strings.Replace(pattern, "@", "@@", -1)
+	//some patterns start with a space, we need to catch that
+	hasSpace := pattern[0:1] == " "
 	s := strings.Fields(pattern)
 	var new []string
 	mtc := make(map[string]int)
@@ -87,6 +89,10 @@ func replaceTags(pattern string) string{
 		if result[len(result)-3:] == ": @"{
 			result = result[:len(result)-3] + ":@"
 		}
+	}
+
+	if hasSpace{
+		result = " " + result
 	}
 
 	return result
@@ -398,13 +404,7 @@ func ExtractTestValuesForTokens(message string, ar sequence.AnalyzerResult) (map
 	pseq, _ := parser.Parse(mseq)
 	m := make(map[string]string)
 	mtc := make(map[string]int)
-	space := ""
-	for i, p := range pseq{
-		if i == 0 && p.IsSpaceBefore{
-			space = " "
-		}else{
-			space = ""
-		}
+	for _, p := range pseq{
 		if p.Type != sequence.TokenLiteral && p.Type != sequence.TokenMultiLine{
 			if p.Tag == 0 {
 				tok = checkForCustomFieldName(p.Type.String())
@@ -412,10 +412,10 @@ func ExtractTestValuesForTokens(message string, ar sequence.AnalyzerResult) (map
 				tok = checkForCustomFieldName(p.Tag.String())
 			}
 			if t, ok := mtc[tok]; ok {
-				m[tok + strconv.Itoa(t)] = space + p.Value
+				m[tok + strconv.Itoa(t)] = p.Value
 				mtc[tok] = t+1
 			}else{
-				m[tok] = space + p.Value
+				m[tok] = p.Value
 				mtc[tok] = 1
 			}
 		}
