@@ -393,6 +393,11 @@ func ExtractTestValuesForTokens(message string, ar sequence.AnalyzerResult) (map
 	)
 	scanner := sequence.NewScanner()
 	parser := sequence.NewParser()
+	m := make(map[string]string)
+	//no tags to find
+	if ar.TagPositions == ""{
+		return m, nil
+	}
 	pos := sequence.SplitToInt(ar.TagPositions, ",")
 	//scan the pattern
 	seq, err := scanner.Scan(ar.Pattern, true, pos)
@@ -401,8 +406,7 @@ func ExtractTestValuesForTokens(message string, ar sequence.AnalyzerResult) (map
 	//scan the example
 	mseq, _ := sequence.ScanMessage(scanner, message, "")
 	//parse the example
-	pseq, _ := parser.Parse(mseq)
-	m := make(map[string]string)
+	pseq, err := parser.Parse(mseq)
 	mtc := make(map[string]int)
 	for _, p := range pseq{
 		if p.Type != sequence.TokenLiteral && p.Type != sequence.TokenMultiLine{

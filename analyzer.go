@@ -807,7 +807,7 @@ func markSequenceKV(seq Sequence) Sequence {
 
 			//sometimes there are double demlimiters or double equals signs
 			for vi < l && seq[vi].Type == TokenLiteral &&
-				(seq[vi].Value == "\"" || seq[vi].Value == "'" || seq[vi].Value == "<" || seq[vi].Value == "[" || seq[vi].Value == "="){
+				(seq[vi].Value == "\"" || seq[vi].Value == "'" || seq[vi].Value == "<" || seq[vi].Value == "[" || seq[vi].Value == "{" || seq[vi].Value == "="){
 				vi = vi + 1
 			}
 

@@ -388,6 +388,30 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 				// then this is the ending quotation mark.
 				this.state.inquote = false
 			}
+		case '[':
+
+			this.state.tokenType = TokenLiteral
+			if !this.state.inquote {
+				// If we are not inside a quote now and we are at the beginning,
+				// then let's be inside the quote now. This is basically the
+				// beginning quotation mark.
+				this.state.tokenStop = true
+				this.state.inquote = true
+				this.state.chquote = r
+			}else{
+				this.state.tokenStop = false
+				this.state.tokenType = TokenLiteral
+			}
+
+		case ']':
+			this.state.tokenStop = true
+			this.state.tokenType = TokenLiteral
+
+			if this.state.inquote && this.state.chquote == '[' {
+				// If we are at the beginning of the data and we are inside a quote,
+				// then this is the ending quotation mark.
+				this.state.inquote = false
+			}
 
 		case '\\':
 			this.state.tokenType = TokenLiteral
@@ -766,5 +790,5 @@ func isTagTokenChar(r rune) bool {
 // q - quote char in state
 // r - current char
 func matchQuote(q, r rune) bool {
-	return (((r == '"' || r == '\'') && r == q) || (r == '>' && q == '<'))
+	return (((r == '"' || r == '\'') && r == q) || (r == '>' && q == '<') || (r == ']' && q == '[') )
 }
