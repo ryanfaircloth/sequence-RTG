@@ -272,10 +272,10 @@ func (this *Analyzer) Add(seq Sequence) error {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 
-	seq = markSequenceKV(seq)
-
-	//Set any literal marked as containing 2 or more % to a string variable
-	seq = markSequencePercent(seq)
+	//this appears to be the source of lots of errors during analysis
+	//therefore removing from here, it is done later in the analysis also
+	//seq = markSequenceKV(seq)
+	
 
 	// Add enough levels to support the depth of the token list
 	if l := len(seq) - len(this.levels) + 1; l > 0 {
@@ -815,7 +815,7 @@ func markSequenceKV(seq Sequence) Sequence {
 			// there's a node after the "=". If the node at value index is NOT
 			// already a key, then it's likely a value. Let's mark it.
 			if vi < l && !seq[vi].isKey &&
-				!(seq[vi].Value == "\"" || seq[vi].Value == "'" || seq[vi].Value == ">" || seq[vi].Value == "*") {
+				!(seq[vi].Value == "\"" || seq[vi].Value == "'" || seq[vi].Value == ">" || seq[vi].Value == "*" || seq[vi].Value == "," || seq[vi].Value == "}") {
 
 				seq[vi].isValue = true
 
