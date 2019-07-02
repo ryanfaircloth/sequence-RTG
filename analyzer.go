@@ -275,7 +275,7 @@ func (this *Analyzer) Add(seq Sequence) error {
 	//this appears to be the source of lots of errors during analysis
 	//therefore removing from here, it is done later in the analysis also
 	//seq = markSequenceKV(seq)
-	
+
 
 	// Add enough levels to support the depth of the token list
 	if l := len(seq) - len(this.levels) + 1; l > 0 {
@@ -324,7 +324,7 @@ func (this *Analyzer) Add(seq Sequence) error {
 				this.levels[i][foundNode.index] = foundNode
 			}
 
-		case token.Type != TokenUnknown && token.Type != TokenLiteral && token.Type != TokenAlphaOnly:
+		case token.Type != TokenUnknown && token.Type != TokenLiteral :
 			// If this is a known token type but it's not a literal or alpha only, it means this
 			// token could contain different values. In this case, we add it to the
 			// list of token types.
@@ -337,7 +337,7 @@ func (this *Analyzer) Add(seq Sequence) error {
 				this.levels[i][foundNode.index] = foundNode
 			}
 
-		case token.Tag == TagUnknown && (token.Type == TokenLiteral || token.Type == TokenAlphaOnly) :
+		case token.Tag == TagUnknown && token.Type == TokenLiteral:
 			// if the tag type is unknown, and the token type is literal or plain text, that
 			// means this is some type of string we parsed from the message.
 			//if we are marking spaces then " literal" and "literal" need to be stored as different tokens
@@ -839,17 +839,6 @@ func markSequenceKV(seq Sequence) Sequence {
 	return seq
 }
 
-func markSequencePercent(seq Sequence) Sequence {
-	// Step 1: mark all key=value pairs
-	l := len(seq)
-	for i := l - 1; i >= 0; i-- {
-		if seq[i].Special == "%" && seq[i].Type == TokenLiteral{
-			seq[i].Type = TokenString
-		}
-	}
-	return seq
-}
-
 func analyzeSequence(seq Sequence) Sequence {
 	l := len(seq)
 	var fexists = make([]bool, TagTypesCount)
@@ -907,7 +896,7 @@ func analyzeSequence(seq Sequence) Sequence {
 		}
 	}
 
-	// Step 2: lower case all literals, and try to recognize emails and host names
+	// Step 2: try to recognize emails and host names
 	for i, tok := range seq {
 		if tok.Type == TokenLiteral && tok.Tag == TagUnknown {
 			//seq[i].Value = strings.ToLower(tok.Value)
@@ -1188,12 +1177,22 @@ LOOP:
 	// any keys
 	for i, tok := range seq {
 		if !tok.isKey && !tok.isValue && (tok.Type == TokenLiteral || tok.Type == TokenString) && tok.Tag == TagUnknown {
-			pw := porter2.Stem(tok.Value)
-			if f, ok := keymaps.keywords[pw]; ok {
+			//look for exact work first as sometimes similar words are in different groups eg: connection = object, connect = action
+			tv := strings.ToLower(tok.Value)
+			if f, ok := keymaps.keywords[tv]; ok {
 				if !fexists[f] {
 					seq[i].Tag = f
 					seq[i].Type = f.TokenType()
 					fexists[f] = true
+				}
+			} else{
+				pw := porter2.Stem(tv)
+				if f, ok := keymaps.keywords[pw]; ok {
+					if !fexists[f] {
+						seq[i].Tag = f
+						seq[i].Type = f.TokenType()
+						fexists[f] = true
+					}
 				}
 			}
 		}

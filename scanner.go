@@ -134,11 +134,6 @@ func (this *Scanner) Scan(s string, isParse bool, pos []int) (Sequence, error) {
 	spaceBefore := false
 	for tok, err = this.msg.Tokenize(isParse, pos); err == nil; tok, err = this.msg.Tokenize(isParse, pos) {
 
-		//convert the alphanum tokens to literal token type
-		if tok.Type == TokenAlphaNum {
-			tok.Type = TokenLiteral
-		}
-
 		//ignore space tokens but mark the token before as needing a space
 		if config.markSpaces{
 			if tok.Value == " "{
@@ -237,10 +232,6 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 		// glog.Debugln(keys)
 		// glog.Debugln(arrs)
 
-		//ignore space tokens completely for now, unsure if needed to be marked for json
-		if config.markSpaces && tok.Value == " "{
-			continue
-		}
 
 		switch state {
 		case jsonStart:
@@ -507,6 +498,311 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 		//glog.Debugf("2. tok=%s, state=%d, kquote=%t, vquote=%t, depth=%d", tok, state, kquote, vquote, len(keys))
 	}
 
+	if err != nil && err != io.EOF {
+		return nil, err
+	}
+
+	return this.seq, nil
+}
+
+//need to keep spaces, commas, and brackets
+func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
+	var (
+		err error
+		tok Token
+		pos []int
+
+		keys = make([]string, 0, 20) // collection keys
+		arrs = make([]int64, 0, 20)  // array index
+
+		state          = jsonStart // state
+		kquote, vquote bool        // quoted key, quoted value
+	)
+
+	this.msg.Data = s
+	this.msg.reset()
+	this.seq = this.seq[:0]
+
+	spaceBefore := false
+	for tok, err = this.msg.Tokenize(false, pos); err == nil; tok, err = this.msg.Tokenize(false, pos) {
+
+		//ignore space tokens but mark the token before as needing a space
+		if config.markSpaces{
+			if tok.Value == " "{
+				spaceBefore = true
+				continue
+			} else{
+				tok.IsSpaceBefore = spaceBefore
+				spaceBefore = false
+			}
+		}
+
+		switch state {
+		case jsonStart:
+			switch tok.Value {
+			case "{":
+				state = jsonObjectStart
+				keys = append(keys, "")
+				this.insertToken(tok)
+
+			default:
+				return nil, fmt.Errorf("Invalid message. Expecting \"{\", got %q.", tok.Value)
+			}
+
+		case jsonObjectStart:
+			switch tok.Value {
+			case "{":
+				// Only reason this could happen is if we encountered an array of
+				// objects like [{"a":1}, {"b":2}]
+				arrs[len(arrs)-1]++
+				keys[len(keys)-1] = keys[len(keys)-2] + "." + strconv.FormatInt(arrs[len(arrs)-1], 10)
+				keys = append(keys, "")
+
+			case "\"":
+				// start quote, add token, move on
+				this.insertToken(tok)
+				if kquote = !kquote; !kquote {
+					return nil, fmt.Errorf("Invalid message. Expecting start quote for key, got end quote.")
+				}
+
+			case "}":
+				// got something like {}
+				if len(keys)-1 < 0 {
+					return nil, fmt.Errorf("Invalid message. Too many } characters.")
+				}
+
+				this.insertToken(tok)
+				keys = keys[:len(keys)-1]
+				state = jsonObjectEnd
+
+			default:
+				if tok.Type == TokenLiteral {
+					//glog.Debugf("depth=%d, keys=%v", len(keys), keys)
+					switch len(keys) {
+					case 0:
+						return nil, fmt.Errorf("Invalid message. Expecting inside object, not so.")
+
+					case 1:
+						keys[0] = tok.Value
+
+					default:
+						keys[len(keys)-1] = keys[len(keys)-2] + "." + tok.Value
+					}
+
+					tok.Value = keys[len(keys)-1]
+					tok.isKey = true
+					tok.Type = TokenLiteral
+					tok.IsSpaceBefore = spaceBefore
+					this.insertToken(tok)
+					state = jsonObjectKey
+
+				} else {
+					return nil, fmt.Errorf("Invalid message. Expecting string key, got %q.", tok.Value)
+				}
+			}
+
+		case jsonObjectKey:
+			switch tok.Value {
+			case "\"":
+				// end quote
+				this.insertToken(tok)
+				if kquote = !kquote; kquote {
+					return nil, fmt.Errorf("Invalid message. Expecting end quote for key, got start quote.")
+				}
+
+			case ":":
+				if kquote {
+					return nil, fmt.Errorf("Invalid message. Expecting end quote for key, got %q.", tok.Value)
+				}
+
+				this.insertToken(tok)
+				state = jsonObjectColon
+
+			default:
+				return nil, fmt.Errorf("Invalid message. Expecting colon or quote, got %q.", tok.Value)
+			}
+
+		case jsonObjectColon:
+			switch tok.Value {
+			case "\"":
+				this.insertToken(tok)
+				if vquote {
+					// if vquote is already true, that means we encountered something like ""
+					vquote = false
+
+					// let's remove the key and "="
+					if len(this.seq) >= 2 {
+						this.seq = this.seq[:len(this.seq)-2]
+					}
+
+					state = jsonObjectValue
+				} else {
+					// start quote, ignore, move on
+					vquote = true
+				}
+
+			case "[":
+				// Start of an array
+				state = jsonArrayStart
+				arrs = append(arrs, 0)
+				keys = append(keys, keys[len(keys)-1]+"."+strconv.FormatInt(arrs[len(arrs)-1], 10))
+
+				// let's remove the key and "="
+				if len(this.seq) >= 2 {
+					this.seq = this.seq[:len(this.seq)-2]
+				}
+
+			case "{":
+				state = jsonObjectStart
+				keys = append(keys, "")
+
+				if len(this.seq) >= 2 {
+					this.seq = this.seq[:len(this.seq)-2]
+				}
+
+			default:
+				state = jsonObjectValue
+				tok.isValue = true
+				this.insertToken(tok)
+			}
+
+		case jsonObjectValue:
+			switch tok.Value {
+			case "\"":
+				// end quote
+				this.insertToken(tok)
+				if vquote = !vquote; vquote {
+					return nil, fmt.Errorf("Invalid message. Expecting end quote for value, got start quote.")
+				}
+
+			case "}":
+				// End of an object
+				this.insertToken(tok)
+				if len(keys)-1 < 0 {
+					return nil, fmt.Errorf("Invalid message. Too many } characters.")
+				}
+
+				keys = keys[:len(keys)-1]
+				state = jsonObjectEnd
+
+			case ",":
+				this.insertToken(tok)
+				state = jsonObjectStart
+
+			default:
+				return nil, fmt.Errorf("Invalid message. Expecting '}', ',' or '\"', got %q.", tok.Value)
+			}
+
+		case jsonObjectEnd, jsonArrayEnd:
+			switch tok.Value {
+			case "}":
+				// End of an object
+				if len(keys)-1 < 0 {
+					return nil, fmt.Errorf("Invalid message. Too many } characters.")
+				}
+				this.insertToken(tok)
+				keys = keys[:len(keys)-1]
+				state = jsonObjectEnd
+
+			case "]":
+				// End of an object
+				if len(arrs)-1 < 0 || len(keys)-1 < 0 {
+					return nil, fmt.Errorf("Invalid message. Mismatched ']' or '}' characters.")
+				}
+
+				keys = keys[:len(keys)-1]
+				arrs = arrs[:len(arrs)-1]
+				state = jsonArrayEnd
+
+			case ",":
+				state = jsonObjectStart
+
+			default:
+				return nil, fmt.Errorf("Invalid message. Expecting '}' or ',', got %q.", tok.Value)
+			}
+
+		case jsonArraySeparator:
+			switch tok.Value {
+			case "{":
+				state = jsonObjectStart
+				keys = append(keys, "")
+
+			default:
+				return nil, fmt.Errorf("Invalid message. Expecting '{', got %q.", tok.Value)
+			}
+
+		case jsonArrayStart:
+			switch tok.Value {
+			case "\"":
+				// start quote, ignore, move on
+				//state = jsonArrayStart
+				if kquote = !kquote; !kquote {
+					return nil, fmt.Errorf("Invalid message. Expecting start quote for value, got end quote.")
+				}
+
+			case "{":
+				state = jsonObjectStart
+				keys = append(keys, "")
+
+			default:
+				if tok.Type == TokenLiteral {
+					//glog.Debugf("depth=%d, keys=%v", depth, keys)
+					this.insertToken(Token{
+						Tag:     TagUnknown,
+						Type:    TokenLiteral,
+						Value:   keys[len(keys)-1],
+						isKey:   true,
+						isValue: false,
+					})
+
+					this.insertToken(Token{
+						Tag:     TagUnknown,
+						Type:    TokenLiteral,
+						Value:   "=",
+						isKey:   false,
+						isValue: false,
+					})
+
+					tok.Value = keys[len(keys)-1]
+					tok.isValue = true
+					this.insertToken(tok)
+					state = jsonArrayValue
+
+				} else {
+					return nil, fmt.Errorf("Invalid message. Expecting string key, got %q.", tok.Value)
+				}
+			}
+
+		case jsonArrayValue:
+			switch tok.Value {
+			case "\"":
+				// end quote, ignore, move on
+				//state = jsonObjectKey
+				if vquote = !vquote; vquote {
+					return nil, fmt.Errorf("Invalid message. Expecting end quote for value, got start quote.")
+				}
+
+			case "]":
+				// End of an object
+				if len(arrs)-1 < 0 || len(keys)-1 < 0 {
+					return nil, fmt.Errorf("Invalid message. Mismatched ']' or '}' characters.")
+				}
+
+				keys = keys[:len(keys)-1]
+				arrs = arrs[:len(arrs)-1]
+				state = jsonArrayEnd
+
+			case ",":
+				state = jsonArrayStart
+				arrs[len(arrs)-1]++
+				keys[len(keys)-1] = keys[len(keys)-2] + "." + strconv.FormatInt(arrs[len(arrs)-1], 10)
+
+			default:
+				return nil, fmt.Errorf("Invalid message. Expecting ']', ',' or '\"', got %q.", tok.Value)
+			}
+		}
+		//glog.Debugf("2. tok=%s, state=%d, kquote=%t, vquote=%t, depth=%d", tok, state, kquote, vquote, len(keys))
+	}
 	if err != nil && err != io.EOF {
 		return nil, err
 	}

@@ -62,8 +62,6 @@ const (
 	TokenURI                        // Token is an URL, in the form of http://... or https://...
 	TokenMac                        // Token is a mac address
 	TokenString                     // Token is a string that represents multiple possible values
-	TokenAlphaNum                   // Token is a string that can have only alphanumeric characters
-	TokenAlphaOnly					// Token has only A-Z or a-z
 	TokenMultiLine					// Token represents every thing after the first \n in a message
 	token__END__                    // All tag types must be inserted before this one
 	token__host__                   // Token is a host name
@@ -83,8 +81,6 @@ var tokens = [...]struct {
 	{"uri"},
 	{"mac"},
 	{"string"},
-	{"alphanum"},
-	{"alpha"},
 	{"multiline"},
 	{"token__END__"},
 	{"token__host__"},
@@ -129,10 +125,6 @@ func name2TokenType(s string) TokenType {
 		return TokenMac
 	case "string":
 		return TokenString
-	case "alphanum":
-		return TokenAlphaNum
-	case "alpha":
-		return TokenAlphaOnly
 	case "multiline":
 		return TokenMultiLine
 	case "token__END__":

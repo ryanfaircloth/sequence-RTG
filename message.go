@@ -157,10 +157,6 @@ func (this *Message) Tokenize(isParse bool, pos []int) (Token, error) {
 		this.state.prevToken = tok
 		this.state.start += l + s
 
-		if tok.Type == TokenAlphaOnly{
-			tok.Type = TokenLiteral
-		}
-
 		//this is for dealing with multiline strings and setting everything after the \n to a single token
 		//these can be super long so I have truncated it at 50 chars for the value as it is not really used.
 		if tok.Value == "\n"{
@@ -421,9 +417,7 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 			this.state.tokenStop = true
 
 		default:
-			if isLetter(r){
-				this.state.tokenType = TokenAlphaOnly
-			}else if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) {
+			if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) {
 				this.state.tokenType = TokenLiteral
 			} else {
 				this.state.tokenType = TokenLiteral
@@ -454,9 +448,6 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 				// if it's /, then it's probably something like http/1.0 or http/1.1,
 				// let's keep it going
 				this.state.tokenType = TokenLiteral
-			} else if i == 1 && isLetter(r){
-				//we probably caught the h or H in the first round
-				this.state.tokenType = TokenAlphaOnly
 			} else if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) {
 				// no longer URL, turn into literal
 				this.state.tokenType = TokenLiteral
@@ -467,38 +458,6 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 				if i < 6 {
 					this.state.tokenType = TokenLiteral
 				}
-			}
-		}
-	case TokenAlphaOnly:
-		switch r {
-		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-			this.state.tokenType = TokenAlphaNum
-		case '/', '\\':
-			this.state.tokenType = TokenLiteral
-
-		default:
-			if isLetter(r) {
-				//do nothing
-			} else if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) {
-				this.state.tokenType = TokenLiteral
-			} else {
-				this.state.tokenType = TokenLiteral
-				this.state.tokenStop = true
-			}
-		}
-	case TokenAlphaNum:
-		switch r {
-		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-		case '/', '\\', '-', '_':
-			this.state.tokenType = TokenLiteral
-
-		default:
-			if isLetter(r) {
-				this.state.tokenType = TokenAlphaNum
-			} else if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) {
-				this.state.tokenType = TokenLiteral
-			} else {
-				this.state.tokenStop = true
 			}
 		}
 
@@ -512,9 +471,7 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 			this.state.tokenType = TokenFloat
 		default:
 			//could be alpha numeric
-			if isLetter(r) {
-				this.state.tokenType = TokenAlphaNum
-			} else if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) {
+			if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) {
 				// no longer URL, turn into literal
 				this.state.tokenType = TokenLiteral
 			} else {

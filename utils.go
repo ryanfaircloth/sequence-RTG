@@ -14,7 +14,7 @@ func ScanMessage(scanner *Scanner, data string, format string) (Sequence, error)
 	)
 
 	if testJson(data){
-		seq, err = scanner.ScanJson(data)
+		seq, err = scanner.ScanJson_Preserve(data)
 	} else {
 		switch format {
 		case "json":
@@ -29,10 +29,11 @@ func ScanMessage(scanner *Scanner, data string, format string) (Sequence, error)
 
 func testJson(data string)bool{
 	data = strings.TrimSpace(data)
-	var js string
+	var js interface{}
 	if data[:1] == "{" && data[len(data)-1:] == "}"{
 		//try to marshall the json
-		return json.Unmarshal([]byte(data), &js) == nil
+		x := json.Unmarshal([]byte(data), &js)
+		return x == nil
 	}
 	return false
 }
