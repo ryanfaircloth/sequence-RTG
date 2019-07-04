@@ -32,6 +32,7 @@ type XRules struct {
 //This represents a rule section in the sys-log ng yaml file
 type XRule struct{
 	XMLName  xml.Name `xml:"rule"`
+	Class string 	    `xml:"class,attr"`
 	Patterns []XPattern  `xml:"patterns"`
 	Examples XExamples  `xml:"examples"`
 	Values   XRuleValues `xml:"values"`
@@ -162,6 +163,7 @@ func buildRuleXML (result sequence.AnalyzerResult) XRule {
 
 	//create a new UUID
 	rule.ID = result.PatternId
+	rule.Class = "sequence"
 	return rule
 }
 

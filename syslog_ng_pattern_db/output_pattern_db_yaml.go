@@ -16,6 +16,7 @@ type YPatternDB struct{
 //This represents a rule section in the sys-log ng yaml file
 type YRule struct{
 	Ruleset  string      		`yaml:"ruleset"`
+	RuleClass  string      		`yaml:"ruleclass"`
 	Patterns []string    		`yaml:"patterns"`
 	Examples []YRuleExample   	`yaml:"examples"`
 	Values   YRuleValues 		`yaml:"values"`
@@ -79,6 +80,7 @@ func buildRule (result sequence.AnalyzerResult, rsName string) YRule {
 	rule.Values.Seqmatches = result.ExampleCount
 	//get the ruleset from the example (service)
 	rule.Ruleset = rsName
+	rule.RuleClass = "sequence"
 	rule.Patterns = append(rule.Patterns, replaceTags(result.Pattern))
 	for _, ex := range result.Examples {
 		m, err := ExtractTestValuesForTokens(ex.Message, result)
