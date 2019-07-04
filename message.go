@@ -715,6 +715,9 @@ func isLiteral(r rune) bool {
 	switch r {
 	case '+', '-', '_', '\\', '%', '*', '@', '$', '.', '/', '~':
 		return true
+	//french letters
+	case 'é', 'è', 'ê', 'ë','ù', 'œ', 'ô', 'ÿ', 'â', 'æ', 'ï', 'ç', 'û', 'ü', 'à', 'î':
+		return true
 	}
 	return 'a' <= r && r <= 'z' || 'A' <= r && r <= 'Z' || r >= '0' && r <= '9'
 }

@@ -162,11 +162,11 @@ func getSpecial(p string, mtc map[string]int) (string, map[string]int) {
 			s, del, fieldname, last = getWithDelimiters(p, off, offsets[i+1]+1, last)
 			fieldname = checkForCustomFieldName(fieldname)
 			//TODO: deal with regex and time formats
+			if strings.Contains(s, sequence.TagRegExTime.String()){
+				k =getTimeRegex(s)
+			}
 			if del != ""{
 				//remove any extra colons and numbers
-				if strings.Contains(s, sequence.TagRegExTime.String()){
-					fieldname = sequence.TagRegExTime.String()
-				}
 				if val, ok := tags.delstr[del]; ok {
 					val, mtc = getUpdatedTag(s, mtc, val, del)
 					k = strings.Replace(k, s, val, 1)
@@ -200,4 +200,16 @@ func getWithDelimiters(p string, start, end int, last int) (string, string, stri
 		}
 	}
 	return p[start:end], "", fieldname, end-1
+}
+
+func getTimeRegex(p string) (string){
+	//this should be in the format %regextime:number%, the number is the regex id
+	//find the colon
+	i := strings.Index(p, ":")
+	h := p[i+1:len(p)-1]
+	rg, ok := sequence.GetTimeSettingsGrokValue(h)
+	if !ok {
+		rg = p
+	}
+	return rg
 }

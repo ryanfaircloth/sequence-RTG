@@ -267,7 +267,6 @@ func SortandSaveLogMessages(lr []sequence.LogRecord, fname string  ){
 		if lr[i].Service != lr[j].Service {
 			return lr[i].Service < lr[j].Service
 		}
-
 		return lr[i].Message < lr[j].Message
 	})
 	ofile, _ := sequence.OpenOutputFile(fname)
@@ -285,7 +284,7 @@ func SaveLogMessages(lr sequence.LogRecordCollection, fname string  ){
 	}
 }
 
-func OutputToFiles(outformat string, outfile string, config string) (int, string, error){
+func OutputToFiles(outformat string, outfile string, config string, cmap map[string]sequence.AnalyzerResult) (int, string, error){
 
 	var (
 			txtFile *os.File
@@ -296,6 +295,7 @@ func OutputToFiles(outformat string, outfile string, config string) (int, string
 			err error
 			count int
 			top5 string
+			patmap map[string]sequence.AnalyzerResult
 		)
 
 	if config == ""{
@@ -305,9 +305,14 @@ func OutputToFiles(outformat string, outfile string, config string) (int, string
 	if err = readConfig(config); err != nil{
 		return count, top5, err
 	}
-	db, ctx := sequence.OpenDbandSetContext()
-	defer db.Close()
-	patmap, top5 := sequence.GetPatternsWithExamplesFromDatabase(db,ctx)
+	if sequence.GetUseDatabase(){
+		db, ctx := sequence.OpenDbandSetContext()
+		defer db.Close()
+		patmap, top5 = sequence.GetPatternsWithExamplesFromDatabase(db,ctx)
+	} else {
+		patmap = cmap
+	}
+
 	logger.HandleInfo(fmt.Sprintf("Found %d patterns for output", len(patmap)))
     count = len(patmap)
 	outformats := strings.Split(outformat, ",")

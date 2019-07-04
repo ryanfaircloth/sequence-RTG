@@ -44,6 +44,7 @@ var (
 	timesettings struct {
 		formats map[int][]string
 		regex  map[string]string
+		grok  map[string]string
 	}
 
 	keymaps struct {
@@ -74,6 +75,7 @@ func ReadConfig(file string) error {
 		Timesettings struct {
 			Formats map[string][]string
 			Regex   map[string]string
+			Grok  map[string]string
 		}
 
 		Analyzer struct {
@@ -107,6 +109,7 @@ func ReadConfig(file string) error {
 	}
 
 	timesettings.regex = configInfo.Timesettings.Regex
+	timesettings.grok = configInfo.Timesettings.Grok
 
 	timeFsmRoot = buildTimeFSM(timesettings.formats)
 
@@ -169,8 +172,17 @@ func GetTimeSettingsRegExValue(id string) (string, bool){
 	return f, ok
 }
 
+func GetTimeSettingsGrokValue(id string) (string, bool){
+	f, ok := timesettings.grok[id]
+	return f, ok
+}
+
 func SetLogger(log *StandardLogger) {
 	logger = log
+}
+
+func GetUseDatabase() bool{
+	return config.useDatabase
 }
 
 func predefineAnalyzerTags(f string, t TagType) {

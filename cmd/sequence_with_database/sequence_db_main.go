@@ -19,7 +19,8 @@ var (
 	outfile    string
 	logfile    string
 	loglevel	string
-	errorfile    string
+	errorfile   string
+	outsystem  string
 	outformat  string
 	informat  string
 	patfile    string
@@ -310,21 +311,47 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 				}
 				processed++
 			}
-			//fmt.Printf("Processed: %d\n", processed)
 		}
 		anTime := time.Since(anStartTime)
 		standardLogger.HandleInfo(fmt.Sprintf("Analysed in: %s\n", anTime))
-		standardLogger.HandleDebug("Starting save to the database.")
-		sequence.SaveExistingToDatabase(pmap)
-		new, saved := sequence.SaveToDatabase(amap)
-		standardLogger.HandleDebug("Finished save to the database.")
-		//debugging what is coming out as new
-		//oFile, _:= sequence.OpenOutputFile("C:\\data\\debug.txt")
-		//defer oFile.Close()
-		//for pat, stat := range amap {
-		//fmt.Fprintf(oFile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.ExampleCount, stat.Examples[0].Message)
-		//}
-		standardLogger.AnalyzeInfo(processed, len(amap)+len(pmap), new, saved, err_count, time.Since(startTime), anTime)
+		if sequence.GetUseDatabase(){
+			standardLogger.HandleDebug("Starting save to the database.")
+			sequence.SaveExistingToDatabase(pmap)
+			new, saved := sequence.SaveToDatabase(amap)
+			standardLogger.HandleDebug("Finished save to the database.")
+			standardLogger.AnalyzeInfo(processed, len(amap)+len(pmap), new, saved, err_count, time.Since(startTime), anTime)
+		}else{
+			//output directly to the files
+			//merge pmap and amap
+			//syslog-ng patterndb
+			fileTime := time.Now()
+			cmap := amap
+			for k, v := range pmap{
+				cmap[k] = v
+			}
+			if outsystem == "patterndb"{
+				processed, top5, err := syslog_ng_pattern_db.OutputToFiles(outformat, outfile, cfgfile, cmap)
+				if err != nil{
+					standardLogger.HandleError(err.Error())
+				} else {
+					standardLogger.OutputToFileInfo(processed, top5, time.Since(fileTime) )
+				}
+			}else if outsystem == "grok"{
+				processed, top5, err := logstash_grok.OutputToFiles(outfile, cfgfile)
+				if err != nil{
+					standardLogger.HandleError(err.Error())
+				} else {
+					standardLogger.OutputToFileInfo(processed, top5, time.Since(fileTime) )
+				}
+			}
+			//always output to a txt file for parsing later
+			oFile, _:= sequence.OpenOutputFile("C:\\data\\debug.txt")
+			defer oFile.Close()
+			for pat, stat := range amap {
+				fmt.Fprintf(oFile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.ExampleCount, stat.Examples[0].Message)
+			}
+		}
+
 		if batchsize == 0 || infile != "-" {
 			break
 		}
@@ -335,7 +362,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 func outputforpatterndb(cmd *cobra.Command, args []string) {
 	start("outputtofile")
 	startTime := time.Now()
-	processed, top5, err := syslog_ng_pattern_db.OutputToFiles(outformat, outfile, cfgfile)
+	processed, top5, err := syslog_ng_pattern_db.OutputToFiles(outformat, outfile, cfgfile, nil)
 	if err != nil{
 		standardLogger.HandleError(err.Error())
 	} else {
@@ -506,6 +533,7 @@ func main() {
 	sequenceCmd.PersistentFlags().StringVarP(&outfile, "output", "o", "", "output file, if omitted, to stdout, if multiple out-formats will use the same file name with diff extensions")
 	sequenceCmd.PersistentFlags().StringVarP(&patfile, "patterns", "p", "", "existing patterns text file, can be a file or directory")
 	sequenceCmd.PersistentFlags().StringVarP(&outformat, "out-format", "f", "", "format of the output file, can be yaml, xml or txt or a combo comma separated eg txt,xml, if empty it uses text, used by analyze")
+	sequenceCmd.PersistentFlags().StringVarP(&outsystem, "out-system", "s", "", "system that will use the output, not needed if use database is set to true in the config, valid values are patterndb and grok, used by analyzebyservice")
 	sequenceCmd.PersistentFlags().StringVarP(&informat, "in-format", "k", "", "format of the input data, can be json or text, if empty it uses text, used by analyze")
 	sequenceCmd.PersistentFlags().IntVarP(&batchsize, "batch-size", "b", 0, "if using a large file or stdin, the batch size sets the limit of how many to process at one time")
 	sequenceCmd.PersistentFlags().StringVarP(&logfile, "log-file", "l", "", "location of log file if different from the exe directory")
