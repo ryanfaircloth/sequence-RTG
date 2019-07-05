@@ -232,6 +232,11 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 		// glog.Debugln(keys)
 		// glog.Debugln(arrs)
 
+		//ignore space tokens completely for now, unsure if needed to be marked for json
+		if config.markSpaces && tok.Value == " "{
+			continue
+		}
+
 
 		switch state {
 		case jsonStart:
