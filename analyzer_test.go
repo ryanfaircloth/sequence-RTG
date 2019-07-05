@@ -57,13 +57,13 @@ var (
 	}{
 		{
 			"id=firewall time=\"2005-03-18 14:01:46\" fw=TOPSEC priv=6 recorder=kernel type=conn policy=414 proto=TCP rule=accept src=61.167.71.244 sport=35223 dst=210.82.119.211 dport=25 duration=27 inpkt=37 outpkt=39 sent=1770 rcvd=20926 smac=00:04:c1:8b:d8:82 dmac=00:0b:5f:b2:1d:80",
-			"id = %string% time = \" %regextime:4% \" fw = %string% priv = %integer% recorder = %string% type = %string% policy = %integer% proto = %protocol% rule = %string% src = %srcip% sport = %srcport% dst = %dstip% dport = %dstport% duration = %duration% inpkt = %integer% outpkt = %integer% sent = %integer% rcvd = %integer% smac = %srcmac% dmac = %dstmac%",
-			"id=%string% time=\"%regextime:4%\" fw=%string% priv=%integer% recorder=%string% type=%string% policy=%integer% proto=%protocol% rule=%string% src=%srcip% sport=%srcport% dst=%dstip% dport=%dstport% duration=%duration% inpkt=%integer% outpkt=%integer% sent=%integer% rcvd=%integer% smac=%srcmac%dmac=%dstmac%",
+			"id = %string% time = \" %regextime:3% \" fw = %string% priv = %integer% recorder = %string% type = %string% policy = %integer% proto = %protocol% rule = %string% src = %srcip% sport = %srcport% dst = %dstip% dport = %dstport% duration = %duration% inpkt = %integer% outpkt = %integer% sent = %integer% rcvd = %integer% smac = %srcmac% dmac = %dstmac%",
+			"id=%string% time=\"%regextime:3%\" fw=%string% priv=%integer% recorder=%string% type=%string% policy=%integer% proto=%protocol% rule=%string% src=%srcip% sport=%srcport% dst=%dstip% dport=%dstport% duration=%duration% inpkt=%integer% outpkt=%integer% sent=%integer% rcvd=%integer% smac=%srcmac%dmac=%dstmac%",
 		},
 		{
 			"id=firewall time=\"2005-03-18 14:01:43\" fw=TOPSEC priv=4 recorder=kernel type=conn policy=504 proto=TCP rule=deny src=210.82.121.91 sport=4958 dst=61.229.37.85 dport=23124 smac=00:0b:5f:b2:1d:80 dmac=00:04:c1:8b:d8:82",
-			"id = %string% time = \" %regextime:4% \" fw = %string% priv = %integer% recorder = %string% type = %string% policy = %integer% proto = %protocol% rule = %string% src = %srcip% sport = %srcport% dst = %dstip% dport = %dstport% smac = %srcmac% dmac = %dstmac%",
-			"id=%string% time=\"%regextime:4%\" fw=%string% priv=%integer% recorder=%string% type=%string% policy=%integer% proto=%protocol% rule=%string% src=%srcip% sport=%srcport% dst=%dstip% dport=%dstport% smac=%srcmac%dmac=%dstmac%",
+			"id = %string% time = \" %regextime:3% \" fw = %string% priv = %integer% recorder = %string% type = %string% policy = %integer% proto = %protocol% rule = %string% src = %srcip% sport = %srcport% dst = %dstip% dport = %dstport% smac = %srcmac% dmac = %dstmac%",
+			"id=%string% time=\"%regextime:3%\" fw=%string% priv=%integer% recorder=%string% type=%string% policy=%integer% proto=%protocol% rule=%string% src=%srcip% sport=%srcport% dst=%dstip% dport=%dstport% smac=%srcmac%dmac=%dstmac%",
 		},
 	}
 
@@ -202,48 +202,6 @@ func TestAnalyzerMergeNodes(t *testing.T) {
 
 		node := atree.levels[l][allTypesCount]
 		require.Equal(t, TokenString, node.Type, fmt.Sprintf("Expected: levels[%d][%d].Type == TokenString, Actual: got %s", l, allTypesCount+1, node.Type))
-	}
-}
-
-func TestAnalyzerKeyValuePairs(t *testing.T) {
-	atree := NewAnalyzer()
-	scanner := NewScanner()
-	var pos []int
-
-	for _, tc := range analyzerKVTests {
-		seq, err := scanner.Scan(tc.msg, false, pos)
-		require.NoError(t, err)
-		err = atree.Add(seq)
-		require.NoError(t, err, tc.msg)
-	}
-
-	atree.Finalize()
-
-	for _, i := range []int{0, 1, 3, 4, 8, 9, 11, 12, 14, 15, 17, 18, 20, 21, 23, 24, 26, 27, 29, 30, 32, 33, 35, 36, 38, 39, 42, 45, 47, 50, 53, 56, 59} {
-		require.Equal(t, 1, len(atree.litmaps[i]), fmt.Sprintf("Expected: levels[%d].litmap == 1, Actual: got %d", i, len(atree.litmaps[i])))
-	}
-
-	for _, i := range []int{41, 44} {
-		require.Equal(t, 2, len(atree.litmaps[i]), fmt.Sprintf("Expected: levels[%d].litmap == 2, Actual: got %d", i, len(atree.litmaps[i])))
-	}
-
-	for _, i := range []int{1, 4, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45} {
-		_, ok := atree.litmaps[i]["="]
-		require.True(t, ok, fmt.Sprintf("Expected: levels[%d][\"=\"] exists, Actual: not exist", i))
-	}
-
-	_, ok := atree.litmaps[41]["duration"]
-	require.True(t, ok, fmt.Sprintf("Expected: levels[%d][\"duration\"] exists, Actual: not exist", 41))
-
-	_, ok = atree.litmaps[41]["smac"]
-	require.True(t, ok, fmt.Sprintf("Expected: levels[%d][\"smac\"] exists, Actual: not exist", 41))
-
-	if _, ok := atree.litmaps[44]["inpkt"]; !ok {
-		t.Fatalf("Expected: levels[%d][\"inpkt\"] exists, Actual: not exist", 44)
-	}
-
-	if _, ok := atree.litmaps[44]["dmac"]; !ok {
-		t.Fatalf("Expected: levels[%d][\"dmac\"] exists, Actual: not exist", 44)
 	}
 }
 
