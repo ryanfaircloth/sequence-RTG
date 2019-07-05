@@ -142,7 +142,7 @@ func getSpecial(p string, mtc map[string]int) (string, map[string]int) {
 			s, del, fieldname, last = getWithDelimiters(p, off, offsets[i+1]+1, last)
 			fieldname = checkForCustomFieldName(fieldname)
 			//check if a time regex tag, this needs some manipulation
-			if strings.Contains(s, sequence.TagRegExTime.String()) && del == ""{
+			if del == "" && strings.Contains(s, sequence.TagRegExTime.String()){
 				r, rg := getTimeRegex(s)
 				// look for the pattern
 				if val, ok := tags.general[r]; ok {
