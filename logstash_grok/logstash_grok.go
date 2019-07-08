@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/BurntSushi/toml"
 	"index/suffixarray"
-	"sequence"
+	"gitlab.in2p3.fr/cc-in2p3-system/sequence"
 	"sort"
 	"strconv"
 	"strings"

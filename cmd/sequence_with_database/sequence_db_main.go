@@ -6,9 +6,9 @@ import (
 	"os"
 	"os/signal"
 	"runtime/pprof"
-	"sequence"
-	"sequence/logstash_grok"
-	"sequence/syslog_ng_pattern_db"
+	"gitlab.in2p3.fr/cc-in2p3-system/sequence"
+	"gitlab.in2p3.fr/cc-in2p3-system/sequence/logstash_grok"
+	"gitlab.in2p3.fr/cc-in2p3-system/sequence/syslog_ng_pattern_db"
 	"strings"
 	"time"
 )

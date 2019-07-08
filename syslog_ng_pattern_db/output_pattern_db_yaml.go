@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v3"
 	"os"
-	"sequence"
+	"gitlab.in2p3.fr/cc-in2p3-system/sequence"
 	"time"
 )
 

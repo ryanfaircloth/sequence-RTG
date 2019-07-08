@@ -3,8 +3,8 @@ package syslog_ng_pattern_db
 import (
 	"encoding/xml"
 	"fmt"
-	"sequence"
-	"sequence/models"
+	"gitlab.in2p3.fr/cc-in2p3-system/sequence"
+	"gitlab.in2p3.fr/cc-in2p3-system/sequence/models"
 	"strconv"
 )
 
