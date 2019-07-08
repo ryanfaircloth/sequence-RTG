@@ -8,8 +8,6 @@ build:
   stage: build
   script:
     - apt update
-    - ln -s /builds /go/src/gitlab.in2p3.fr
-    - cd /go/src/gitlab.in2p3.fr/cc-in2p3-system/sequence
     - sed -i '/^database =/c\database = "/var/lib/sequence/sequence.sdb"' sequence.toml
     - go get -d -v
     - go build --ldflags "-X gitlab.in2p3.fr/cc-in2p3-system/sequence.Version=$(git describe --always --tags HEAD)"
