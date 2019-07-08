@@ -8,16 +8,13 @@ build:
   stage: build
   script:
     - apt update
-    - ln -s /builds /go/src/gitlab.in2p3.fr
-    - cd /go/src/gitlab.in2p3.fr/cc-in2p3-system/sequence
-    - find . -name \*.go -exec sed -i 's:^\t"sequence:\t"gitlab.in2p3.fr/cc-in2p3-system/sequence:g' {} \;
     - sed -i '/^database =/c\database = "/var/lib/sequence/sequence.sdb"' sequence.toml
-    - go get -t -d -v
+    - go get -d -v
     - go build --ldflags "-X gitlab.in2p3.fr/cc-in2p3-system/sequence.Version=$(git describe --always --tags HEAD)"
     - 'go test || :'
     - sed -e "s/__CREDENTIALS__/gitlab-ci-token:${CI_BUILD_TOKEN}/" .gitlab-ci-godeps-config > ~/.gitconfig
     - cd $CI_PROJECT_DIR/cmd/sequence_with_database
-    - 'go get -t -d -v || :'
+    - go get -d -v
     - go build --ldflags "-X gitlab.in2p3.fr/cc-in2p3-system/sequence.Version=$(git describe --always --tags HEAD)" sequence_db_main.go
   artifacts:
     expire_in: '1 hour'

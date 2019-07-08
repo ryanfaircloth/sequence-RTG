@@ -19,7 +19,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math"
-	"sequence/models"
+	"gitlab.in2p3.fr/cc-in2p3-system/sequence/models"
 	"strconv"
 	"strings"
 	"sync"

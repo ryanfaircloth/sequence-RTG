@@ -35,7 +35,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/surge/glog"
-	"sequence"
+	"gitlab.in2p3.fr/cc-in2p3-system/sequence"
 )
 
 var (

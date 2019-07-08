@@ -2,7 +2,7 @@ package logstash_grok
 
 import (
 	"github.com/stretchr/testify/require"
-	"sequence"
+	"gitlab.in2p3.fr/cc-in2p3-system/sequence"
 	"testing"
 )
 

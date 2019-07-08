@@ -9,7 +9,7 @@ import (
 	"github.com/volatiletech/sqlboiler/boil"
 	"github.com/volatiletech/sqlboiler/queries"
 	"github.com/volatiletech/sqlboiler/queries/qm"
-	"sequence/models"
+	"gitlab.in2p3.fr/cc-in2p3-system/sequence/models"
 	"strconv"
 	"strings"
 	"time"
