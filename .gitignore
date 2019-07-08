@@ -36,3 +36,9 @@ _testmain.go
 
 *.sublime-project
 *.sublime-workspace
+cmd/sequence/sequence
+cmd/sequence_with_database/sequence_db_main
+cmd/sequence_with_database/sequence_with_database
+/sequence.sdb
+
+
