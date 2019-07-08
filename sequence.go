@@ -37,7 +37,7 @@ func (this Sequence) String() (string, []int) {
 	var start int
 	for i, token := range this {
 		var c string
-		if config.markSpaces && token.IsSpaceBefore && i != 0{
+		if config.markSpaces && token.IsSpaceBefore && i != 0 {
 			start += 1
 		}
 		if token.Tag != TagUnknown {
@@ -81,12 +81,12 @@ func (this Sequence) String() (string, []int) {
 		}
 		//if the spaces are marked on the token
 		//if we need one before isSpaceBefore will be set to true
-		if !config.markSpaces{
+		if !config.markSpaces {
 			p += c + " "
 			start += 1
-		}else if token.IsSpaceBefore{
+		} else if token.IsSpaceBefore {
 			p += " " + c
-		}else{
+		} else {
 			p += c
 		}
 		start += len(c)

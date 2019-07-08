@@ -21,7 +21,7 @@ type LogRecordCollection struct {
 func ReadLogRecord(fname string, format string, lr []LogRecord, batchLimit int) []LogRecord {
 	iscan, ifile, err := OpenInputFile(fname)
 	defer ifile.Close()
-	if err != nil{
+	if err != nil {
 		logger.HandleFatal(err.Error())
 	}
 	var r LogRecord
@@ -34,32 +34,32 @@ func ReadLogRecord(fname string, format string, lr []LogRecord, batchLimit int) 
 		if len(message) == 0 || message[0] == '#' {
 			continue
 		}
-		if format == "json"{
+		if format == "json" {
 			r = LogRecord{}
 			_ = json.Unmarshal([]byte(message), &r)
 			//check for an empty service and set it to none
 			//TODO: Review if these should be discarded too
-			if r.Service == ""{
+			if r.Service == "" {
 				r.Service = "none"
 			}
-		}else{
+		} else {
 			//the first field is the service, delimited by a space
 			k := strings.Fields(message)
 			s := k[0]
 			//we need to remove the service from the remaining message
 			i := len(s) + 1
-			if i < len(message){
+			if i < len(message) {
 				m := message[i:]
 				r = LogRecord{Service: s, Message: m}
 			}
 		}
 		//check for an empty message and discard
-		if len(strings.TrimSpace(r.Message)) == 0{
+		if len(strings.TrimSpace(r.Message)) == 0 {
 			continue
 		}
 		lr = append(lr, r)
 		count++
-		if batchLimit != 0 && count >= batchLimit{
+		if batchLimit != 0 && count >= batchLimit {
 			break
 		}
 	}
@@ -69,7 +69,7 @@ func ReadLogRecord(fname string, format string, lr []LogRecord, batchLimit int) 
 
 //if json, this method expects record in the format {"service": "service-name", message: "log message"}
 //eg {"service":"remctld","message":"error receiving initial token: unexpected end of file"}
-func ReadLogRecordAsMap(iscan *bufio.Scanner, format string, smap map[string] LogRecordCollection, batchLimit int) (int, map[string] LogRecordCollection, bool){
+func ReadLogRecordAsMap(iscan *bufio.Scanner, format string, smap map[string]LogRecordCollection, batchLimit int) (int, map[string]LogRecordCollection, bool) {
 	var lr LogRecordCollection
 	var count = 0
 	var exit = false
@@ -77,52 +77,52 @@ func ReadLogRecordAsMap(iscan *bufio.Scanner, format string, smap map[string] Lo
 	for iscan.Scan() {
 		message := iscan.Text()
 		//
-		if len(strings.TrimSpace(message)) == 0{
+		if len(strings.TrimSpace(message)) == 0 {
 			break
 		}
-		if strings.TrimSpace(message) == "exit"{
+		if strings.TrimSpace(message) == "exit" {
 			exit = true
 			break
 		}
 		if message[0] == '#' {
 			continue
 		}
-		if format == "json"{
+		if format == "json" {
 			r = LogRecord{}
 			_ = json.Unmarshal([]byte(message), &r)
 			//check for an empty service and set it to none
 			//TODO: Review if these should be discarded too
-			if r.Service == ""{
+			if r.Service == "" {
 				r.Service = "none"
 			}
-		}else{
+		} else {
 			//the first field is the service, delimited by a space
 			k := strings.Fields(message)
 			s := k[0]
 			//we need to remove the service from the remaining message
 			i := len(s) + 1
-			if i < len(message){
+			if i < len(message) {
 				m := message[i:]
 				r = LogRecord{Service: s, Message: m}
-			} else{
+			} else {
 				r = LogRecord{Service: s, Message: ""}
 			}
 		}
 		//check for an empty message and discard
-		if len(strings.TrimSpace(r.Message)) == 0{
+		if len(strings.TrimSpace(r.Message)) == 0 {
 			continue
 		}
 		//look for the service in the map
 		if val, ok := smap[r.Service]; ok {
 			val.Records = append(val.Records, r)
 			smap[r.Service] = val
-		} else{
-			lr = LogRecordCollection{Service:r.Service}
+		} else {
+			lr = LogRecordCollection{Service: r.Service}
 			lr.Records = append(lr.Records, r)
 			smap[r.Service] = lr
 		}
 		count++
-		if batchLimit != 0 && count >= batchLimit{
+		if batchLimit != 0 && count >= batchLimit {
 			break
 		}
 	}

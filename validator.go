@@ -10,12 +10,11 @@ import "strings"
 //the in-format is for supporting a feed that has the service and the message provided.
 //this can be either txt or json
 func ValidateInformat(informat string) string {
-	if (informat == "json") ||  (informat == "txt"){
+	if (informat == "json") || (informat == "txt") {
 		return ""
 	}
 	return informat + " is not a supported input format type, please select either json or txt"
 }
-
 
 //output format
 func ValidateOutformat(outformat string) string {
@@ -32,7 +31,7 @@ func ValidateOutformat(outformat string) string {
 //
 func ValidateOutFormatWithFile(outfile string, outformat string) string {
 	outformats := strings.Split(outformat, ",")
-	if len(outformats) > 1 && outfile == ""{
+	if len(outformats) > 1 && outfile == "" {
 		return "Stdout can only supported one output format type, please select only one."
 	}
 	return ""
@@ -40,17 +39,15 @@ func ValidateOutFormatWithFile(outfile string, outformat string) string {
 
 //for the create database
 func ValidateOutFile(outfile string) string {
-	if outfile == ""{
+	if outfile == "" {
 		return "Out file name must be specified for creating a database."
 	}
 	return ""
 }
 
 func ValidateBatchSize(batchsize int) string {
-	if batchsize < 0{
+	if batchsize < 0 {
 		return "Batch size must be zero or greater. Negative numbers are not permitted."
 	}
 	return ""
 }
-
-

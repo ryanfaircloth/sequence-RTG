@@ -84,16 +84,15 @@ type Analyzer struct {
 //pattern to be used as the starting block for
 //all conversions
 type AnalyzerResult struct {
-	Services models.ServiceSlice
-	PatternId string
-	Pattern string
-	TagPositions string
-	ExampleCount int
-	Examples []LogRecord
-	DateCreated time.Time
+	Services        models.ServiceSlice
+	PatternId       string
+	Pattern         string
+	TagPositions    string
+	ExampleCount    int
+	Examples        []LogRecord
+	DateCreated     time.Time
 	DateLastMatched time.Time
 }
-
 
 type analyzerNode struct {
 	Token
@@ -101,9 +100,9 @@ type analyzerNode struct {
 	index int
 	level int
 
-	isKey   bool
-	isSpaceBefore   bool
-	isValue bool
+	isKey         bool
+	isSpaceBefore bool
+	isValue       bool
 
 	leaf bool
 
@@ -143,30 +142,30 @@ func SplitToInt(s string, sep string) []int {
 	return b
 }
 
-func AddServiceToAnalyzerResult(this *AnalyzerResult, service string){
-	for _, s := range this.Services{
-		if s.Name == service{
+func AddServiceToAnalyzerResult(this *AnalyzerResult, service string) {
+	for _, s := range this.Services {
+		if s.Name == service {
 			return
 		}
 	}
-	s:= models.Service{ID:GenerateIDFromString(service), Name:service, DateCreated:time.Now()}
+	s := models.Service{ID: GenerateIDFromString(service), Name: service, DateCreated: time.Now()}
 	this.Services = append(this.Services, &s)
 }
 
-func AddExampleToAnalyzerResult(this *AnalyzerResult, lr LogRecord, threshold int){
-	if len(this.Examples) >= 3{
+func AddExampleToAnalyzerResult(this *AnalyzerResult, lr LogRecord, threshold int) {
+	if len(this.Examples) >= 3 {
 		//nothing to here
 		return
 	}
 	var found = false
 	//check it is unique and add, else don't
-	for _, ex := range this.Examples{
-		if lr.Message == ex.Message{
+	for _, ex := range this.Examples {
+		if lr.Message == ex.Message {
 			found = true
 			break
 		}
 	}
-	if !found{
+	if !found {
 		this.Examples = append(this.Examples, lr)
 	}
 }
@@ -174,28 +173,28 @@ func AddExampleToAnalyzerResult(this *AnalyzerResult, lr LogRecord, threshold in
 //this is so that the same pattern will have the same id
 //in all files and the id is reproducible
 //returns a sha1 hash as the id
-func GenerateIDFromString(pattern string) string{
+func GenerateIDFromString(pattern string) string {
 	h := sha1.New()
 	h.Write([]byte(pattern))
-	sha := h.Sum(nil)  // "sha" is uint8 type, encoded in base16
-	shaStr := hex.EncodeToString(sha)  // String representation
+	sha := h.Sum(nil)                 // "sha" is uint8 type, encoded in base16
+	shaStr := hex.EncodeToString(sha) // String representation
 	return shaStr
 }
 
 func GetThreshold(numTotal int) int {
 	t := config.matchThresholdType
-	if t == "count"{
+	if t == "count" {
 		tr, err := strconv.Atoi(config.matchThresholdValue)
-		if err != nil{
+		if err != nil {
 			return 0
-		}else{
+		} else {
 			return tr
 		}
-	}else{
+	} else {
 		f, err := strconv.ParseFloat(config.matchThresholdValue, 64)
-		if err != nil{
+		if err != nil {
 			return 0
-		}else{
+		} else {
 			total := float64(numTotal)
 			t := f * total
 			tr := int(math.Floor(t))
@@ -208,7 +207,7 @@ func GetThreshold(numTotal int) int {
 func GetSaveThreshold() int {
 	//check that the pattern has reached the save threshold example limit
 	tr, err := strconv.Atoi(config.saveThreshold)
-	if err != nil{
+	if err != nil {
 		logger.HandleError("Save Threshold value cannot be parsed to an integer. Setting it to 0")
 		tr = 0
 	}
@@ -276,7 +275,6 @@ func (this *Analyzer) Add(seq Sequence) error {
 	//therefore removing from here, it is done later in the analysis also
 	//seq = markSequenceKV(seq)
 
-
 	// Add enough levels to support the depth of the token list
 	if l := len(seq) - len(this.levels) + 1; l > 0 {
 		newlevels := make([][]*analyzerNode, l)
@@ -324,7 +322,7 @@ func (this *Analyzer) Add(seq Sequence) error {
 				this.levels[i][foundNode.index] = foundNode
 			}
 
-		case token.Type != TokenUnknown && token.Type != TokenLiteral :
+		case token.Type != TokenUnknown && token.Type != TokenLiteral:
 			// If this is a known token type but it's not a literal or alpha only, it means this
 			// token could contain different values. In this case, we add it to the
 			// list of token types.
@@ -342,7 +340,7 @@ func (this *Analyzer) Add(seq Sequence) error {
 			// means this is some type of string we parsed from the message.
 			//if we are marking spaces then " literal" and "literal" need to be stored as different tokens
 			space := ""
-			if token.IsSpaceBefore{
+			if token.IsSpaceBefore {
 				space = " "
 			}
 			// If we have gotten here, it means we found a string that we cannot
@@ -364,7 +362,7 @@ func (this *Analyzer) Add(seq Sequence) error {
 				foundNode.Tag = TagUnknown
 				//when adding to this map we must add the space before if it is marked true,
 				// or we get incorrect patterns
-				this.litmaps[i][space + foundNode.Value] = foundNode.index
+				this.litmaps[i][space+foundNode.Value] = foundNode.index
 				foundNode.isKey = token.isKey
 				foundNode.isSpaceBefore = token.IsSpaceBefore
 			}
@@ -722,7 +720,7 @@ func (this *Analyzer) analyzeMessage(seq Sequence) ([]*analyzerNode, error) {
 		// be added to the stack for visiting.
 		for i, e := cur.node.children.NextSet(0); e && i < uint(len(this.levels[cur.node.level+1])); i, e = cur.node.children.NextSet(i + 1) {
 
-             node := this.levels[cur.node.level+1][i]
+			node := this.levels[cur.node.level+1][i]
 
 			if node != nil {
 				// Anything other than these 3 conditions are considered no match.
@@ -736,7 +734,7 @@ func (this *Analyzer) analyzeMessage(seq Sequence) ([]*analyzerNode, error) {
 					toVisit = append(toVisit, stackAnalyzerNode{node, cur.level + 1, cur.score + fullMatchWeight})
 
 				case node.Type == TokenString && token.Type == TokenLiteral &&
-					(len(token.Value) != 1 || (len(token.Value) == 1 && unicode.IsLetter(rune(token.Value[0])))|| token.Value == "/"):
+					(len(token.Value) != 1 || (len(token.Value) == 1 && unicode.IsLetter(rune(token.Value[0]))) || token.Value == "/"):
 					// If the node is a string and token is a non-one-character literal,
 					// then it's considered a partial match, since a literal is
 					// technically a string.
@@ -807,7 +805,7 @@ func markSequenceKV(seq Sequence) Sequence {
 
 			//sometimes there are double demlimiters or double equals signs
 			for vi < l && seq[vi].Type == TokenLiteral &&
-				(seq[vi].Value == "\"" || seq[vi].Value == "'" || seq[vi].Value == "<" || seq[vi].Value == "[" || seq[vi].Value == "{" || seq[vi].Value == "="){
+				(seq[vi].Value == "\"" || seq[vi].Value == "'" || seq[vi].Value == "<" || seq[vi].Value == "[" || seq[vi].Value == "{" || seq[vi].Value == "=") {
 				vi = vi + 1
 			}
 
@@ -827,7 +825,7 @@ func markSequenceKV(seq Sequence) Sequence {
 			// if the key index is greater or equal to 0, which means there's
 			// a token before the "=", if it's a literal or id, then it's very likely
 			// a key, so let's mark that
-			if ki >= 0 && (seq[ki].Type == TokenLiteral ||  seq[ki].Type == TokenString ) {
+			if ki >= 0 && (seq[ki].Type == TokenLiteral || seq[ki].Type == TokenString) {
 				if seq[ki].Type == TokenString {
 					seq[ki].Type = TokenLiteral
 				}
@@ -878,7 +876,7 @@ func analyzeSequence(seq Sequence) Sequence {
 			}
 
 			//last of all set any marked literals containing percent values to strings
-			if seq[i].Special == "%" && seq[i].Type == TokenLiteral{
+			if seq[i].Special == "%" && seq[i].Type == TokenLiteral {
 				seq[i].Type = TokenString
 			}
 		}
@@ -932,7 +930,7 @@ func analyzeSequence(seq Sequence) Sequence {
 
 		// RFC5424 header format
 		// message time
-		if seq[1].Tag != TagRegExTime{
+		if seq[1].Tag != TagRegExTime {
 			seq[1].Tag = TagMsgTime
 		}
 		seq[1].Type = seq[1].Tag.TokenType()
@@ -971,7 +969,7 @@ func analyzeSequence(seq Sequence) Sequence {
 
 		// RFC3164 format 1 - "Oct 11 22:14:15 mymachine su: ..."
 		// message time
-		if seq[0].Tag != TagRegExTime{
+		if seq[0].Tag != TagRegExTime {
 			seq[0].Tag = TagMsgTime
 		}
 		seq[0].Type = seq[0].Tag.TokenType()
@@ -1003,7 +1001,7 @@ func analyzeSequence(seq Sequence) Sequence {
 
 		// RFC3164 format 2 - "Aug 24 05:34:00 CST 1987 mymachine myproc[10]: ..."
 		// message time
-		if seq[0].Tag != TagRegExTime{
+		if seq[0].Tag != TagRegExTime {
 			seq[0].Tag = TagMsgTime
 		}
 		seq[0].Type = seq[0].Tag.TokenType()
@@ -1036,7 +1034,7 @@ func analyzeSequence(seq Sequence) Sequence {
 
 		// "jan 12 06:49:56 irc last message repeated 6 times"
 		// message time
-		if seq[0].Tag != TagRegExTime{
+		if seq[0].Tag != TagRegExTime {
 			seq[0].Tag = TagMsgTime
 		}
 		seq[0].Type = seq[0].Tag.TokenType()
@@ -1185,7 +1183,7 @@ LOOP:
 					seq[i].Type = f.TokenType()
 					fexists[f] = true
 				}
-			} else{
+			} else {
 				pw := porter2.Stem(tv)
 				if f, ok := keymaps.keywords[pw]; ok {
 					if !fexists[f] {

@@ -61,18 +61,18 @@ const (
 	hexColon
 )
 
-func isValidTokenStartPosition( start int, pos []int) bool {
-	for _, p := range pos{
-		if p == start{
+func isValidTokenStartPosition(start int, pos []int) bool {
+	for _, p := range pos {
+		if p == start {
 			return true
 		}
 	}
 	return false
 }
 
-func getNextTokenStartPosition( start int, pos []int) int {
-	for _, p := range pos{
-		if p > start{
+func getNextTokenStartPosition(start int, pos []int) int {
+	for _, p := range pos {
+		if p > start {
 			return p - start
 		}
 	}
@@ -84,13 +84,13 @@ func (this *Message) Tokenize(isParse bool, pos []int) (Token, error) {
 	var nt = 0
 	if this.state.start < this.state.end {
 
-		if !config.markSpaces{
+		if !config.markSpaces {
 			// Number of spaces skipped
 			nss := this.skipSpace(this.Data[this.state.start:])
 			this.state.start += nss
-		}else{
+		} else {
 			//just return the space if it is a space
-			if this.Data[this.state.start] == ' '{
+			if this.Data[this.state.start] == ' ' {
 				tok := Token{
 					Tag:   TagUnknown,
 					Type:  TokenLiteral,
@@ -105,7 +105,7 @@ func (this *Message) Tokenize(isParse bool, pos []int) (Token, error) {
 		// at least 2 chars left, and the first is a '%'
 		// Don't do this if not in parse mode, picks up things that it shouldn't
 		if isParse && len(pos) > 0 {
-			if this.state.start+1 < this.state.end && this.Data[this.state.start] == '%' && (isValidTokenStartPosition(this.state.start, pos) && config.useDatabase){
+			if this.state.start+1 < this.state.end && this.Data[this.state.start] == '%' && (isValidTokenStartPosition(this.state.start, pos) && config.useDatabase) {
 				var i int
 				var r rune
 
@@ -126,11 +126,10 @@ func (this *Message) Tokenize(isParse bool, pos []int) (Token, error) {
 
 					return tok, nil
 				}
-			} else{
+			} else {
 				nt = getNextTokenStartPosition(this.state.start, pos)
 			}
 		}
-
 
 		l, tok, err := this.scanToken(this.Data[this.state.start:], nt)
 		if err != nil {
@@ -143,7 +142,7 @@ func (this *Message) Tokenize(isParse bool, pos []int) (Token, error) {
 
 		// remove any trailing spaces
 		s := 0 // trail space count
-		if !config.markSpaces{
+		if !config.markSpaces {
 			for this.Data[this.state.start+l-1] == ' ' && l > 0 {
 				l--
 				s++
@@ -159,16 +158,16 @@ func (this *Message) Tokenize(isParse bool, pos []int) (Token, error) {
 
 		//this is for dealing with multiline strings and setting everything after the \n to a single token
 		//these can be super long so I have truncated it at 50 chars for the value as it is not really used.
-		if tok.Value == "\n"{
+		if tok.Value == "\n" {
 			l = len(this.Data[this.state.start:])
-			if l > 15{
-				tok.Value = this.Data[this.state.start:this.state.start+15]
-			}else{
+			if l > 15 {
+				tok.Value = this.Data[this.state.start : this.state.start+15]
+			} else {
 				tok.Value = this.Data[this.state.start:]
 			}
 			this.state.start += l
 			tok.Type = TokenMultiLine
-		}else if strings.Contains(tok.Value, "\n") && this.state.prevToken.Value != "\""{
+		} else if strings.Contains(tok.Value, "\n") && this.state.prevToken.Value != "\"" {
 			tok.Value = this.Data[this.state.start:]
 			this.state.start += len(tok.Value)
 			tok.Type = TokenMultiLine
@@ -201,7 +200,7 @@ func (this *Message) scanToken(data string, nt int) (int, Token, error) {
 		tokenStop, timeStop, hexStop, hexValid bool
 		timeLen, hexLen, tokenLen              int
 		l                                      = len(data)
-		tagType								   = TagUnknown
+		tagType                                = TagUnknown
 	)
 
 	this.resetTokenStates()
@@ -222,13 +221,13 @@ func (this *Message) scanToken(data string, nt int) (int, Token, error) {
 		//we pass as a string as converting to a rune is expensive
 		//the "step" functions will convert if needed.
 		var s = ""
-		if i < len(data)-1{
-			s = data[i+1:i+2]
+		if i < len(data)-1 {
+			s = data[i+1 : i+2]
 		}
 
 		//this is for scanning patterns we break if we hit a know pattern position
 		//as the % char is a known literal it has to be forcibly broken here
-		if i > 0 && i == nt{
+		if i > 0 && i == nt {
 			tokenStop = true
 			hexStop = true
 			timeStop = true
@@ -252,10 +251,10 @@ func (this *Message) scanToken(data string, nt int) (int, Token, error) {
 		if !timeStop {
 			if tnode, timeStop = timeStep(r, tnode); timeStop == true {
 				if timeLen > 0 {
-					if tnode.regextype != ""{
+					if tnode.regextype != "" {
 						tagType = TagRegExTime
 					}
-					return timeLen, Token{Type:TokenTime, Tag:tagType, Special:tnode.regextype}, nil
+					return timeLen, Token{Type: TokenTime, Tag: tagType, Special: tnode.regextype}, nil
 				}
 			} else if tnode.final == TokenTime {
 				if i+1 > timeLen {
@@ -268,23 +267,23 @@ func (this *Message) scanToken(data string, nt int) (int, Token, error) {
 		// This means either we found something, or we have exhausted the string
 		if (tokenStop && timeStop && hexStop) || i == l-1 {
 			if timeLen > 0 {
-				if tnode.regextype != ""{
+				if tnode.regextype != "" {
 					tagType = TagRegExTime
 				}
-				return timeLen, Token{Type:TokenTime, Tag:tagType, Special:tnode.regextype}, nil
+				return timeLen, Token{Type: TokenTime, Tag: tagType, Special: tnode.regextype}, nil
 			} else if hexLen > 0 && this.state.hexColons > 1 {
 				if this.state.hexColons == 5 && this.state.hexMaxSuccColons == 1 {
-					return hexLen, Token{Type:TokenMac, Tag:tagType}, nil
+					return hexLen, Token{Type: TokenMac, Tag: tagType}, nil
 				} else if this.state.hexSuccColonsSeries == 1 ||
 					(this.state.hexColons == 7 && this.state.hexSuccColonsSeries == 0) {
 
-					return hexLen, Token{Type:TokenIPv6, Tag:tagType}, nil
+					return hexLen, Token{Type: TokenIPv6, Tag: tagType}, nil
 				} else {
 					//sometimes adds a space on the end
-					if r == ' '{
-						return hexLen-1, Token{Type:TokenLiteral, Tag:tagType}, nil
-					}else{
-						return hexLen, Token{Type:TokenLiteral, Tag:tagType}, nil
+					if r == ' ' {
+						return hexLen - 1, Token{Type: TokenLiteral, Tag: tagType}, nil
+					} else {
+						return hexLen, Token{Type: TokenLiteral, Tag: tagType}, nil
 					}
 
 				}
@@ -295,7 +294,7 @@ func (this *Message) scanToken(data string, nt int) (int, Token, error) {
 			// a word, it cannot be space since we skipped all space. This means it
 			// is a single character literal, so return that.
 			if tokenLen == 0 {
-				return 1, Token{Type:TokenLiteral, Tag:tagType}, nil
+				return 1, Token{Type: TokenLiteral, Tag: tagType}, nil
 			} else {
 				switch this.state.tokenType {
 				case TokenIPv4:
@@ -310,12 +309,12 @@ func (this *Message) scanToken(data string, nt int) (int, Token, error) {
 					}
 				}
 
-				return tokenLen, Token{Type:this.state.tokenType, Tag:tagType}, nil
+				return tokenLen, Token{Type: this.state.tokenType, Tag: tagType}, nil
 			}
 		}
 	}
 
-	return len(data), Token{Type:this.state.tokenType, Tag:tagType}, nil
+	return len(data), Token{Type: this.state.tokenType, Tag: tagType}, nil
 }
 
 func (this *Message) tokenStep(i int, r rune, nr string) bool {
@@ -324,7 +323,7 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 	case TokenUnknown:
 		switch r {
 		case 'h', 'H':
-			if nr == "t" || nr == "T"{
+			if nr == "t" || nr == "T" {
 				this.state.tokenType = TokenURI
 			}
 		case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
@@ -334,7 +333,7 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 			if this.state.prevToken.Type == TokenIPv4 {
 				this.state.tokenType = TokenLiteral
 				this.state.tokenStop = true
-			}else{
+			} else {
 				this.state.tokenType = TokenLiteral
 			}
 
@@ -370,7 +369,7 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 				this.state.tokenStop = true
 				this.state.inquote = true
 				this.state.chquote = r
-			}else{
+			} else {
 				this.state.tokenStop = false
 				this.state.tokenType = TokenLiteral
 			}
@@ -388,7 +387,7 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 		case '\\':
 			this.state.tokenType = TokenLiteral
 
-		case '?','&':
+		case '?', '&':
 			this.state.tokenType = TokenLiteral
 			this.state.tokenStop = true
 
@@ -486,7 +485,7 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 	case TokenLiteral:
 		if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) || (!this.state.inquote && r == '\'') {
 			//keep going
-		}else{
+		} else {
 			this.state.tokenStop = true
 		}
 		//glog.Debugf("tokenStop=%t, r=%c", this.state.tokenStop, r)
@@ -607,7 +606,7 @@ func (this *Message) hexStep(i int, r rune, nr string) (bool, bool) {
 			// for the special case of "::" which is valid and represents an
 			// unspecified ip, need to check for space afterwards otherwise not
 			// valid ipv6
-			if i == 1 && (nr == " " || nr == "'"){
+			if i == 1 && (nr == " " || nr == "'") {
 				return true, false
 			}
 
@@ -692,7 +691,7 @@ func isLiteral(r rune) bool {
 	case '+', '-', '_', '\\', '%', '*', '@', '$', '.', '/', '~':
 		return true
 	//french letters
-	case 'é', 'è', 'ê', 'ë','ù', 'œ', 'ô', 'ÿ', 'â', 'æ', 'ï', 'ç', 'û', 'ü', 'à', 'î', 'Ù','Û','Ü','Ÿ','À','Â','Æ','Ç','É','È','Ê','Ë','Ï','Î','Ô','Œ':
+	case 'é', 'è', 'ê', 'ë', 'ù', 'œ', 'ô', 'ÿ', 'â', 'æ', 'ï', 'ç', 'û', 'ü', 'à', 'î', 'Ù', 'Û', 'Ü', 'Ÿ', 'À', 'Â', 'Æ', 'Ç', 'É', 'È', 'Ê', 'Ë', 'Ï', 'Î', 'Ô', 'Œ':
 		return true
 	}
 	return 'a' <= r && r <= 'z' || 'A' <= r && r <= 'Z' || r >= '0' && r <= '9'

@@ -14,21 +14,21 @@ import (
 )
 
 var (
-	cfgfile    string
-	infile     string
-	outfile    string
-	logfile    string
-	loglevel	string
-	errorfile   string
-	outsystem  string
-	outformat  string
-	informat  string
-	patfile    string
-	cpuprofile string
-	workers    int
-	format     string
-	batchsize  int
-	threshold  int
+	cfgfile        string
+	infile         string
+	outfile        string
+	logfile        string
+	loglevel       string
+	errorfile      string
+	outsystem      string
+	outformat      string
+	informat       string
+	patfile        string
+	cpuprofile     string
+	workers        int
+	format         string
+	batchsize      int
+	threshold      int
 	standardLogger *sequence.StandardLogger
 
 	quit chan struct{}
@@ -71,18 +71,18 @@ func profile() {
 	}()
 }
 
-func start(commandType string){
+func start(commandType string) {
 	standardLogger = sequence.NewLogger(logfile, loglevel)
 	//if errorfile != ""{
-		//ofile, err := sequence.OpenOutputFile(errorfile)
-		//if err == nil {
-			//err = sequence.RedirectStderr(ofile)
-			//if err != nil{
-				//standardLogger.HandleFatal(fmt.Sprintf("Failed to redirect stderr to file: %v", err))
-			//}
-		//}else{
-			//standardLogger.HandleFatal(fmt.Sprintf("Error opening file for system errors: %v", err))
-		//}
+	//ofile, err := sequence.OpenOutputFile(errorfile)
+	//if err == nil {
+	//err = sequence.RedirectStderr(ofile)
+	//if err != nil{
+	//standardLogger.HandleFatal(fmt.Sprintf("Failed to redirect stderr to file: %v", err))
+	//}
+	//}else{
+	//standardLogger.HandleFatal(fmt.Sprintf("Error opening file for system errors: %v", err))
+	//}
 	//}
 	standardLogger.HandleInfo(fmt.Sprintf("Starting up: method called %s", commandType))
 	readConfig()
@@ -95,12 +95,12 @@ func scan(cmd *cobra.Command, args []string) {
 	if infile != "" {
 		scanner := sequence.NewScanner()
 		iscan, ifile, err := sequence.OpenInputFile(infile)
-		if err != nil{
+		if err != nil {
 			standardLogger.HandleFatal(err.Error())
 		}
 		defer ifile.Close()
 
-		ofile,_ := sequence.OpenOutputFile(outfile)
+		ofile, _ := sequence.OpenOutputFile(outfile)
 		defer ofile.Close()
 
 		lrMap := make(map[string]sequence.LogRecordCollection)
@@ -116,7 +116,6 @@ func scan(cmd *cobra.Command, args []string) {
 		standardLogger.HandleFatal("Invalid input file or string specified")
 	}
 }
-
 
 func analyze(cmd *cobra.Command, args []string) {
 	start("analyze")
@@ -164,7 +163,7 @@ func analyze(cmd *cobra.Command, args []string) {
 	processed := 0
 
 	for _, l := range lr {
-		seq, err:= sequence.ScanMessage(scanner, l.Message, format)
+		seq, err := sequence.ScanMessage(scanner, l.Message, format)
 
 		pseq, err := parser.Parse(seq)
 		if err == nil {
@@ -206,13 +205,13 @@ func analyze(cmd *cobra.Command, args []string) {
 	standardLogger.AnalyzeInfo(processed, len(amap)+len(pmap), new, saved, err_count, time.Since(startTime), time.Since(startTime))
 }
 
-func createdatabase(cmd *cobra.Command, args []string){
+func createdatabase(cmd *cobra.Command, args []string) {
 	start("createdatabase")
 	sequence.CreateDatabase(outfile)
 	standardLogger.HandleInfo(fmt.Sprintf("Database created successfully"))
 }
 
-func updatedatabase(cmd *cobra.Command, args []string){
+func updatedatabase(cmd *cobra.Command, args []string) {
 	start("updatedatabase")
 	sequence.UpdateDatabase()
 	standardLogger.HandleInfo(fmt.Sprintf("Database updated successfully"))
@@ -224,12 +223,11 @@ func purgepatterns(cmd *cobra.Command, args []string) {
 	standardLogger.HandleInfo(fmt.Sprintf("%d patterns and their examples removed from the database", rf))
 }
 
-
 func analyzebyservice(cmd *cobra.Command, args []string) {
 	start("analyzebyservice")
 	scanner := sequence.NewScanner()
 	iscan, ifile, err := sequence.OpenInputFile(infile)
-	if err != nil{
+	if err != nil {
 		standardLogger.HandleFatal(err.Error())
 	}
 	defer ifile.Close()
@@ -239,7 +237,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 		startTime := time.Now()
 		//We load the file completely
 		total, lrMap, exit := sequence.ReadLogRecordAsMap(iscan, informat, lrMap, batchsize)
-		if exit{
+		if exit {
 			break
 		}
 		standardLogger.HandleInfo(fmt.Sprintf("Read in %d records successfully, starting analysis..", total))
@@ -314,38 +312,38 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 		}
 		anTime := time.Since(anStartTime)
 		standardLogger.HandleInfo(fmt.Sprintf("Analysed in: %s\n", anTime))
-		if sequence.GetUseDatabase(){
+		if sequence.GetUseDatabase() {
 			standardLogger.HandleDebug("Starting save to the database.")
 			sequence.SaveExistingToDatabase(pmap)
 			new, saved := sequence.SaveToDatabase(amap)
 			standardLogger.HandleDebug("Finished save to the database.")
 			standardLogger.AnalyzeInfo(processed, len(amap)+len(pmap), new, saved, err_count, time.Since(startTime), anTime)
-		}else{
+		} else {
 			//output directly to the files
 			//merge pmap and amap
 			//syslog-ng patterndb
 			fileTime := time.Now()
 			cmap := amap
-			for k, v := range pmap{
+			for k, v := range pmap {
 				cmap[k] = v
 			}
-			if outsystem == "patterndb"{
+			if outsystem == "patterndb" {
 				processed, top5, err := syslog_ng_pattern_db.OutputToFiles(outformat, outfile, cfgfile, cmap)
-				if err != nil{
+				if err != nil {
 					standardLogger.HandleError(err.Error())
 				} else {
-					standardLogger.OutputToFileInfo(processed, top5, time.Since(fileTime) )
+					standardLogger.OutputToFileInfo(processed, top5, time.Since(fileTime))
 				}
-			}else if outsystem == "grok"{
+			} else if outsystem == "grok" {
 				processed, top5, err := logstash_grok.OutputToFiles(outfile, cfgfile)
-				if err != nil{
+				if err != nil {
 					standardLogger.HandleError(err.Error())
 				} else {
-					standardLogger.OutputToFileInfo(processed, top5, time.Since(fileTime) )
+					standardLogger.OutputToFileInfo(processed, top5, time.Since(fileTime))
 				}
 			}
 			//always output to a txt file for parsing later
-			oFile, _:= sequence.OpenOutputFile("C:\\data\\debug.txt")
+			oFile, _ := sequence.OpenOutputFile("C:\\data\\debug.txt")
 			defer oFile.Close()
 			for pat, stat := range amap {
 				fmt.Fprintf(oFile, "%s\n# %d log messages matched\n# %s\n\n", pat, stat.ExampleCount, stat.Examples[0].Message)
@@ -358,15 +356,14 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 	}
 }
 
-
 func outputforpatterndb(cmd *cobra.Command, args []string) {
 	start("outputtofile")
 	startTime := time.Now()
 	processed, top5, err := syslog_ng_pattern_db.OutputToFiles(outformat, outfile, cfgfile, nil)
-	if err != nil{
+	if err != nil {
 		standardLogger.HandleError(err.Error())
 	} else {
-		standardLogger.OutputToFileInfo(processed, top5, time.Since(startTime) )
+		standardLogger.OutputToFileInfo(processed, top5, time.Since(startTime))
 	}
 }
 
@@ -374,10 +371,10 @@ func outputforgrok(cmd *cobra.Command, args []string) {
 	start("outputtofile")
 	startTime := time.Now()
 	processed, top5, err := logstash_grok.OutputToFiles(outfile, cfgfile)
-	if err != nil{
+	if err != nil {
 		standardLogger.HandleError(err.Error())
 	} else {
-		standardLogger.OutputToFileInfo(processed, top5, time.Since(startTime) )
+		standardLogger.OutputToFileInfo(processed, top5, time.Since(startTime))
 	}
 }
 
@@ -448,7 +445,7 @@ func validateInputs(commandType string) {
 		}
 	}
 
-	if errors != ""{
+	if errors != "" {
 		standardLogger.HandleFatal(errors)
 	}
 }

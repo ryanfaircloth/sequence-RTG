@@ -16,8 +16,8 @@ package sequence
 
 import (
 	"fmt"
-	"testing"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 var (
@@ -28,7 +28,6 @@ var (
 			"Jan 12 06:49:42 irc sshd[7034]: Failed password for root from 218.161.81.238 port 4228 ssh2",
 			"%regextime:1% %apphost% %appname% [ %sessionid% ] : %status% %method% for %srcuser% from %srcip% port %srcport% ssh2",
 			"%regextime:1% %apphost% %appname%[%sessionid%]: %status% %method% for %srcuser% from %srcip% port %srcport% ssh2",
-
 		},
 		{
 			"Jan 12 06:49:42 irc sshd[7034]: Accepted password for root from 218.161.81.238 port 4228 ssh2",
@@ -97,7 +96,7 @@ func TestAnalyzerMergeNodes(t *testing.T) {
 		node := atree.levels[l][i]
 
 		//added this to match the case the tag is known
-		if node != nil && node.Tag != TagUnknown{
+		if node != nil && node.Tag != TagUnknown {
 			require.NotNil(t, node, fmt.Sprintf("Expected: levels[%d][%d] != nil, Actual: got nil", l, i))
 		} else {
 			require.Nil(t, node, fmt.Sprintf("Expected: levels[%d][%d] == nil, Actual: got non-nil %s", l, i, node))
@@ -232,9 +231,9 @@ func TestAnalyzerMatchPatterns(t *testing.T) {
 		seq, err = atree.Analyze(seq)
 		require.NoError(t, err, tc.msg)
 		r, _ := seq.String()
-		if config.markSpaces{
+		if config.markSpaces {
 			require.Equal(t, tc.patNoSp, r, tc.msg+"\n"+seq.PrintTokens())
-		}else{
+		} else {
 			require.Equal(t, tc.pat, r, tc.msg+"\n"+seq.PrintTokens())
 		}
 
@@ -246,9 +245,9 @@ func TestAnalyzerMatchPatterns(t *testing.T) {
 		seq, err = atree.Analyze(seq)
 		require.NoError(t, err, tc.msg)
 		r, _ := seq.String()
-		if config.markSpaces{
+		if config.markSpaces {
 			require.Equal(t, tc.patNoSp, r, tc.msg+"\n"+seq.PrintTokens())
-		}else {
+		} else {
 			require.Equal(t, tc.pat, r, tc.msg+"\n"+seq.PrintTokens())
 		}
 	}

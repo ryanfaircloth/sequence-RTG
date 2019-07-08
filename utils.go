@@ -13,7 +13,7 @@ func ScanMessage(scanner *Scanner, data string, format string) (Sequence, error)
 		pos []int
 	)
 
-	if testJson(data){
+	if testJson(data) {
 		seq, err = scanner.ScanJson_Preserve(data)
 	} else {
 		switch format {
@@ -27,17 +27,16 @@ func ScanMessage(scanner *Scanner, data string, format string) (Sequence, error)
 	return seq, err
 }
 
-func testJson(data string)bool{
+func testJson(data string) bool {
 	data = strings.TrimSpace(data)
 	var js interface{}
-	if data[:1] == "{" && data[len(data)-1:] == "}"{
+	if data[:1] == "{" && data[len(data)-1:] == "}" {
 		//try to marshall the json
 		x := json.Unmarshal([]byte(data), &js)
 		return x == nil
 	}
 	return false
 }
-
 
 func BuildParser(patfile string) *Parser {
 	parser := NewParser()
@@ -61,7 +60,7 @@ func BuildParser(patfile string) *Parser {
 
 	for _, file := range files {
 		// Open pattern file
-		pscan, pfile, err:= OpenInputFile(file)
+		pscan, pfile, err := OpenInputFile(file)
 		defer pfile.Close()
 		if err != nil {
 			logger.HandleFatal(err.Error())

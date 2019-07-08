@@ -135,19 +135,18 @@ func (this *Scanner) Scan(s string, isParse bool, pos []int) (Sequence, error) {
 	for tok, err = this.msg.Tokenize(isParse, pos); err == nil; tok, err = this.msg.Tokenize(isParse, pos) {
 
 		//ignore space tokens but mark the token before as needing a space
-		if config.markSpaces{
-			if tok.Value == " "{
+		if config.markSpaces {
+			if tok.Value == " " {
 				spaceBefore = true
 				continue
-			} else{
+			} else {
 				tok.IsSpaceBefore = spaceBefore
 				spaceBefore = false
 				this.insertToken(tok)
 			}
-		}else{
+		} else {
 			this.insertToken(tok)
 		}
-
 
 		// special case for %r, or request, token in apache logs, which is comprised
 		// of method, url, and protocol like "GET http://blah HTTP/1.0"
@@ -214,7 +213,6 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 	this.msg.reset()
 	this.seq = this.seq[:0]
 
-
 	var (
 		err error
 		tok Token
@@ -233,10 +231,9 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 		// glog.Debugln(arrs)
 
 		//ignore space tokens completely for now, unsure if needed to be marked for json
-		if config.markSpaces && tok.Value == " "{
+		if config.markSpaces && tok.Value == " " {
 			continue
 		}
-
 
 		switch state {
 		case jsonStart:
@@ -532,11 +529,11 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 	for tok, err = this.msg.Tokenize(false, pos); err == nil; tok, err = this.msg.Tokenize(false, pos) {
 
 		//ignore space tokens but mark the token before as needing a space
-		if config.markSpaces{
-			if tok.Value == " "{
+		if config.markSpaces {
+			if tok.Value == " " {
 				spaceBefore = true
 				continue
-			} else{
+			} else {
 				tok.IsSpaceBefore = spaceBefore
 				spaceBefore = false
 			}

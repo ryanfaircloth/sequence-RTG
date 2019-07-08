@@ -6,9 +6,9 @@ import (
 	"testing"
 )
 
-var(
+var (
 	tagtests = []struct {
-		data  string
+		data   string
 		result string
 	}{
 		{"%object% ", "@ESTRING:object:@"},
@@ -28,13 +28,11 @@ var(
 	}
 )
 
-func loadConfigs(){
+func loadConfigs() {
 	file := "./sequence.toml"
 	readConfig(file)
 	sequence.ReadConfig(file)
 }
-
-
 
 func TestTagTransformation(t *testing.T) {
 	loadConfigs()

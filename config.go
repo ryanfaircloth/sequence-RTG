@@ -30,21 +30,21 @@ var (
 		//keep the spaces during tokenization
 		//set to true if spacing matters for your output
 		//format
-  		markSpaces bool
-		matchThresholdType     string
-		matchThresholdValue    string
-		saveThreshold		   string
-		inclBelThresholdRecs   bool
-		database			   string
-		useDatabase			   bool
-		createDbCommands	 []string
-		updateDbCommands	 []string
+		markSpaces           bool
+		matchThresholdType   string
+		matchThresholdValue  string
+		saveThreshold        string
+		inclBelThresholdRecs bool
+		database             string
+		useDatabase          bool
+		createDbCommands     []string
+		updateDbCommands     []string
 	}
 
 	timesettings struct {
 		formats map[int][]string
-		regex  map[string]string
-		grok  map[string]string
+		regex   map[string]string
+		grok    map[string]string
 	}
 
 	keymaps struct {
@@ -55,7 +55,7 @@ var (
 	TagTypesCount   int
 	TokenTypesCount = int(token__END__) + 1
 	allTypesCount   int
-	logger *StandardLogger
+	logger          *StandardLogger
 )
 
 func ReadConfig(file string) error {
@@ -75,7 +75,7 @@ func ReadConfig(file string) error {
 		Timesettings struct {
 			Formats map[string][]string
 			Regex   map[string]string
-			Grok  map[string]string
+			Grok    map[string]string
 		}
 
 		Analyzer struct {
@@ -167,12 +167,12 @@ func ReadConfig(file string) error {
 	return nil
 }
 
-func GetTimeSettingsRegExValue(id string) (string, bool){
+func GetTimeSettingsRegExValue(id string) (string, bool) {
 	f, ok := timesettings.regex[id]
 	return f, ok
 }
 
-func GetTimeSettingsGrokValue(id string) (string, bool){
+func GetTimeSettingsGrokValue(id string) (string, bool) {
 	f, ok := timesettings.grok[id]
 	return f, ok
 }
@@ -181,7 +181,7 @@ func SetLogger(log *StandardLogger) {
 	logger = log
 }
 
-func GetUseDatabase() bool{
+func GetUseDatabase() bool {
 	return config.useDatabase
 }
 
@@ -295,54 +295,54 @@ func predefineAnalyzerTags(f string, t TagType) {
 var (
 	TagUnknown    TagType = 0
 	TagRegExTime  TagType = 1 // The timestamp that has spaces and needs a regex for matching
-	TagMsgId      TagType // The message identifier
-	TagMsgTime	  TagType // The timestamp that is a string with no spaces
-	TagSeverity   TagType // The severity of the event, e.g., Emergency, …
-	TagPriority   TagType // The priority of the event
-	TagAppHost    TagType // The hostname of the host where the log message is generated
-	TagAppIP      TagType // The IP address of the host where the application that generated the log message is running on.
-	TagAppVendor  TagType // The type of application that generated the log message, e.g., Cisco, ISS
-	TagAppName    TagType // The name of the application that generated the log message, e.g., asa, snort, sshd
-	TagSrcDomain  TagType // The domain name of the initiator of the event, usually a Windows domain
-	TagSrcZone    TagType // The originating zone
-	TagSrcHost    TagType // The hostname of the originator of the event or connection.
-	TagSrcIP      TagType // The IPv4 address of the originator of the event or connection.
-	TagSrcIPNAT   TagType // The natted (network address translation) IP of the originator of the event or connection.
-	TagSrcPort    TagType // The port number of the originating connection.
-	TagSrcPortNAT TagType // The natted port number of the originating connection.
-	TagSrcMac     TagType // The mac address of the host that originated the connection.
-	TagSrcUser    TagType // The user that originated the session.
-	TagSrcUid     TagType // The user id that originated the session.
-	TagSrcGroup   TagType // The group that originated the session.
-	TagSrcGid     TagType // The group id that originated the session.
-	TagSrcEmail   TagType // The originating email address
-	TagDstDomain  TagType // The domain name of the destination of the event, usually a Windows domain
-	TagDstZone    TagType // The destination zone
-	TagDstHost    TagType // The hostname of the destination of the event or connection.
-	TagDstIP      TagType // The IPv4 address of the destination of the event or connection.
-	TagDstIPNAT   TagType // The natted (network address translation) IP of the destination of the event or connection.
-	TagDstPort    TagType // The destination port number of the connection.
-	TagDstPortNAT TagType // The natted destination port number of the connection.
-	TagDstMac     TagType // The mac address of the destination host.
-	TagDstUser    TagType // The user at the destination.
-	TagDstUid     TagType // The user id that originated the session.
-	TagDstGroup   TagType // The group that originated the session.
-	TagDstGid     TagType // The group id that originated the session.
-	TagDstEmail   TagType // The destination email address
-	TagProtocol   TagType // The protocol, such as TCP, UDP, ICMP, of the connection
-	TagInIface    TagType // The incoming TagTypeerface
-	TagOutIface   TagType // The outgoing TagTypeerface
-	TagPolicyID   TagType // The policy ID
-	TagSessionID  TagType // The session or process ID
-	TagObject     TagType // The object affected.
-	TagAction     TagType // The action taken
-	TagCommand    TagType // The command executed
-	TagMethod     TagType // The method in which the action was taken, for example, public key or password for ssh
-	TagStatus     TagType // The status of the action taken
-	TagReason     TagType // The reason for the action taken or the status returned
-	TagBytesRecv  TagType // The number of bytes received
-	TagBytesSent  TagType // The number of bytes sent
-	TagPktsRecv   TagType // The number of packets received
-	TagPktsSent   TagType // The number of packets sent
-	TagDuration   TagType // The duration of the session
+	TagMsgId      TagType     // The message identifier
+	TagMsgTime    TagType     // The timestamp that is a string with no spaces
+	TagSeverity   TagType     // The severity of the event, e.g., Emergency, …
+	TagPriority   TagType     // The priority of the event
+	TagAppHost    TagType     // The hostname of the host where the log message is generated
+	TagAppIP      TagType     // The IP address of the host where the application that generated the log message is running on.
+	TagAppVendor  TagType     // The type of application that generated the log message, e.g., Cisco, ISS
+	TagAppName    TagType     // The name of the application that generated the log message, e.g., asa, snort, sshd
+	TagSrcDomain  TagType     // The domain name of the initiator of the event, usually a Windows domain
+	TagSrcZone    TagType     // The originating zone
+	TagSrcHost    TagType     // The hostname of the originator of the event or connection.
+	TagSrcIP      TagType     // The IPv4 address of the originator of the event or connection.
+	TagSrcIPNAT   TagType     // The natted (network address translation) IP of the originator of the event or connection.
+	TagSrcPort    TagType     // The port number of the originating connection.
+	TagSrcPortNAT TagType     // The natted port number of the originating connection.
+	TagSrcMac     TagType     // The mac address of the host that originated the connection.
+	TagSrcUser    TagType     // The user that originated the session.
+	TagSrcUid     TagType     // The user id that originated the session.
+	TagSrcGroup   TagType     // The group that originated the session.
+	TagSrcGid     TagType     // The group id that originated the session.
+	TagSrcEmail   TagType     // The originating email address
+	TagDstDomain  TagType     // The domain name of the destination of the event, usually a Windows domain
+	TagDstZone    TagType     // The destination zone
+	TagDstHost    TagType     // The hostname of the destination of the event or connection.
+	TagDstIP      TagType     // The IPv4 address of the destination of the event or connection.
+	TagDstIPNAT   TagType     // The natted (network address translation) IP of the destination of the event or connection.
+	TagDstPort    TagType     // The destination port number of the connection.
+	TagDstPortNAT TagType     // The natted destination port number of the connection.
+	TagDstMac     TagType     // The mac address of the destination host.
+	TagDstUser    TagType     // The user at the destination.
+	TagDstUid     TagType     // The user id that originated the session.
+	TagDstGroup   TagType     // The group that originated the session.
+	TagDstGid     TagType     // The group id that originated the session.
+	TagDstEmail   TagType     // The destination email address
+	TagProtocol   TagType     // The protocol, such as TCP, UDP, ICMP, of the connection
+	TagInIface    TagType     // The incoming TagTypeerface
+	TagOutIface   TagType     // The outgoing TagTypeerface
+	TagPolicyID   TagType     // The policy ID
+	TagSessionID  TagType     // The session or process ID
+	TagObject     TagType     // The object affected.
+	TagAction     TagType     // The action taken
+	TagCommand    TagType     // The command executed
+	TagMethod     TagType     // The method in which the action was taken, for example, public key or password for ssh
+	TagStatus     TagType     // The status of the action taken
+	TagReason     TagType     // The reason for the action taken or the status returned
+	TagBytesRecv  TagType     // The number of bytes received
+	TagBytesSent  TagType     // The number of bytes sent
+	TagPktsRecv   TagType     // The number of packets received
+	TagPktsSent   TagType     // The number of packets sent
+	TagDuration   TagType     // The duration of the session
 )

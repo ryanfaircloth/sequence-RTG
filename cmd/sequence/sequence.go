@@ -200,7 +200,7 @@ func analyze(cmd *cobra.Command, args []string) {
 			if err != nil {
 				log.Printf("Error analyzing: %s", line)
 			} else {
-				pat, _  := aseq.String()
+				pat, _ := aseq.String()
 				stat, ok := amap[pat]
 				if !ok {
 					stat = struct {
@@ -409,15 +409,13 @@ func scanMessage(scanner *sequence.Scanner, data string) sequence.Sequence {
 		pos = make([]int, 0)
 	)
 
-
 	switch format {
-		case "json":
-			seq, err = scanner.ScanJson(data)
+	case "json":
+		seq, err = scanner.ScanJson(data)
 
-		default:
-			seq, err = scanner.Scan(data, false, pos)
+	default:
+		seq, err = scanner.Scan(data, false, pos)
 	}
-
 
 	if err != nil {
 		log.Fatal(err)

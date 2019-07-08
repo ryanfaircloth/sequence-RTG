@@ -9,19 +9,19 @@ import (
 )
 
 //This represents a ruleset section in the sys-log ng yaml file
-type XPatternDB struct{
-	XMLName  xml.Name `xml:"patterndb"`
-	Version string `xml:"version,attr"`
-	Pubdate string `xml:"pub_date,attr"`
+type XPatternDB struct {
+	XMLName  xml.Name   `xml:"patterndb"`
+	Version  string     `xml:"version,attr"`
+	Pubdate  string     `xml:"pub_date,attr"`
 	Rulesets []XRuleset `xml:"ruleset"`
 }
 
 //This represents a ruleset section in the sys-log ng yaml file
-type XRuleset struct{
-	ID string `xml:"id,attr"`
-	Name string `xml:"name,attr"`
-	Patterns XPatterns  `xml:"patterns"`
-	Rules XRules `xml:"rules"`
+type XRuleset struct {
+	ID       string    `xml:"id,attr"`
+	Name     string    `xml:"name,attr"`
+	Patterns XPatterns `xml:"patterns"`
+	Rules    XRules    `xml:"rules"`
 }
 
 //this is needed for the xml to format properly
@@ -30,11 +30,11 @@ type XRules struct {
 }
 
 //This represents a rule section in the sys-log ng yaml file
-type XRule struct{
-	XMLName  xml.Name `xml:"rule"`
-	Class string 	    `xml:"class,attr"`
+type XRule struct {
+	XMLName  xml.Name    `xml:"rule"`
+	Class    string      `xml:"class,attr"`
 	Patterns []XPattern  `xml:"patterns"`
-	Examples XExamples  `xml:"examples"`
+	Examples XExamples   `xml:"examples"`
 	Values   XRuleValues `xml:"values"`
 	ID       string      `xml:"id,attr"`
 }
@@ -54,37 +54,36 @@ type XExamples struct {
 }
 
 type XExample struct {
-	XMLName  xml.Name `xml:"example"`
+	XMLName     xml.Name     `xml:"example"`
 	TestMessage XTestMessage `xml:"test_message"`
-	TestValues XTestValues `xml:"test_values"`
+	TestValues  XTestValues  `xml:"test_values"`
 }
 
-type XTestValues struct{
+type XTestValues struct {
 	Values []XTestValue `xml:"test_values"`
 }
 
 type XTestMessage struct {
-	XMLName  xml.Name `xml:"test_message"`
-	TestMessage string `xml:",chardata"`
-	Program string `xml:"program,attr"`
+	XMLName     xml.Name `xml:"test_message"`
+	TestMessage string   `xml:",chardata"`
+	Program     string   `xml:"program,attr"`
 }
 
 type XTestValue struct {
-	XMLName  xml.Name `xml:"test_value"`
-	Value string `xml:",chardata"`
-	Key	string `xml:"name,attr"`
+	XMLName xml.Name `xml:"test_value"`
+	Value   string   `xml:",chardata"`
+	Key     string   `xml:"name,attr"`
 }
 
 type XRuleValues struct {
-	Values [] XRuleValue `xml:"values"`
+	Values []XRuleValue `xml:"values"`
 }
 
 type XRuleValue struct {
-	XMLName  xml.Name `xml:"value"`
-	Name string `xml:"name,attr"`
-	Value string `xml:",chardata"`
+	XMLName xml.Name `xml:"value"`
+	Name    string   `xml:"name,attr"`
+	Value   string   `xml:",chardata"`
 }
-
 
 //This method takes the path to the file output by the analyzer as in and
 //converts it to Yaml and saves in the out path.
@@ -101,7 +100,7 @@ func AddToRuleset(pattern sequence.AnalyzerResult, document XPatternDB) XPattern
 	//it will be the service value
 	rs := pattern.Services[0].Name
 	rsID := pattern.Services[0].ID
-	if len(pattern.Services) > 1{
+	if len(pattern.Services) > 1 {
 		rs, rsID = CreateRulesetName(pattern.Services)
 	}
 	found := false
@@ -130,30 +129,30 @@ func AddToRuleset(pattern sequence.AnalyzerResult, document XPatternDB) XPattern
 	return document
 }
 
-func buildRuleXML (result sequence.AnalyzerResult) XRule {
+func buildRuleXML(result sequence.AnalyzerResult) XRule {
 	rule := XRule{}
-	count := XRuleValue{Name:"seq-matches", Value: strconv.Itoa(result.ExampleCount)}
+	count := XRuleValue{Name: "seq-matches", Value: strconv.Itoa(result.ExampleCount)}
 	rule.Values.Values = append(rule.Values.Values, count)
-	new := XRuleValue{Name:"seq-new", Value: "true"}
+	new := XRuleValue{Name: "seq-new", Value: "true"}
 	rule.Values.Values = append(rule.Values.Values, new)
-	dc := XRuleValue{Name:"seq-created", Value: result.DateCreated.Format("2006-01-02")}
+	dc := XRuleValue{Name: "seq-created", Value: result.DateCreated.Format("2006-01-02")}
 	rule.Values.Values = append(rule.Values.Values, dc)
-	dlm := XRuleValue{Name:"seq-last-match", Value: result.DateLastMatched.Format("2006-01-02")}
+	dlm := XRuleValue{Name: "seq-last-match", Value: result.DateLastMatched.Format("2006-01-02")}
 	rule.Values.Values = append(rule.Values.Values, dlm)
 	var p XPattern
 	var e XExample
 	var t XTestMessage
-	for _, ex := range result.Examples{
+	for _, ex := range result.Examples {
 		e = XExample{}
 		t.TestMessage = ex.Message
 		t.Program = ex.Service
 		e.TestMessage = t
 		m, err := ExtractTestValuesForTokens(ex.Message, result)
-		if err != nil{
+		if err != nil {
 			logger.HandleError(fmt.Sprintf("Unable to make test_values map for examples for pattern %s", result.PatternId))
-		}else{
-			for key, val := range m{
-				e.TestValues.Values = append(e.TestValues.Values, XTestValue{Key:key, Value:val})
+		} else {
+			for key, val := range m {
+				e.TestValues.Values = append(e.TestValues.Values, XTestValue{Key: key, Value: val})
 			}
 		}
 		rule.Examples.Examples = append(rule.Examples.Examples, e)
@@ -167,13 +166,10 @@ func buildRuleXML (result sequence.AnalyzerResult) XRule {
 	return rule
 }
 
-func buildRulesetXML (rsID string, rsName string, slice models.ServiceSlice) XRuleset {
-	rs := XRuleset{Name:rsName, ID:rsID}
-	for _, s := range slice{
+func buildRulesetXML(rsID string, rsName string, slice models.ServiceSlice) XRuleset {
+	rs := XRuleset{Name: rsName, ID: rsID}
+	for _, s := range slice {
 		rs.Patterns.Patterns = append(rs.Patterns.Patterns, s.Name)
 	}
 	return rs
 }
-
-
-

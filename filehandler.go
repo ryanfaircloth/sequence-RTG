@@ -28,9 +28,9 @@ func OpenInputFile(fname string) (*bufio.Scanner, *os.File, error) {
 	var f *os.File
 	var err error
 	//this determines the input is from the stdin
-	if fname == "-"{
+	if fname == "-" {
 		f = os.Stdin
-	} else{
+	} else {
 		f, err = os.Open(fname)
 		if err != nil {
 			return s, f, err
@@ -66,6 +66,3 @@ func OpenOutputFile(fname string) (*os.File, error) {
 
 	return ofile, err
 }
-
-
-

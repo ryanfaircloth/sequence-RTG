@@ -4,10 +4,10 @@ import (
 	"testing"
 )
 
-func TestYAMLConversion(t *testing.T){
-//read the pattern text into the struct
-//parse to the YAML converter
-//
+func TestYAMLConversion(t *testing.T) {
+	//read the pattern text into the struct
+	//parse to the YAML converter
+	//
 
 }
 

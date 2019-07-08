@@ -19,12 +19,12 @@ import (
 )
 
 type timeNode struct {
-	ntype    	int
-	value    	rune
-	final    	TokenType
-	subtype  	int
-	regextype 	string
-	children 	[]*timeNode
+	ntype     int
+	value     rune
+	final     TokenType
+	subtype   int
+	regextype string
+	children  []*timeNode
 }
 
 const (

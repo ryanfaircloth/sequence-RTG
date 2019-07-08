@@ -30,15 +30,14 @@ type (
 // if the Scanner finds a token that's surrounded by %, e.g., %srcuser%, it will
 // try to determine the correct tag type the token represents.
 type Token struct {
-	Type  TokenType // Type is the type of token the Value represents.
-	Tag   TagType   // Tag determines which tag the Value should be.
-	Value string    // Value is the extracted string from the log message.
-	Special string  // % is reserved for the tokens, if a literal contains one it must become a string, this also stores the regex index for the RegExTimeTag
-	IsSpaceBefore   bool // Is there token a space before this token
+	Type          TokenType // Type is the type of token the Value represents.
+	Tag           TagType   // Tag determines which tag the Value should be.
+	Value         string    // Value is the extracted string from the log message.
+	Special       string    // % is reserved for the tokens, if a literal contains one it must become a string, this also stores the regex index for the RegExTimeTag
+	IsSpaceBefore bool      // Is there token a space before this token
 
 	isValue bool // Is this token a key in k=v pair
 	isKey   bool // Is this token a value in k=v pair
-
 
 	minus bool // For parser, should this token consume the rest of the tokens
 	plus  bool // For parser, should this token consume one or more tokens
@@ -62,7 +61,7 @@ const (
 	TokenURI                        // Token is an URL, in the form of http://... or https://...
 	TokenMac                        // Token is a mac address
 	TokenString                     // Token is a string that represents multiple possible values
-	TokenMultiLine					// Token represents every thing after the first \n in a message
+	TokenMultiLine                  // Token represents every thing after the first \n in a message
 	token__END__                    // All tag types must be inserted before this one
 	token__host__                   // Token is a host name
 	token__email__                  // Token is an email address
