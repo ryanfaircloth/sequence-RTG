@@ -572,7 +572,7 @@ func testServiceToManyServiceExamples(t *testing.T) {
 	}
 }
 
-func testServiceToManyPatternIdPatterns(t *testing.T) {
+func testServiceToManyPatternPatterns(t *testing.T) {
 	var err error
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
@@ -604,16 +604,16 @@ func testServiceToManyPatternIdPatterns(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = tx.Exec("insert into \"PatternsServices\" (\"ServiceId\", \"PatternId\") values (?, ?)", a.ID, b.ID)
+	_, err = tx.Exec("insert into \"PatternsServices\" (\"service_id\", \"pattern_id\") values (?, ?)", a.ID, b.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = tx.Exec("insert into \"PatternsServices\" (\"ServiceId\", \"PatternId\") values (?, ?)", a.ID, c.ID)
+	_, err = tx.Exec("insert into \"PatternsServices\" (\"service_id\", \"pattern_id\") values (?, ?)", a.ID, c.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	check, err := a.PatternIdPatterns().All(ctx, tx)
+	check, err := a.PatternPatterns().All(ctx, tx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -636,18 +636,18 @@ func testServiceToManyPatternIdPatterns(t *testing.T) {
 	}
 
 	slice := ServiceSlice{&a}
-	if err = a.L.LoadPatternIdPatterns(ctx, tx, false, (*[]*Service)(&slice), nil); err != nil {
+	if err = a.L.LoadPatternPatterns(ctx, tx, false, (*[]*Service)(&slice), nil); err != nil {
 		t.Fatal(err)
 	}
-	if got := len(a.R.PatternIdPatterns); got != 2 {
+	if got := len(a.R.PatternPatterns); got != 2 {
 		t.Error("number of eager loaded records wrong, got:", got)
 	}
 
-	a.R.PatternIdPatterns = nil
-	if err = a.L.LoadPatternIdPatterns(ctx, tx, true, &a, nil); err != nil {
+	a.R.PatternPatterns = nil
+	if err = a.L.LoadPatternPatterns(ctx, tx, true, &a, nil); err != nil {
 		t.Fatal(err)
 	}
-	if got := len(a.R.PatternIdPatterns); got != 2 {
+	if got := len(a.R.PatternPatterns); got != 2 {
 		t.Error("number of eager loaded records wrong, got:", got)
 	}
 
@@ -731,7 +731,7 @@ func testServiceToManyAddOpServiceExamples(t *testing.T) {
 		}
 	}
 }
-func testServiceToManyAddOpPatternIdPatterns(t *testing.T) {
+func testServiceToManyAddOpPatternPatterns(t *testing.T) {
 	var err error
 
 	ctx := context.Background()
@@ -768,7 +768,7 @@ func testServiceToManyAddOpPatternIdPatterns(t *testing.T) {
 	}
 
 	for i, x := range foreignersSplitByInsertion {
-		err = a.AddPatternIdPatterns(ctx, tx, i != 0, x...)
+		err = a.AddPatternPatterns(ctx, tx, i != 0, x...)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -776,21 +776,21 @@ func testServiceToManyAddOpPatternIdPatterns(t *testing.T) {
 		first := x[0]
 		second := x[1]
 
-		if first.R.ServiceIdServices[0] != &a {
+		if first.R.ServiceServices[0] != &a {
 			t.Error("relationship was not added properly to the slice")
 		}
-		if second.R.ServiceIdServices[0] != &a {
+		if second.R.ServiceServices[0] != &a {
 			t.Error("relationship was not added properly to the slice")
 		}
 
-		if a.R.PatternIdPatterns[i*2] != first {
+		if a.R.PatternPatterns[i*2] != first {
 			t.Error("relationship struct slice not set to correct value")
 		}
-		if a.R.PatternIdPatterns[i*2+1] != second {
+		if a.R.PatternPatterns[i*2+1] != second {
 			t.Error("relationship struct slice not set to correct value")
 		}
 
-		count, err := a.PatternIdPatterns().Count(ctx, tx)
+		count, err := a.PatternPatterns().Count(ctx, tx)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -800,7 +800,7 @@ func testServiceToManyAddOpPatternIdPatterns(t *testing.T) {
 	}
 }
 
-func testServiceToManySetOpPatternIdPatterns(t *testing.T) {
+func testServiceToManySetOpPatternPatterns(t *testing.T) {
 	var err error
 
 	ctx := context.Background()
@@ -831,12 +831,12 @@ func testServiceToManySetOpPatternIdPatterns(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = a.SetPatternIdPatterns(ctx, tx, false, &b, &c)
+	err = a.SetPatternPatterns(ctx, tx, false, &b, &c)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	count, err := a.PatternIdPatterns().Count(ctx, tx)
+	count, err := a.PatternPatterns().Count(ctx, tx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -844,12 +844,12 @@ func testServiceToManySetOpPatternIdPatterns(t *testing.T) {
 		t.Error("count was wrong:", count)
 	}
 
-	err = a.SetPatternIdPatterns(ctx, tx, true, &d, &e)
+	err = a.SetPatternPatterns(ctx, tx, true, &d, &e)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	count, err = a.PatternIdPatterns().Count(ctx, tx)
+	count, err = a.PatternPatterns().Count(ctx, tx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -861,28 +861,28 @@ func testServiceToManySetOpPatternIdPatterns(t *testing.T) {
 	// to these when we call Set(). Leaving them here as wishful thinking
 	// and to let people know there's dragons.
 	//
-	// if len(b.R.ServiceIdServices) != 0 {
+	// if len(b.R.ServiceServices) != 0 {
 	// 	t.Error("relationship was not removed properly from the slice")
 	// }
-	// if len(c.R.ServiceIdServices) != 0 {
+	// if len(c.R.ServiceServices) != 0 {
 	// 	t.Error("relationship was not removed properly from the slice")
 	// }
-	if d.R.ServiceIdServices[0] != &a {
+	if d.R.ServiceServices[0] != &a {
 		t.Error("relationship was not added properly to the slice")
 	}
-	if e.R.ServiceIdServices[0] != &a {
+	if e.R.ServiceServices[0] != &a {
 		t.Error("relationship was not added properly to the slice")
 	}
 
-	if a.R.PatternIdPatterns[0] != &d {
+	if a.R.PatternPatterns[0] != &d {
 		t.Error("relationship struct slice not set to correct value")
 	}
-	if a.R.PatternIdPatterns[1] != &e {
+	if a.R.PatternPatterns[1] != &e {
 		t.Error("relationship struct slice not set to correct value")
 	}
 }
 
-func testServiceToManyRemoveOpPatternIdPatterns(t *testing.T) {
+func testServiceToManyRemoveOpPatternPatterns(t *testing.T) {
 	var err error
 
 	ctx := context.Background()
@@ -907,12 +907,12 @@ func testServiceToManyRemoveOpPatternIdPatterns(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = a.AddPatternIdPatterns(ctx, tx, true, foreigners...)
+	err = a.AddPatternPatterns(ctx, tx, true, foreigners...)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	count, err := a.PatternIdPatterns().Count(ctx, tx)
+	count, err := a.PatternPatterns().Count(ctx, tx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -920,12 +920,12 @@ func testServiceToManyRemoveOpPatternIdPatterns(t *testing.T) {
 		t.Error("count was wrong:", count)
 	}
 
-	err = a.RemovePatternIdPatterns(ctx, tx, foreigners[:2]...)
+	err = a.RemovePatternPatterns(ctx, tx, foreigners[:2]...)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	count, err = a.PatternIdPatterns().Count(ctx, tx)
+	count, err = a.PatternPatterns().Count(ctx, tx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -933,28 +933,28 @@ func testServiceToManyRemoveOpPatternIdPatterns(t *testing.T) {
 		t.Error("count was wrong:", count)
 	}
 
-	if len(b.R.ServiceIdServices) != 0 {
+	if len(b.R.ServiceServices) != 0 {
 		t.Error("relationship was not removed properly from the slice")
 	}
-	if len(c.R.ServiceIdServices) != 0 {
+	if len(c.R.ServiceServices) != 0 {
 		t.Error("relationship was not removed properly from the slice")
 	}
-	if d.R.ServiceIdServices[0] != &a {
+	if d.R.ServiceServices[0] != &a {
 		t.Error("relationship was not added properly to the foreign struct")
 	}
-	if e.R.ServiceIdServices[0] != &a {
+	if e.R.ServiceServices[0] != &a {
 		t.Error("relationship was not added properly to the foreign struct")
 	}
 
-	if len(a.R.PatternIdPatterns) != 2 {
+	if len(a.R.PatternPatterns) != 2 {
 		t.Error("should have preserved two relationships")
 	}
 
 	// Removal doesn't do a stable deletion for performance so we have to flip the order
-	if a.R.PatternIdPatterns[1] != &d {
+	if a.R.PatternPatterns[1] != &d {
 		t.Error("relationship to d should have been preserved")
 	}
-	if a.R.PatternIdPatterns[0] != &e {
+	if a.R.PatternPatterns[0] != &e {
 		t.Error("relationship to e should have been preserved")
 	}
 }

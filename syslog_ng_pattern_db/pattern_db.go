@@ -207,7 +207,7 @@ func getWithDelimiters(p string, start, end int, last int) (string, string, stri
 	fieldname := p[start+1 : end-1]
 	before := ""
 	//integer and ip fields are not considered strings so can bypass this
-	if fieldname == "integer" || fieldname == "srcip" || fieldname == "dstip" || fieldname == "float" || fieldname == "ipv6" {
+	if fieldname == "integer" || fieldname == "srcip" || fieldname == "dstip" || fieldname == "float" || fieldname == "ipv6" || fieldname == "srcmac" || fieldname == "dstmac" {
 		return p[start:end], "", fieldname, end - 1
 	}
 	if start > 0 && end < len(p) {

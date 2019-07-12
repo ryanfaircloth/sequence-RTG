@@ -304,6 +304,8 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 						ar.PatternId = sequence.GenerateIDFromString(pat)
 						ar.Pattern = pat
 						ar.ExampleCount++
+						ar.ComplexityScore = sequence.CalculatePatternComplexity(aseq, len(l.Message))
+
 						amap[pat] = ar
 					}
 				}

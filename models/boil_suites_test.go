@@ -101,9 +101,9 @@ func TestOneToOne(t *testing.T) {}
 // or deadlocks can occur.
 func TestToMany(t *testing.T) {
 	t.Run("PatternToPatternExamples", testPatternToManyPatternExamples)
-	t.Run("PatternToServiceIdServices", testPatternToManyServiceIdServices)
+	t.Run("PatternToServiceServices", testPatternToManyServiceServices)
 	t.Run("ServiceToServiceExamples", testServiceToManyServiceExamples)
-	t.Run("ServiceToPatternIdPatterns", testServiceToManyPatternIdPatterns)
+	t.Run("ServiceToPatternPatterns", testServiceToManyPatternPatterns)
 }
 
 // TestToOneSet tests cannot be run in parallel
@@ -129,23 +129,23 @@ func TestOneToOneRemove(t *testing.T) {}
 // or deadlocks can occur.
 func TestToManyAdd(t *testing.T) {
 	t.Run("PatternToPatternExamples", testPatternToManyAddOpPatternExamples)
-	t.Run("PatternToServiceIdServices", testPatternToManyAddOpServiceIdServices)
+	t.Run("PatternToServiceServices", testPatternToManyAddOpServiceServices)
 	t.Run("ServiceToServiceExamples", testServiceToManyAddOpServiceExamples)
-	t.Run("ServiceToPatternIdPatterns", testServiceToManyAddOpPatternIdPatterns)
+	t.Run("ServiceToPatternPatterns", testServiceToManyAddOpPatternPatterns)
 }
 
 // TestToManySet tests cannot be run in parallel
 // or deadlocks can occur.
 func TestToManySet(t *testing.T) {
-	t.Run("PatternToServiceIdServices", testPatternToManySetOpServiceIdServices)
-	t.Run("ServiceToPatternIdPatterns", testServiceToManySetOpPatternIdPatterns)
+	t.Run("PatternToServiceServices", testPatternToManySetOpServiceServices)
+	t.Run("ServiceToPatternPatterns", testServiceToManySetOpPatternPatterns)
 }
 
 // TestToManyRemove tests cannot be run in parallel
 // or deadlocks can occur.
 func TestToManyRemove(t *testing.T) {
-	t.Run("PatternToServiceIdServices", testPatternToManyRemoveOpServiceIdServices)
-	t.Run("ServiceToPatternIdPatterns", testServiceToManyRemoveOpPatternIdPatterns)
+	t.Run("PatternToServiceServices", testPatternToManyRemoveOpServiceServices)
+	t.Run("ServiceToPatternPatterns", testServiceToManyRemoveOpPatternPatterns)
 }
 
 func TestReload(t *testing.T) {

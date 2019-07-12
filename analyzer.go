@@ -92,6 +92,7 @@ type AnalyzerResult struct {
 	Examples        []LogRecord
 	DateCreated     time.Time
 	DateLastMatched time.Time
+	ComplexityScore	float64
 }
 
 type analyzerNode struct {
@@ -202,6 +203,44 @@ func GetThreshold(numTotal int) int {
 		}
 	}
 	return 0
+}
+
+func CalculatePatternComplexity(seq Sequence, lgt int) float64{
+
+	var (
+		strct float64
+		intct float64
+		litct float64
+		othct float64
+	)
+	//length of the sequence
+	lt := float64(len(seq))
+
+	for _, tok := range seq{
+		if tok.Type == TokenString{
+			strct += 1
+		} else if tok.Type == TokenLiteral{
+			if len(tok.Value) > 1{
+				litct += 1
+			}else if tok.Value != "="{
+				lt -= 1
+			}
+		} else if tok.Type == TokenInteger{
+			intct += 1
+		} else{
+			othct += 1
+		}
+	}
+
+	//Complexity score
+	//all literal tokens
+	if lt == litct{
+		return 0.0
+	}else if strct > 0{
+		return float64(strct/lt)
+	}
+
+	return 0.05
 }
 
 func GetSaveThreshold() int {
