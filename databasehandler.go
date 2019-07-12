@@ -61,12 +61,12 @@ func PurgePatternsfromDatabase(threshold int64) int64 {
 	}
 	patterns, _ := models.Patterns(models.PatternWhere.CumulativeMatchCount.LT(threshold)).All(ctx, tx)
 	for _, pat := range patterns {
-		svc, err := pat.ServiceIdServices().All(ctx, tx)
+		svc, err := pat.ServiceServices().All(ctx, tx)
 		if err != nil {
 			logger.HandleError(err.Error())
 		}
 		for _, s := range svc {
-			pat.RemoveServiceIdServices(ctx, tx, s)
+			pat.RemoveServiceServices(ctx, tx, s)
 		}
 		pat.PatternExamples().DeleteAll(ctx, tx)
 	}
@@ -148,7 +148,7 @@ func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context) (map[s
 
 	for _, p := range patterns {
 		ar := AnalyzerResult{PatternId: p.ID, Pattern: p.SequencePattern, DateCreated: p.DateCreated, DateLastMatched: p.DateLastMatched, ExampleCount: int(p.CumulativeMatchCount), TagPositions: p.TagPositions.String}
-		svcs, err := p.ServiceIdServices().All(ctx, db)
+		svcs, err := p.ServiceServices().All(ctx, db)
 		if err != nil {
 			logger.DatabaseSelectFailed("services", "Where id = "+p.ID, err.Error())
 		}
@@ -194,7 +194,7 @@ func GetPatternsFromDatabaseByService(db *sql.DB, ctx context.Context, sid strin
 			logger.DatabaseSelectFailed("services", "Where Serviceid = "+sid, err.Error())
 		}
 	} else {
-		patterns, err := svc.PatternIdPatterns().All(ctx, db)
+		patterns, err := svc.PatternPatterns().All(ctx, db)
 		if err != nil {
 			logger.DatabaseSelectFailed("patterns", "Where Serviceid = "+sid, err.Error())
 		}
@@ -245,7 +245,7 @@ func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, tr int) 
 
 	//add the patternid and serviceid to the table
 	for _, s := range result.Services {
-		p.AddServiceIdServices(ctx, tx, false, s)
+		p.AddServiceServices(ctx, tx, false, s)
 	}
 	for _, e := range result.Examples {
 		insertExample(ctx, tx, e, result.PatternId)
@@ -263,7 +263,7 @@ func UpdatePattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult) {
 	}
 	//add the patternid and serviceid to the table
 	for _, s := range result.Services {
-		p.AddServiceIdServices(ctx, tx, false, s)
+		p.AddServiceServices(ctx, tx, false, s)
 	}
 
 	//if the example count is less than three, add the extra ones if different
