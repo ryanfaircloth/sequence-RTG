@@ -465,3 +465,4 @@ tags = [
         [grok.tags.fieldname]
         "msgtime"	    =   "timestamp"
         "float"         =   "decimal"
+# vim:set ts=4 et:
