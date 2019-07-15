@@ -7,7 +7,7 @@ usedatabase = true
 database = "sequence.sdb"
 createdbcommands = [
         "PRAGMA foreign_keys=OFF;",
-		"CREATE TABLE Services (id STRING (20, 50) PRIMARY KEY NOT NULL, name STRING NOT NULL, date_created DATETIME NOT NULL);",
+        "CREATE TABLE Services (id STRING (20, 50) PRIMARY KEY NOT NULL, name STRING NOT NULL, date_created DATETIME NOT NULL);",
         "CREATE TABLE PatternsServices (pattern_id STRING REFERENCES Patterns (id) ON DELETE NO ACTION NOT NULL, service_id STRING REFERENCES Services (id) ON DELETE NO ACTION NOT NULL, PRIMARY KEY (pattern_id, service_id));",
         "CREATE TABLE Patterns (id STRING (20, 50) PRIMARY KEY NOT NULL, sequence_pattern STRING (1000) NOT NULL, tag_positions STRING, date_created DATETIME NOT NULL, date_last_matched DATETIME NOT NULL, original_match_count INTEGER NOT NULL, cumulative_match_count INTEGER NOT NULL, ignore_pattern BOOLEAN NOT NULL, complexity_score DOUBLE NOT NULL DEFAULT (0.0));",
         "CREATE TABLE Examples (id STRING PRIMARY KEY NOT NULL, service_id STRING REFERENCES Services (id) ON DELETE NO ACTION NOT NULL, pattern_id STRING (20, 50) REFERENCES Patterns (id) ON DELETE NO ACTION NOT NULL, example_detail STRING (1000) NOT NULL);",
@@ -32,255 +32,255 @@ matchThresholdValue = "0.001"
 saveThreshold = "3"
 
 tags = [
-    "regextime:time",		    # The timestamp that’s part of the log message (matches the a pcre (Perl-Compatible Regular Expression) defined below) (must be at the top of this list)
-	"msgid:string",				# The message identifier
-	"msgtime:time",				# The timestamp that’s part of the log message (undefined format)
-	"severity:integer",			# The severity of the event, e.g., Emergency, …
-	"priority:integer",			# The pirority of the event
-	"apphost:string",			# The hostname of the host where the log message is generated
-	"appip:ipv4",				# The IP address of the host where the application that generated the log message is running on.
-	"appvendor:string",			# The type of application that generated the log message, e.g., Cisco, ISS
-	"appname:string",			# The name of the application that generated the log message, e.g., asa, snort, sshd
-	"srcdomain:string",			# The domain name of the initiator of the event, usually a Windows domain
-	"srczone:string",			# The originating zone
-	"srchost:string",			# The hostname of the originator of the event or connection.
-	"srcip:ipv4",				# The IPv4 address of the originator of the event or connection.
-	"srcuri:uri",				# The uri of the originator of the event or connection.
-	"srcipnat:ipv4",			# The natted (network address translation) IP of the originator of the event or connection.
-	"srcport:integer",			# The port number of the originating connection.
-	"srcportnat:integer",		# The natted port number of the originating connection.
-	"srcmac:mac",				# The mac address of the host that originated the connection.
-	"srcuser:string",			# The user that originated the session.
-	"srcuid:integer",			# The user id that originated the session.
-	"srcgroup:string",			# The group that originated the session.
-	"srcgid:integer",			# The group id that originated the session.
-	"srcemail:string",			# The originating email address
-	"dstdomain:string",			# The domain name of the destination of the event, usually a Windows domain
-	"dstzone:string",			# The destination zone
-	"dsthost:string",			# The hostname of the destination of the event or connection.
-	"dstip:ipv4",				# The IPv4 address of the destination of the event or connection.
-	"dsturi:uri",				# The uri of the destination of the event or connection.
-	"dstipnat:ipv4",			# The natted (network address translation) IP of the destination of the event or connection.
-	"dstport:integer",			# The destination port number of the connection.
-	"dstportnat:integer",		# The natted destination port number of the connection.
-	"dstmac:mac",				# The mac address of the destination host.
-	"dstuser:string",			# The user at the destination.
-	"dstuid:integer",			# The user id that originated the session.
-	"dstgroup:string",			# The group that originated the session.
-	"dstgid:integer",			# The group id that originated the session.
-	"dstemail:string",			# The destination email address
-	"protocol:string",			# The protocol, such as TCP, UDP, ICMP, of the connection
-	"iniface:string",			# The incoming interface
-	"outiface:string",			# The outgoing interface
-	"policyid:integer",			# The policy ID
-	"sessionid:integer",		# The session or process ID
-	"object:string",			# The object affected.
-	"action:string",			# The action taken
-	"command:string",			# The command executed
-	"method:string",			# The method in which the action was taken, for example, public key or password for ssh
-	"status:string",			# The status of the action taken
-	"reason:string",			# The reason for the action taken or the status returned
-	"bytesrecv:integer",		# The number of bytes received
-	"bytessent:integer",		# The number of bytes sent
-	"pktsrecv:integer",			# The number of packets received
-	"pktssent:integer",			# The number of packets sent
-	"duration:integer"			# The duration of the session
+    "regextime:time",           # The timestamp that’s part of the log message (matches the a pcre (Perl-Compatible Regular Expression) defined below) (must be at the top of this list)
+    "msgid:string",             # The message identifier
+    "msgtime:time",             # The timestamp that’s part of the log message (undefined format)
+    "severity:integer",         # The severity of the event, e.g., Emergency, …
+    "priority:integer",         # The pirority of the event
+    "apphost:string",           # The hostname of the host where the log message is generated
+    "appip:ipv4",               # The IP address of the host where the application that generated the log message is running on.
+    "appvendor:string",         # The type of application that generated the log message, e.g., Cisco, ISS
+    "appname:string",           # The name of the application that generated the log message, e.g., asa, snort, sshd
+    "srcdomain:string",         # The domain name of the initiator of the event, usually a Windows domain
+    "srczone:string",           # The originating zone
+    "srchost:string",           # The hostname of the originator of the event or connection.
+    "srcip:ipv4",               # The IPv4 address of the originator of the event or connection.
+    "srcuri:uri",               # The uri of the originator of the event or connection.
+    "srcipnat:ipv4",            # The natted (network address translation) IP of the originator of the event or connection.
+    "srcport:integer",          # The port number of the originating connection.
+    "srcportnat:integer",       # The natted port number of the originating connection.
+    "srcmac:mac",               # The mac address of the host that originated the connection.
+    "srcuser:string",           # The user that originated the session.
+    "srcuid:integer",           # The user id that originated the session.
+    "srcgroup:string",          # The group that originated the session.
+    "srcgid:integer",           # The group id that originated the session.
+    "srcemail:string",          # The originating email address
+    "dstdomain:string",         # The domain name of the destination of the event, usually a Windows domain
+    "dstzone:string",           # The destination zone
+    "dsthost:string",           # The hostname of the destination of the event or connection.
+    "dstip:ipv4",               # The IPv4 address of the destination of the event or connection.
+    "dsturi:uri",               # The uri of the destination of the event or connection.
+    "dstipnat:ipv4",            # The natted (network address translation) IP of the destination of the event or connection.
+    "dstport:integer",          # The destination port number of the connection.
+    "dstportnat:integer",       # The natted destination port number of the connection.
+    "dstmac:mac",               # The mac address of the destination host.
+    "dstuser:string",           # The user at the destination.
+    "dstuid:integer",           # The user id that originated the session.
+    "dstgroup:string",          # The group that originated the session.
+    "dstgid:integer",           # The group id that originated the session.
+    "dstemail:string",          # The destination email address
+    "protocol:string",          # The protocol, such as TCP, UDP, ICMP, of the connection
+    "iniface:string",           # The incoming interface
+    "outiface:string",          # The outgoing interface
+    "policyid:integer",         # The policy ID
+    "sessionid:integer",        # The session or process ID
+    "object:string",            # The object affected.
+    "action:string",            # The action taken
+    "command:string",           # The command executed
+    "method:string",            # The method in which the action was taken, for example, public key or password for ssh
+    "status:string",            # The status of the action taken
+    "reason:string",            # The reason for the action taken or the status returned
+    "bytesrecv:integer",        # The number of bytes received
+    "bytessent:integer",        # The number of bytes sent
+    "pktsrecv:integer",         # The number of packets received
+    "pktssent:integer",         # The number of packets sent
+    "duration:integer"          # The duration of the session
 ]
 
 [analyzer]
-	[analyzer.prekeys]
-	address		= [ "srchost", "srcipv4" ]
-	by 			= [ "srchost", "srcipv4", "srcuser" ]
-	command 	= [ "command" ]
-	connection 	= [ "sessionid" ]
-	dport		= [ "dstport" ]
-	dst 		= [ "dsthost", "dstipv4" ]
-	duration	= [ "duration" ]
-	egid 		= [ "srcgid" ]
-	euid 		= [ "srcuid" ]
-	for 		= [ "srchost", "srcipv4", "srcuser" ]
-	from 		= [ "srchost", "srcipv4", "srcuri"]
-	gid 		= [ "srcgid" ]
-	group 		= [ "srcgroup" ]
-	logname 	= [ "srcuser" ]
-	port 		= [ "srcport", "dstport" ]
-	proto		= [ "protocol" ]
-	rhost 		= [ "srchost", "srcipv4" ]
-	ruser 		= [ "srcuser" ]
-	sport		= [ "srcport" ]
-	src 		= [ "srchost", "srcipv4", "srcuri"]
-	time 		= [ "strtime", "regexonetime", "msgtime"]
-	to          = [ "dsthost", "dstipv4", "dsturi"]
-	uid 		= [ "srcuid" ]
-	uname 		= [ "srcuser" ]
-	user 		= [ "srcuser" ]
+    [analyzer.prekeys]
+    address     = [ "srchost", "srcipv4" ]
+    by          = [ "srchost", "srcipv4", "srcuser" ]
+    command     = [ "command" ]
+    connection  = [ "sessionid" ]
+    dport       = [ "dstport" ]
+    dst         = [ "dsthost", "dstipv4" ]
+    duration    = [ "duration" ]
+    egid        = [ "srcgid" ]
+    euid        = [ "srcuid" ]
+    for         = [ "srchost", "srcipv4", "srcuser" ]
+    from        = [ "srchost", "srcipv4", "srcuri"]
+    gid         = [ "srcgid" ]
+    group       = [ "srcgroup" ]
+    logname     = [ "srcuser" ]
+    port        = [ "srcport", "dstport" ]
+    proto       = [ "protocol" ]
+    rhost       = [ "srchost", "srcipv4" ]
+    ruser       = [ "srcuser" ]
+    sport       = [ "srcport" ]
+    src         = [ "srchost", "srcipv4", "srcuri"]
+    time        = [ "strtime", "regexonetime", "msgtime"]
+    to          = [ "dsthost", "dstipv4", "dsturi"]
+    uid         = [ "srcuid" ]
+    uname       = [ "srcuser" ]
+    user        = [ "srcuser" ]
 
-	[analyzer.keywords]
-	action = [
-		"access",
-		"alert",
-		"allocate",
-		"allow",
-		"audit",
-		"authenticate",
-		"backup",
-		"bind",
-		"block",
-		"build",
-		"built",
-		"cancel",
-		"clean",
-		"close",
-		"compress",
-		"connect",
-		"copy",
-		"create",
-		"decode",
-		"decompress",
-		"decrypt",
-		"depress",
-		"detect",
-		"disconnect",
-		"download",
-		"encode",
-		"encrypt",
-		"establish",
-		"execute",
-		"filter",
-		"find",
-		"finish",
-		"free",
-		"get",
-		"initialize",
-		"initiate",
-		"install",
-		"lock",
-		"login",
-		"logoff",
-		"logon",
-		"logout",
-		"modify",
-		"move",
-		"open",
-		"post",
-		"quarantine",
-		"read",
-		"release",
-		"remove",
-		"replicate",
-		"resume",
-		"save",
-		"scan",
-		"search",
-		"start",
-		"stop",
-		"suspend",
-		"teardown",
-		"uninstall",
-		"unlock",
-		"update",
-		"upgrade",
-		"upload",
-		"violate",
-		"write"
-	]
+    [analyzer.keywords]
+    action = [
+        "access",
+        "alert",
+        "allocate",
+        "allow",
+        "audit",
+        "authenticate",
+        "backup",
+        "bind",
+        "block",
+        "build",
+        "built",
+        "cancel",
+        "clean",
+        "close",
+        "compress",
+        "connect",
+        "copy",
+        "create",
+        "decode",
+        "decompress",
+        "decrypt",
+        "depress",
+        "detect",
+        "disconnect",
+        "download",
+        "encode",
+        "encrypt",
+        "establish",
+        "execute",
+        "filter",
+        "find",
+        "finish",
+        "free",
+        "get",
+        "initialize",
+        "initiate",
+        "install",
+        "lock",
+        "login",
+        "logoff",
+        "logon",
+        "logout",
+        "modify",
+        "move",
+        "open",
+        "post",
+        "quarantine",
+        "read",
+        "release",
+        "remove",
+        "replicate",
+        "resume",
+        "save",
+        "scan",
+        "search",
+        "start",
+        "stop",
+        "suspend",
+        "teardown",
+        "uninstall",
+        "unlock",
+        "update",
+        "upgrade",
+        "upload",
+        "violate",
+        "write"
+    ]
 
-	status = [
-		"accept",
-		"error",
-		"fail",
-		"failure",
-		"success"
-	]
+    status = [
+        "accept",
+        "error",
+        "fail",
+        "failure",
+        "success"
+    ]
 
-	object = [
-		"account",
-		"app",
-		"bios",
-		"directory",
-		"driver",
-		"email",
-		"event",
-		"file",
-		"flow",
-		"connection",
-		"memory",
-		"process",
-		"rule",
-		"session",
-		"system",
-		"thread",
-		"vuln"
-	]
+    object = [
+        "account",
+        "app",
+        "bios",
+        "directory",
+        "driver",
+        "email",
+        "event",
+        "file",
+        "flow",
+        "connection",
+        "memory",
+        "process",
+        "rule",
+        "session",
+        "system",
+        "thread",
+        "vuln"
+    ]
 
-	srcuser = [
-		"root",
-		"admin",
-		"administrator"
-	]
+    srcuser = [
+        "root",
+        "admin",
+        "administrator"
+    ]
 
-	method = [
-		"password",
-		"publickey"
-	]
+    method = [
+        "password",
+        "publickey"
+    ]
 
-	protocol = [
-		"udp",
-		"tcp",
-		"icmp",
-		"http/1.0",
-		"http/1.1"
-	]
+    protocol = [
+        "udp",
+        "tcp",
+        "icmp",
+        "http/1.0",
+        "http/1.1"
+    ]
 
 [timesettings]
     [timesettings.formats]
-	0 = ["Mon Jan _2 15:04:05 2006", "4"]            #type 0 - matches first pcre
-	1 = ["Mon Jan _2 15:04:05 MST 2006", "0"]
-	2 = ["Mon Jan 02 15:04:05 CEST 2006", "0"]
-	3 = ["Mon Jan 02 15:04:05 -0700 2006", "99"]      #type 99 - underfined yet
-	4 = ["02 Jan 06 15:04 MST", "99"]
-	5 = ["02 Jan 06 15:04 -0700", "99"]
-	6 = ["Monday, 02-Jan-06 15:04:05 MST", "99"]
-	7 = ["Mon, 02 Jan 2006 15:04:05 MST", "99"]
-	8 = ["Mon, 02 Jan 2006 15:04:05 -0700", "99"]
-	9 = ["Jan _2 15:04:05", "1"]
-	10 = ["Jan _2 15:04:05.000", "1"]
-	11 = ["Jan _2 15:04:05.000000", "1"]
-	12 = ["Jan _2 15:04:05.000000000", "1"]
-	13 = ["_2/Jan/2006:15:04:05 -0700", "5"]
-	14 = ["02/Jan/2006:15:04:05 -0700", "5"]
-	15 = ["Jan 2 2006 15:04:05", "99"]
-	16 = ["Jan 2 15:04:05 2006", "99"]
-	17 = ["Jan 2 15:04:05 -0700", "99"]
-	18 = ["Jan 2, 2006 3:04:05 PM", "2"]
-	19 = ["2006-01-02 15:04:05 -0700", "99"]
-	20 = ["2006-01-02 15:04:05-0700", "99"]
-	21 = ["2006-01-02 15:04:05.000", "3"]
-	22 = ["2006-01-02 15:04:05", "3"]
-	23 = ["2006-01-02 15:04:05.000 -0700", "99"]
-	24 = ["2006/01/02 15:04:05", "6"]
-	25 = ["06-01-02 15:04:05,000", "99"]
-	26 = ["06-01-02 15:04:05", "99"]
-	27 = ["06/01/02 15:04:05", "99"]
-	28 = ["06-01-02 15:04:05,000 -0700", "99"]
-	29 = ["1/2/2006 3:04:05 PM", "99"]
-	30 = ["1/2/06 3:04:05.000 PM", "99"]
-	31 = ["1/2/2006 15:04", "99"]
-	32 = ["02Jan2006 03:04:05", "99"]
-	33 = ["Jan _2, 2006 _3:04:05 PM", "2"]
-	34 = ["2006-01-02T15:04:05Z", ""]              #type empty string - matches all the types with no spaces, no regex needed 2015-01-21 21:41:27
-	35 = ["2006-01-02T15:04:05-0700", ""]
-	36 = ["2006-01-02T15:04:05.999-0700", ""]
-	37 = ["2006-01-02T15:04:05Z07:00", ""]
+    0 = ["Mon Jan _2 15:04:05 2006", "4"]            #type 0 - matches first pcre
+    1 = ["Mon Jan _2 15:04:05 MST 2006", "0"]
+    2 = ["Mon Jan 02 15:04:05 CEST 2006", "0"]
+    3 = ["Mon Jan 02 15:04:05 -0700 2006", "99"]      #type 99 - underfined yet
+    4 = ["02 Jan 06 15:04 MST", "99"]
+    5 = ["02 Jan 06 15:04 -0700", "99"]
+    6 = ["Monday, 02-Jan-06 15:04:05 MST", "99"]
+    7 = ["Mon, 02 Jan 2006 15:04:05 MST", "99"]
+    8 = ["Mon, 02 Jan 2006 15:04:05 -0700", "99"]
+    9 = ["Jan _2 15:04:05", "1"]
+    10 = ["Jan _2 15:04:05.000", "1"]
+    11 = ["Jan _2 15:04:05.000000", "1"]
+    12 = ["Jan _2 15:04:05.000000000", "1"]
+    13 = ["_2/Jan/2006:15:04:05 -0700", "5"]
+    14 = ["02/Jan/2006:15:04:05 -0700", "5"]
+    15 = ["Jan 2 2006 15:04:05", "99"]
+    16 = ["Jan 2 15:04:05 2006", "99"]
+    17 = ["Jan 2 15:04:05 -0700", "99"]
+    18 = ["Jan 2, 2006 3:04:05 PM", "2"]
+    19 = ["2006-01-02 15:04:05 -0700", "99"]
+    20 = ["2006-01-02 15:04:05-0700", "99"]
+    21 = ["2006-01-02 15:04:05.000", "3"]
+    22 = ["2006-01-02 15:04:05", "3"]
+    23 = ["2006-01-02 15:04:05.000 -0700", "99"]
+    24 = ["2006/01/02 15:04:05", "6"]
+    25 = ["06-01-02 15:04:05,000", "99"]
+    26 = ["06-01-02 15:04:05", "99"]
+    27 = ["06/01/02 15:04:05", "99"]
+    28 = ["06-01-02 15:04:05,000 -0700", "99"]
+    29 = ["1/2/2006 3:04:05 PM", "99"]
+    30 = ["1/2/06 3:04:05.000 PM", "99"]
+    31 = ["1/2/2006 15:04", "99"]
+    32 = ["02Jan2006 03:04:05", "99"]
+    33 = ["Jan _2, 2006 _3:04:05 PM", "2"]
+    34 = ["2006-01-02T15:04:05Z", ""]              #type empty string - matches all the types with no spaces, no regex needed 2015-01-21 21:41:27
+    35 = ["2006-01-02T15:04:05-0700", ""]
+    36 = ["2006-01-02T15:04:05.999-0700", ""]
+    37 = ["2006-01-02T15:04:05Z07:00", ""]
     38 = ["2006-01-02T15:04:05.999999999Z07:00", ""]
     39 = ["2006-01-02 15:04:05.999999", "3"]
-	40 = ["3:04:05", ""]
-	41 = ["15:04:05,000", ""]
-	42 = ["2006-01-02T15:04:05.999999Z", ""]
-	43 = ["02/Jan/2006:15:04:05.999", ""]
-	44 = ["2006-01-02T15:04:05", ""]
-	45 = ["2006/01/02-15:04:05.999999", ""]
-	46 = ["Jan 02 15:04:05", "1"]
+    40 = ["3:04:05", ""]
+    41 = ["15:04:05,000", ""]
+    42 = ["2006-01-02T15:04:05.999999Z", ""]
+    43 = ["02/Jan/2006:15:04:05.999", ""]
+    44 = ["2006-01-02T15:04:05", ""]
+    45 = ["2006/01/02-15:04:05.999999", ""]
+    46 = ["Jan 02 15:04:05", "1"]
     47 = ["15:04:05", ""]
     48 = ["2006-01-02", ""]
 
@@ -305,164 +305,164 @@ tags = [
     [patterndb.tags]
         [patterndb.tags.general]
         "%multiline%"   =   "@ANYSTRING:[fieldname]@"
-        "%srcemail%"	=   "@EMAIL:[fieldname]:@"
-        "%float%"		=   "@FLOAT:[fieldname]@"
-        "%integer%"		= 	"@NUMBER:[fieldname]@"
-        "%srcip%"		=   "@IPvANY:[fieldname]@"
-        "%dstip%"		=   "@IPvANY:[fieldname]@"
-        "%ipv6%"		=   "@IPv6:[fieldname]@"
-        "%srchost%" 	=	"@HOSTNAME:[fieldname]@"
-        "%srcport%" 	= 	"@NUMBER:[fieldname]@"
-        "%srcmac%" 		= 	"@MACADDR:[fieldname]@"
-        "%dsthost%" 	= 	"@HOSTNAME:[fieldname]:@"
-        "%dstport%" 	= 	"@NUMBER:[fieldname]@"
-        "%dstmac%" 		= 	"@MACADDR:[fieldname]@"
-        "%regextime%"	=	"@PCRE:timestamp:[regexnotfound]@"
-        "%string%"	    =   "@ESTRING:[fieldname]: @"           #string types with fieldname
-        "%alphanum%"	=   "@ESTRING:[fieldname]: @"
-        "%id%"			=   "@ESTRING:[fieldname]: @"
-        "%msgtime%"		= 	"@ESTRING:[fieldname]: @"
-        "%time%"		=	"@ESTRING:[fieldname]: @"
-        "%protocol%"	=	"@ESTRING:[fieldname]: @"
-        "%msgid%" 		=   "@ESTRING:[fieldname]: @"
-        "%severity%" 	=	"@ESTRING:[fieldname]: @"
-        "%priority%" 	=	"@ESTRING:[fieldname]: @"
-        "%apphost%" 	=	"@ESTRING:[fieldname]: @"
-        "%appip%" 		=   "@ESTRING:[fieldname]: @"
-        "%appvendor%"	=	"@ESTRING:[fieldname]: @"
-        "%appname%" 	=	"@ESTRING:[fieldname]: @"
-        "%srcdomain%"	=	"@ESTRING:[fieldname]: @"
-        "%srczone%" 	= 	"@ESTRING:[fieldname]: @"
-        "%srcipnat%" 	=	"@ESTRING:[fieldname]: @"
-        "%srcportnat%" 	= 	"@ESTRING:[fieldname]: @"
-        "%srcuser%" 	=  	"@ESTRING:[fieldname]: @"
-        "%srcuid%" 		=  	"@ESTRING:[fieldname]: @"
-        "%srcuri%" 		=  	"@ESTRING:[fieldname]: @"
-        "%srcgid%" 		=  	"@ESTRING:[fieldname]: @"
-        "%dstdomain%" 	= 	"@ESTRING:[fieldname]: @"
-        "%dstzone%" 	=	"@ESTRING:[fieldname]: @"
-        "%dstipnat%" 	= 	"@ESTRING:[fieldname]: @"
-        "%dstportnat%" 	= 	"@ESTRING:[fieldname]: @"
-        "%dstuser%" 	= 	"@ESTRING:[fieldname]: @"
-        "%dstuid%" 		= 	"@ESTRING:[fieldname]: @"
-        "%dsturi%" 		=  	"@ESTRING:[fieldname]: @"
-        "%dstgroup%" 	= 	"@ESTRING:[fieldname]: @"
-        "%dstgid%" 		= 	"@ESTRING:[fieldname]: @"
-        "%dstemail%" 	= 	"@ESTRING:[fieldname]: @"
-        "%iniface%" 	= 	"@ESTRING:[fieldname]: @"
-        "%outiface%" 	= 	"@ESTRING:[fieldname]: @"
-        "%policyid%" 	= 	"@ESTRING:[fieldname]: @"
-        "%sessionid%" 	= 	"@ESTRING:[fieldname]: @"
-        "%action%" 		= 	"@ESTRING:[fieldname]: @"
-        "%command%" 	= 	"@ESTRING:[fieldname]: @"
-        "%object%" 		= 	"@ESTRING:[fieldname]: @"
-        "%method%" 		= 	"@ESTRING:[fieldname]: @"
-        "%status%" 		= 	"@ESTRING:[fieldname]: @"
-        "%reason%" 		= 	"@ESTRING:[fieldname]: @"
-        "%bytesrecv%" 	= 	"@ESTRING:[fieldname]: @"
-        "%bytessent%" 	= 	"@ESTRING:[fieldname]: @"
-        "%pktsrecv%" 	= 	"@ESTRING:[fieldname]: @"
-        "%pktssent%" 	= 	"@ESTRING:[fieldname]: @"
-        "%duration%" 	= 	"@ESTRING:[fieldname]: @"
-        "%uri%"			=	"@ESTRING:[fieldname]: @"
+        "%srcemail%"    =   "@EMAIL:[fieldname]:@"
+        "%float%"       =   "@FLOAT:[fieldname]@"
+        "%integer%"     =   "@NUMBER:[fieldname]@"
+        "%srcip%"       =   "@IPvANY:[fieldname]@"
+        "%dstip%"       =   "@IPvANY:[fieldname]@"
+        "%ipv6%"        =   "@IPv6:[fieldname]@"
+        "%srchost%"     =   "@HOSTNAME:[fieldname]@"
+        "%srcport%"     =   "@NUMBER:[fieldname]@"
+        "%srcmac%"      =   "@MACADDR:[fieldname]@"
+        "%dsthost%"     =   "@HOSTNAME:[fieldname]:@"
+        "%dstport%"     =   "@NUMBER:[fieldname]@"
+        "%dstmac%"      =   "@MACADDR:[fieldname]@"
+        "%regextime%"   =   "@PCRE:timestamp:[regexnotfound]@"
+        "%string%"      =   "@ESTRING:[fieldname]: @"           #string types with fieldname
+        "%alphanum%"    =   "@ESTRING:[fieldname]: @"
+        "%id%"          =   "@ESTRING:[fieldname]: @"
+        "%msgtime%"     =   "@ESTRING:[fieldname]: @"
+        "%time%"        =   "@ESTRING:[fieldname]: @"
+        "%protocol%"    =   "@ESTRING:[fieldname]: @"
+        "%msgid%"       =   "@ESTRING:[fieldname]: @"
+        "%severity%"    =   "@ESTRING:[fieldname]: @"
+        "%priority%"    =   "@ESTRING:[fieldname]: @"
+        "%apphost%"     =   "@ESTRING:[fieldname]: @"
+        "%appip%"       =   "@ESTRING:[fieldname]: @"
+        "%appvendor%"   =   "@ESTRING:[fieldname]: @"
+        "%appname%"     =   "@ESTRING:[fieldname]: @"
+        "%srcdomain%"   =   "@ESTRING:[fieldname]: @"
+        "%srczone%"     =   "@ESTRING:[fieldname]: @"
+        "%srcipnat%"    =   "@ESTRING:[fieldname]: @"
+        "%srcportnat%"  =   "@ESTRING:[fieldname]: @"
+        "%srcuser%"     =   "@ESTRING:[fieldname]: @"
+        "%srcuid%"      =   "@ESTRING:[fieldname]: @"
+        "%srcuri%"      =   "@ESTRING:[fieldname]: @"
+        "%srcgid%"      =   "@ESTRING:[fieldname]: @"
+        "%dstdomain%"   =   "@ESTRING:[fieldname]: @"
+        "%dstzone%"     =   "@ESTRING:[fieldname]: @"
+        "%dstipnat%"    =   "@ESTRING:[fieldname]: @"
+        "%dstportnat%"  =   "@ESTRING:[fieldname]: @"
+        "%dstuser%"     =   "@ESTRING:[fieldname]: @"
+        "%dstuid%"      =   "@ESTRING:[fieldname]: @"
+        "%dsturi%"      =   "@ESTRING:[fieldname]: @"
+        "%dstgroup%"    =   "@ESTRING:[fieldname]: @"
+        "%dstgid%"      =   "@ESTRING:[fieldname]: @"
+        "%dstemail%"    =   "@ESTRING:[fieldname]: @"
+        "%iniface%"     =   "@ESTRING:[fieldname]: @"
+        "%outiface%"    =   "@ESTRING:[fieldname]: @"
+        "%policyid%"    =   "@ESTRING:[fieldname]: @"
+        "%sessionid%"   =   "@ESTRING:[fieldname]: @"
+        "%action%"      =   "@ESTRING:[fieldname]: @"
+        "%command%"     =   "@ESTRING:[fieldname]: @"
+        "%object%"      =   "@ESTRING:[fieldname]: @"
+        "%method%"      =   "@ESTRING:[fieldname]: @"
+        "%status%"      =   "@ESTRING:[fieldname]: @"
+        "%reason%"      =   "@ESTRING:[fieldname]: @"
+        "%bytesrecv%"   =   "@ESTRING:[fieldname]: @"
+        "%bytessent%"   =   "@ESTRING:[fieldname]: @"
+        "%pktsrecv%"    =   "@ESTRING:[fieldname]: @"
+        "%pktssent%"    =   "@ESTRING:[fieldname]: @"
+        "%duration%"    =   "@ESTRING:[fieldname]: @"
+        "%uri%"         =   "@ESTRING:[fieldname]: @"
 
         [patterndb.tags.delimitedstring]
-        "()"		= 	"@QSTRING:[fieldname]:()@"
-        "[]"		= 	"@QSTRING:[fieldname]:[]@"
-        "\"\""		= 	"@QSTRING:[fieldname]:\"@"
-        "''"		= 	"@QSTRING:[fieldname]:'@"
-        "<>"		=	"@QSTRING:[fieldname]:<>@"
-        "``"		=	"@QSTRING:[fieldname]:`@"
-        ":"			=	"@ESTRING:[fieldname]::@"
-        ","			=	"@ESTRING:[fieldname]:,@"
-        ";"			=	"@ESTRING:[fieldname]:;@"
-        ">"			=	"@ESTRING:[fieldname]:>@"
-        "'"			=	"@ESTRING:[fieldname]:'@"
-        "?"			=	"@ESTRING:[fieldname]:?@"
-        "&"			=	"@ESTRING:[fieldname]:&@"
-        "default"	=	"@ESTRING:[fieldname]:[del]@"
+        "()"        =   "@QSTRING:[fieldname]:()@"
+        "[]"        =   "@QSTRING:[fieldname]:[]@"
+        "\"\""      =   "@QSTRING:[fieldname]:\"@"
+        "''"        =   "@QSTRING:[fieldname]:'@"
+        "<>"        =   "@QSTRING:[fieldname]:<>@"
+        "``"        =   "@QSTRING:[fieldname]:`@"
+        ":"         =   "@ESTRING:[fieldname]::@"
+        ","         =   "@ESTRING:[fieldname]:,@"
+        ";"         =   "@ESTRING:[fieldname]:;@"
+        ">"         =   "@ESTRING:[fieldname]:>@"
+        "'"         =   "@ESTRING:[fieldname]:'@"
+        "?"         =   "@ESTRING:[fieldname]:?@"
+        "&"         =   "@ESTRING:[fieldname]:&@"
+        "default"   =   "@ESTRING:[fieldname]:[del]@"
 
 
         #only need to add the tags here that you wish to change the name of, otherwise the sequence value is used.
         [patterndb.tags.fieldname]
-        "msgtime"	    =   "timestamp"
-        "regextime"	    =   "timestamp"
+        "msgtime"       =   "timestamp"
+        "regextime"     =   "timestamp"
         "float"         =   "decimal"
 
 [grok]
     [grok.tags]
         [grok.tags.general]
         "%multiline%"   =   "%{GREEDYDATA:[fieldname]}"
-        "%srcemail%"	=   "%{EMAILADDRESS:[fieldname]}"
-        "%float%"		=   "%{BASE16FLOAT:[fieldname]}"
-        "%integer%"		= 	"%{INT:[fieldname]}"
-        "%srcip%"		=   "%{IP:[fieldname]}"
-        "%dstip%"		=   "%{IP:[fieldname]}"
-        "%ipv6%"		=   "%{IP:[fieldname]}"
-        "%srchost%" 	=	"%{HOSTNAME:[fieldname]}"
-        "%srcport%" 	= 	"%{INT:[fieldname]}"
-        "%srcmac%" 		= 	"%{MAC:[fieldname]}"
-        "%dsthost%" 	= 	"%{HOSTNAME:[fieldname]}"
-        "%dstport%" 	= 	"%{INT:[fieldname]}"
-        "%dstmac%" 		= 	"%{MAC:[fieldname]}"
-        "%regextime%"	=	"%{DATA:[fieldname]}"
-        "%string%"	    =   "%{DATA:[fieldname]}"
-        "%alphanum%"	=   "%{DATA:[fieldname]}"
-        "%id%"			=   "%{DATA:[fieldname]}"
-        "%msgtime%"		= 	"%{DATA:[fieldname]}"
-        "%time%"		=	"%{DATA:[fieldname]}"
-        "%protocol%"	=	"%{DATA:[fieldname]}"
-        "%msgid%" 		=   "%{DATA:[fieldname]}"
-        "%severity%" 	=	"%{DATA:[fieldname]}"
-        "%priority%" 	=	"%{DATA:[fieldname]}"
-        "%apphost%" 	=	"%{DATA:[fieldname]}"
-        "%appip%" 		=   "%{DATA:[fieldname]}"
-        "%appvendor%"	=	"%{DATA:[fieldname]}"
-        "%appname%" 	=	"%{DATA:[fieldname]}"
-        "%srcdomain%"	=	"%{DATA:[fieldname]}"
-        "%srczone%" 	= 	"%{DATA:[fieldname]}"
-        "%srcipnat%" 	=	"%{DATA:[fieldname]}"
-        "%srcportnat%" 	= 	"%{DATA:[fieldname]}"
-        "%srcuser%" 	=  	"%{USER:[fieldname]}"
-        "%srcuid%" 		=  	"%{UUID:[fieldname]}"
-        "%srcuri%" 		=  	"%{URI:[fieldname]}"
-        "%srcgid%" 		=  	"%{DATA:[fieldname]}"
-        "%dstdomain%" 	= 	"%{DATA:[fieldname]}"
-        "%dstzone%" 	=	"%{DATA:[fieldname]}"
-        "%dstipnat%" 	= 	"%{DATA:[fieldname]}"
-        "%dstportnat%" 	= 	"%{DATA:[fieldname]}"
-        "%dstuser%" 	= 	"%{USER:[fieldname]}"
-        "%dstuid%" 		= 	"%{UUID:[fieldname]}"
-        "%dsturi%" 		=  	"%{URI:[fieldname]}"
-        "%dstgroup%" 	= 	"%{DATA:[fieldname]}"
-        "%dstgid%" 		= 	"%{DATA:[fieldname]}"
-        "%dstemail%" 	= 	"%{EMAILADDRESS:[fieldname]}"
-        "%iniface%" 	= 	"%{DATA:[fieldname]}"
-        "%outiface%" 	= 	"%{DATA:[fieldname]}"
-        "%policyid%" 	= 	"%{DATA:[fieldname]}"
-        "%sessionid%" 	= 	"%{DATA:[fieldname]}"
-        "%action%" 		= 	"%{DATA:[fieldname]}"
-        "%command%" 	= 	"%{DATA:[fieldname]}"
-        "%object%" 		= 	"%{DATA:[fieldname]}"
-        "%method%" 		= 	"%{DATA:[fieldname]}"
-        "%status%" 		= 	"%{LOGLEVEL:[fieldname]}"
-        "%reason%" 		= 	"%{DATA:[fieldname]}"
-        "%bytesrecv%" 	= 	"%{DATA:[fieldname]}"
-        "%bytessent%" 	= 	"%{DATA:[fieldname]}"
-        "%pktsrecv%" 	= 	"%{DATA:[fieldname]}"
-        "%pktssent%" 	= 	"%{DATA:[fieldname]}"
-        "%duration%" 	= 	"%{DATA:[fieldname]}"
-        "%uri%"			=	"%{URI:[fieldname]}"
+        "%srcemail%"    =   "%{EMAILADDRESS:[fieldname]}"
+        "%float%"       =   "%{BASE16FLOAT:[fieldname]}"
+        "%integer%"     =   "%{INT:[fieldname]}"
+        "%srcip%"       =   "%{IP:[fieldname]}"
+        "%dstip%"       =   "%{IP:[fieldname]}"
+        "%ipv6%"        =   "%{IP:[fieldname]}"
+        "%srchost%"     =   "%{HOSTNAME:[fieldname]}"
+        "%srcport%"     =   "%{INT:[fieldname]}"
+        "%srcmac%"      =   "%{MAC:[fieldname]}"
+        "%dsthost%"     =   "%{HOSTNAME:[fieldname]}"
+        "%dstport%"     =   "%{INT:[fieldname]}"
+        "%dstmac%"      =   "%{MAC:[fieldname]}"
+        "%regextime%"   =   "%{DATA:[fieldname]}"
+        "%string%"      =   "%{DATA:[fieldname]}"
+        "%alphanum%"    =   "%{DATA:[fieldname]}"
+        "%id%"          =   "%{DATA:[fieldname]}"
+        "%msgtime%"     =   "%{DATA:[fieldname]}"
+        "%time%"        =   "%{DATA:[fieldname]}"
+        "%protocol%"    =   "%{DATA:[fieldname]}"
+        "%msgid%"       =   "%{DATA:[fieldname]}"
+        "%severity%"    =   "%{DATA:[fieldname]}"
+        "%priority%"    =   "%{DATA:[fieldname]}"
+        "%apphost%"     =   "%{DATA:[fieldname]}"
+        "%appip%"       =   "%{DATA:[fieldname]}"
+        "%appvendor%"   =   "%{DATA:[fieldname]}"
+        "%appname%"     =   "%{DATA:[fieldname]}"
+        "%srcdomain%"   =   "%{DATA:[fieldname]}"
+        "%srczone%"     =   "%{DATA:[fieldname]}"
+        "%srcipnat%"    =   "%{DATA:[fieldname]}"
+        "%srcportnat%"  =   "%{DATA:[fieldname]}"
+        "%srcuser%"     =   "%{USER:[fieldname]}"
+        "%srcuid%"      =   "%{UUID:[fieldname]}"
+        "%srcuri%"      =   "%{URI:[fieldname]}"
+        "%srcgid%"      =   "%{DATA:[fieldname]}"
+        "%dstdomain%"   =   "%{DATA:[fieldname]}"
+        "%dstzone%"     =   "%{DATA:[fieldname]}"
+        "%dstipnat%"    =   "%{DATA:[fieldname]}"
+        "%dstportnat%"  =   "%{DATA:[fieldname]}"
+        "%dstuser%"     =   "%{USER:[fieldname]}"
+        "%dstuid%"      =   "%{UUID:[fieldname]}"
+        "%dsturi%"      =   "%{URI:[fieldname]}"
+        "%dstgroup%"    =   "%{DATA:[fieldname]}"
+        "%dstgid%"      =   "%{DATA:[fieldname]}"
+        "%dstemail%"    =   "%{EMAILADDRESS:[fieldname]}"
+        "%iniface%"     =   "%{DATA:[fieldname]}"
+        "%outiface%"    =   "%{DATA:[fieldname]}"
+        "%policyid%"    =   "%{DATA:[fieldname]}"
+        "%sessionid%"   =   "%{DATA:[fieldname]}"
+        "%action%"      =   "%{DATA:[fieldname]}"
+        "%command%"     =   "%{DATA:[fieldname]}"
+        "%object%"      =   "%{DATA:[fieldname]}"
+        "%method%"      =   "%{DATA:[fieldname]}"
+        "%status%"      =   "%{LOGLEVEL:[fieldname]}"
+        "%reason%"      =   "%{DATA:[fieldname]}"
+        "%bytesrecv%"   =   "%{DATA:[fieldname]}"
+        "%bytessent%"   =   "%{DATA:[fieldname]}"
+        "%pktsrecv%"    =   "%{DATA:[fieldname]}"
+        "%pktssent%"    =   "%{DATA:[fieldname]}"
+        "%duration%"    =   "%{DATA:[fieldname]}"
+        "%uri%"         =   "%{URI:[fieldname]}"
 
         [grok.tags.delimitedstring]
-        "\"\""		= 	"%{QUOTEDSTRING:[fieldname]}"
-        "''"		= 	"%{QUOTEDSTRING:[fieldname]}"
-        "<>"		=	"%{QUOTEDSTRING:[fieldname]}"
-        "``"		=	"%{QUOTEDSTRING:[fieldname]}"
+        "\"\""      =   "%{QUOTEDSTRING:[fieldname]}"
+        "''"        =   "%{QUOTEDSTRING:[fieldname]}"
+        "<>"        =   "%{QUOTEDSTRING:[fieldname]}"
+        "``"        =   "%{QUOTEDSTRING:[fieldname]}"
 
 
         #only need to add the tags here that you wish to change the name of, otherwise the sequence value is used.
         [grok.tags.fieldname]
-        "msgtime"	    =   "timestamp"
+        "msgtime"       =   "timestamp"
         "float"         =   "decimal"
 # vim:set ts=4 et:
