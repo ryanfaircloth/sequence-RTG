@@ -147,7 +147,7 @@ func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context, comple
 	}
 
 	for _, p := range patterns {
-		ar := AnalyzerResult{PatternId: p.ID, Pattern: p.SequencePattern, DateCreated: p.DateCreated, DateLastMatched: p.DateLastMatched, ExampleCount: int(p.CumulativeMatchCount), TagPositions: p.TagPositions.String}
+		ar := AnalyzerResult{PatternId: p.ID, Pattern: p.SequencePattern, DateCreated: p.DateCreated, DateLastMatched: p.DateLastMatched, ExampleCount: int(p.CumulativeMatchCount), TagPositions: p.TagPositions.String, ComplexityScore: p.ComplexityScore}
 		svcs, err := p.ServiceServices().All(ctx, db)
 		if err != nil {
 			logger.DatabaseSelectFailed("services", "Where id = "+p.ID, err.Error())

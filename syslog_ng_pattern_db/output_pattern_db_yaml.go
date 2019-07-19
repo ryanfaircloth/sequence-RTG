@@ -3,6 +3,7 @@ package syslog_ng_pattern_db
 import (
 	"fmt"
 	"gopkg.in/yaml.v3"
+	"math"
 	"os"
 	"gitlab.in2p3.fr/cc-in2p3-system/sequence"
 	"time"
@@ -24,6 +25,7 @@ type YRule struct {
 }
 
 type YRuleValues struct {
+	Complexity      float64`yaml:"seq-complexity"`
 	Seqmatches      int    `yaml:"seq-matches"`
 	New             bool   `yaml:"seq-new"`
 	DateCreated     string `yaml:"seq-created"`
@@ -94,6 +96,7 @@ func buildRule(result sequence.AnalyzerResult, rsName string) YRule {
 	rule.Values.New = true
 	rule.Values.DateCreated = result.DateCreated.Format("2006-01-02")
 	rule.Values.DateLastMatched = result.DateLastMatched.Format("2006-01-02")
+	rule.Values.Complexity = math.Round(result.ComplexityScore*100)/100
 	//create a new UUID
 	rule.ID = result.PatternId
 	return rule

@@ -139,6 +139,8 @@ func buildRuleXML(result sequence.AnalyzerResult) XRule {
 	rule.Values.Values = append(rule.Values.Values, dc)
 	dlm := XRuleValue{Name: "seq-last-match", Value: result.DateLastMatched.Format("2006-01-02")}
 	rule.Values.Values = append(rule.Values.Values, dlm)
+	dcs := XRuleValue{Name: "seq-complexity", Value: fmt.Sprintf("%.2f", result.ComplexityScore)}
+	rule.Values.Values = append(rule.Values.Values, dcs)
 	var p XPattern
 	var e XExample
 	var t XTestMessage
