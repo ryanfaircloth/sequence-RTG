@@ -29,6 +29,7 @@ var (
 	format         string
 	batchsize      int
 	threshold      int
+	complimit	   float64
 	standardLogger *sequence.StandardLogger
 
 	quit chan struct{}
@@ -330,14 +331,14 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 				cmap[k] = v
 			}
 			if outsystem == "patterndb" {
-				processed, top5, err := syslog_ng_pattern_db.OutputToFiles(outformat, outfile, cfgfile, cmap)
+				processed, top5, err := syslog_ng_pattern_db.OutputToFiles(outformat, outfile, cfgfile, complimit, cmap)
 				if err != nil {
 					standardLogger.HandleError(err.Error())
 				} else {
 					standardLogger.OutputToFileInfo(processed, top5, time.Since(fileTime))
 				}
 			} else if outsystem == "grok" {
-				processed, top5, err := logstash_grok.OutputToFiles(outfile, cfgfile)
+				processed, top5, err := logstash_grok.OutputToFiles(outfile, cfgfile, complimit, cmap)
 				if err != nil {
 					standardLogger.HandleError(err.Error())
 				} else {
@@ -361,7 +362,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 func outputforpatterndb(cmd *cobra.Command, args []string) {
 	start("outputtofile")
 	startTime := time.Now()
-	processed, top5, err := syslog_ng_pattern_db.OutputToFiles(outformat, outfile, cfgfile, nil)
+	processed, top5, err := syslog_ng_pattern_db.OutputToFiles(outformat, outfile, cfgfile, complimit, nil)
 	if err != nil {
 		standardLogger.HandleError(err.Error())
 	} else {
@@ -372,7 +373,7 @@ func outputforpatterndb(cmd *cobra.Command, args []string) {
 func outputforgrok(cmd *cobra.Command, args []string) {
 	start("outputtofile")
 	startTime := time.Now()
-	processed, top5, err := logstash_grok.OutputToFiles(outfile, cfgfile)
+	processed, top5, err := logstash_grok.OutputToFiles(outfile, cfgfile, complimit, nil)
 	if err != nil {
 		standardLogger.HandleError(err.Error())
 	} else {
@@ -539,6 +540,7 @@ func main() {
 	sequenceCmd.PersistentFlags().StringVarP(&loglevel, "log-level", "n", "", "defaults to info level, can be 'trace' 'debug', 'info', 'error', 'fatal'")
 	sequenceCmd.PersistentFlags().StringVarP(&errorfile, "std-error-file", "e", "", "this redirects panics etc to a log file not stderr, set to a valid path to enable this")
 	sequenceCmd.PersistentFlags().IntVarP(&threshold, "below-threshold", "t", 0, "this is used with the purge patterns command, any patterns with cumulative match count less than the threshold will be deleted")
+	sequenceCmd.PersistentFlags().Float64VarP(&complimit, "complexity-limit", "c", 1, "the complexity of a pattern is between 0 and 1, higher numbers represent more tags. 0.5 is a good level to limit exporting over-tagged patterns.")
 
 	scanCmd.Run = scan
 	createDatabaseCmd.Run = createdatabase

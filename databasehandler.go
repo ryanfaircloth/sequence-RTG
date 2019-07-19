@@ -108,7 +108,7 @@ func GetPatternsFromDatabase(db *sql.DB, ctx context.Context) map[string]string 
 }
 
 //this is for the output to files
-func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context) (map[string]AnalyzerResult, string) {
+func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context, complexityLevel float64) (map[string]AnalyzerResult, string) {
 	var (
 		patterns models.PatternSlice
 		err      error
@@ -123,12 +123,12 @@ func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context) (map[s
 			total := getRecordProcessed(db, ctx)
 			threshold = int64(GetThreshold(total))
 		}
-		patterns, err = models.Patterns(models.PatternWhere.CumulativeMatchCount.GTE(threshold), qm.OrderBy(models.PatternColumns.CumulativeMatchCount+" DESC")).All(ctx, db)
+		patterns, err = models.Patterns(models.PatternWhere.CumulativeMatchCount.GTE(threshold), qm.And(models.PatternColumns.ComplexityScore+" <=? ", complexityLevel), qm.OrderBy(models.PatternColumns.CumulativeMatchCount+" DESC")).All(ctx, db)
 		if err != nil {
 			logger.DatabaseSelectFailed("patterns", "Where threshold_reached=true", err.Error())
 		}
 	} else {
-		patterns, err = models.Patterns(qm.OrderBy(models.PatternColumns.CumulativeMatchCount+" DESC")).All(ctx, db)
+		patterns, err = models.Patterns(models.PatternWhere.ComplexityScore.LTE(complexityLevel), qm.OrderBy(models.PatternColumns.CumulativeMatchCount+" DESC")).All(ctx, db)
 		if err != nil {
 			logger.DatabaseSelectFailed("patterns", "All", err.Error())
 		}

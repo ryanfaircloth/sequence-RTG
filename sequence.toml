@@ -283,6 +283,7 @@ tags = [
     46 = ["Jan 02 15:04:05", "1"]
     47 = ["15:04:05", ""]
     48 = ["2006-01-02", ""]
+    49 = ["15:04:05.999999", ""]
 
 
     #this is if you are using a parser that is not sequence, such as sys-log patterndb

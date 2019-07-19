@@ -45,10 +45,12 @@ func readConfig(file string) error {
 	return nil
 }
 
-func OutputToFiles(outfile string, config string) (int, string, error) {
+func OutputToFiles(outfile string, config string, complexitylevel float64, cmap map[string]sequence.AnalyzerResult) (int, string, error) {
 	var (
 		err   error
 		count int
+		top5     string
+		patmap   map[string]sequence.AnalyzerResult
 	)
 
 	if config == "" {
@@ -58,9 +60,13 @@ func OutputToFiles(outfile string, config string) (int, string, error) {
 	if err = readConfig(config); err != nil {
 		return count, "", err
 	}
-	db, ctx := sequence.OpenDbandSetContext()
-	defer db.Close()
-	patmap, top5 := sequence.GetPatternsWithExamplesFromDatabase(db, ctx)
+	if sequence.GetUseDatabase() {
+		db, ctx := sequence.OpenDbandSetContext()
+		defer db.Close()
+		patmap, top5 = sequence.GetPatternsWithExamplesFromDatabase(db, ctx, complexitylevel)
+	} else {
+		patmap = cmap
+	}
 	logger.HandleInfo(fmt.Sprintf("Found %d patterns for output", len(patmap)))
 	count = len(patmap)
 	//open the file for the text output

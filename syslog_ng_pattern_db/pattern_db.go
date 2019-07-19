@@ -51,6 +51,9 @@ func readConfig(file string) error {
 //first we replace the easy ones that are surrounded by spaces
 //then we deal with the compound ones
 func replaceTags(pattern string) string {
+	if len(pattern) < 1{
+		return pattern
+	}
 	//make sure @ are escaped @@ before we start
 	pattern = strings.Replace(pattern, "@", "@@", -1)
 	//some patterns start with a space, we need to catch that
@@ -281,7 +284,7 @@ func SaveLogMessages(lr sequence.LogRecordCollection, fname string) {
 	}
 }
 
-func OutputToFiles(outformat string, outfile string, config string, cmap map[string]sequence.AnalyzerResult) (int, string, error) {
+func OutputToFiles(outformat string, outfile string, config string, complexitylevel float64, cmap map[string]sequence.AnalyzerResult) (int, string, error) {
 
 	var (
 		txtFile  *os.File
@@ -305,7 +308,7 @@ func OutputToFiles(outformat string, outfile string, config string, cmap map[str
 	if sequence.GetUseDatabase() {
 		db, ctx := sequence.OpenDbandSetContext()
 		defer db.Close()
-		patmap, top5 = sequence.GetPatternsWithExamplesFromDatabase(db, ctx)
+		patmap, top5 = sequence.GetPatternsWithExamplesFromDatabase(db, ctx, complexitylevel)
 	} else {
 		patmap = cmap
 	}
