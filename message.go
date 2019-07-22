@@ -273,10 +273,15 @@ func (this *Message) scanToken(data string, nt int) (int, Token, error) {
 				return timeLen, Token{Type: TokenTime, Tag: tagType, Special: tnode.regextype}, nil
 			} else if hexLen > 0 && this.state.hexColons > 1 {
 				if this.state.hexColons == 5 && this.state.hexMaxSuccColons == 1 {
-					return hexLen, Token{Type: TokenMac, Tag: tagType}, nil
+					//if the end of the message there won't be an extra space
+					if i == l-1{
+						return hexLen, Token{Type: TokenMac, Tag: tagType}, nil
+					} else {
+						return hexLen-1, Token{Type: TokenMac, Tag: tagType}, nil
+					}
+
 				} else if this.state.hexSuccColonsSeries == 1 ||
 					(this.state.hexColons == 7 && this.state.hexSuccColonsSeries == 0) {
-
 					return hexLen, Token{Type: TokenIPv6, Tag: tagType}, nil
 				} else {
 					//sometimes adds a space on the end

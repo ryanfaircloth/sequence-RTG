@@ -57,12 +57,12 @@ var (
 		{
 			"id=firewall time=\"2005-03-18 14:01:46\" fw=TOPSEC priv=6 recorder=kernel type=conn policy=414 proto=TCP rule=accept src=61.167.71.244 sport=35223 dst=210.82.119.211 dport=25 duration=27 inpkt=37 outpkt=39 sent=1770 rcvd=20926 smac=00:04:c1:8b:d8:82 dmac=00:0b:5f:b2:1d:80",
 			"id = %string% time = \" %regextime:3% \" fw = %string% priv = %integer% recorder = %string% type = %string% policy = %integer% proto = %protocol% rule = %string% src = %srcip% sport = %srcport% dst = %dstip% dport = %dstport% duration = %duration% inpkt = %integer% outpkt = %integer% sent = %integer% rcvd = %integer% smac = %srcmac% dmac = %dstmac%",
-			"id=%string% time=\"%regextime:3%\" fw=%string% priv=%integer% recorder=%string% type=%string% policy=%integer% proto=%protocol% rule=%string% src=%srcip% sport=%srcport% dst=%dstip% dport=%dstport% duration=%duration% inpkt=%integer% outpkt=%integer% sent=%integer% rcvd=%integer% smac=%srcmac%dmac=%dstmac%",
+			"id=%string% time=\"%regextime:3%\" fw=%string% priv=%integer% recorder=%string% type=%string% policy=%integer% proto=%protocol% rule=%string% src=%srcip% sport=%srcport% dst=%dstip% dport=%dstport% duration=%duration% inpkt=%integer% outpkt=%integer% sent=%integer% rcvd=%integer% smac=%srcmac% dmac=%dstmac%",
 		},
 		{
 			"id=firewall time=\"2005-03-18 14:01:43\" fw=TOPSEC priv=4 recorder=kernel type=conn policy=504 proto=TCP rule=deny src=210.82.121.91 sport=4958 dst=61.229.37.85 dport=23124 smac=00:0b:5f:b2:1d:80 dmac=00:04:c1:8b:d8:82",
 			"id = %string% time = \" %regextime:3% \" fw = %string% priv = %integer% recorder = %string% type = %string% policy = %integer% proto = %protocol% rule = %string% src = %srcip% sport = %srcport% dst = %dstip% dport = %dstport% smac = %srcmac% dmac = %dstmac%",
-			"id=%string% time=\"%regextime:3%\" fw=%string% priv=%integer% recorder=%string% type=%string% policy=%integer% proto=%protocol% rule=%string% src=%srcip% sport=%srcport% dst=%dstip% dport=%dstport% smac=%srcmac%dmac=%dstmac%",
+			"id=%string% time=\"%regextime:3%\" fw=%string% priv=%integer% recorder=%string% type=%string% policy=%integer% proto=%protocol% rule=%string% src=%srcip% sport=%srcport% dst=%dstip% dport=%dstport% smac=%srcmac% dmac=%dstmac%",
 		},
 	}
 
