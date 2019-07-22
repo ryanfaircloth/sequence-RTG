@@ -284,7 +284,7 @@ func (this *Message) scanToken(data string, nt int) (int, Token, error) {
 					(this.state.hexColons == 7 && this.state.hexSuccColonsSeries == 0) {
 					return hexLen, Token{Type: TokenIPv6, Tag: tagType}, nil
 				} else {
-					//sometimes adds a space on the end
+					//sometimes it adds a space on the end - needs to be removed
 					if r == ' ' {
 						return hexLen - 1, Token{Type: TokenLiteral, Tag: tagType}, nil
 					} else {
@@ -311,6 +311,11 @@ func (this *Message) scanToken(data string, nt int) (int, Token, error) {
 					if r == '.' && i == l-1 {
 						tokenLen--
 						this.state.tokenType = TokenInteger
+					}
+				//if the sentence finishes with a . it is likely to be punctuation remove it so it makes its own token.
+				case TokenLiteral:
+					if r == '.' && i == l-1 && tokenLen > 1{
+						tokenLen--
 					}
 				}
 

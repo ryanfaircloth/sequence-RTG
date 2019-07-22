@@ -197,6 +197,7 @@ tags = [
         "bios",
         "directory",
         "driver",
+        "disk",
         "email",
         "event",
         "file",
