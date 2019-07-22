@@ -61,13 +61,6 @@ func PurgePatternsfromDatabase(threshold int64) int64 {
 	}
 	patterns, _ := models.Patterns(models.PatternWhere.CumulativeMatchCount.LT(threshold)).All(ctx, tx)
 	for _, pat := range patterns {
-		svc, err := pat.ServiceServices().All(ctx, tx)
-		if err != nil {
-			logger.HandleError(err.Error())
-		}
-		for _, s := range svc {
-			pat.RemoveServiceServices(ctx, tx, s)
-		}
 		pat.PatternExamples().DeleteAll(ctx, tx)
 	}
 	if len(patterns) > 0 {
@@ -148,11 +141,10 @@ func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context, comple
 
 	for _, p := range patterns {
 		ar := AnalyzerResult{PatternId: p.ID, Pattern: p.SequencePattern, DateCreated: p.DateCreated, DateLastMatched: p.DateLastMatched, ExampleCount: int(p.CumulativeMatchCount), TagPositions: p.TagPositions.String, ComplexityScore: p.ComplexityScore}
-		svcs, err := p.ServiceServices().All(ctx, db)
-		if err != nil {
-			logger.DatabaseSelectFailed("services", "Where id = "+p.ID, err.Error())
-		}
-		ar.Services = svcs
+		svc, _ := p.Service().One(ctx, db)
+		ar.Service.ID = svc.ID
+		ar.Service.Name = svc.Name
+		ar.Service.DateCreated = svc.DateCreated
 		var ex models.ExampleSlice
 		ex, err = p.PatternExamples().All(ctx, db)
 		if err != nil {
@@ -187,21 +179,16 @@ func getRecordProcessed(db *sql.DB, ctx context.Context) int {
 //this is for the parser
 func GetPatternsFromDatabaseByService(db *sql.DB, ctx context.Context, sid string) map[string]AnalyzerResult {
 	pmap := make(map[string]AnalyzerResult)
-	// This pulls 'all' of the patterns from the patterns database
 	svc, err := models.Services(models.ServiceWhere.ID.EQ(sid)).One(ctx, db)
+	patterns, err := models.Patterns(models.PatternWhere.ServiceID.EQ(sid)).All(ctx, db)
 	if err != nil {
-		if err.Error() != "sql: no rows in result set" {
-			logger.DatabaseSelectFailed("services", "Where Serviceid = "+sid, err.Error())
-		}
-	} else {
-		patterns, err := svc.PatternPatterns().All(ctx, db)
-		if err != nil {
-			logger.DatabaseSelectFailed("patterns", "Where Serviceid = "+sid, err.Error())
-		}
-		for _, p := range patterns {
-			ar := AnalyzerResult{Pattern: p.SequencePattern, TagPositions: p.TagPositions.String}
-			pmap[p.ID] = ar
-		}
+		logger.DatabaseSelectFailed("patterns", "Where Serviceid = "+sid, err.Error())
+	}
+	for _, p := range patterns {
+		ar := AnalyzerResult{Pattern: p.SequencePattern, TagPositions: p.TagPositions.String}
+		ar.Service.Name = svc.Name
+		ar.Service.ID = svc.ID
+		pmap[p.ID] = ar
 	}
 	return pmap
 }
@@ -235,20 +222,15 @@ func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, tr int) 
 		return false
 	}
 	tp := null.String{String: result.TagPositions, Valid: true}
-	p := models.Pattern{ID: result.PatternId, SequencePattern: result.Pattern, DateCreated: time.Now(),
+	p := models.Pattern{ID: result.PatternId, ServiceID: result.Service.ID, SequencePattern: result.Pattern, DateCreated: time.Now(),
 		CumulativeMatchCount: int64(result.ExampleCount), OriginalMatchCount: int64(result.ExampleCount), DateLastMatched: time.Now(), IgnorePattern: false, TagPositions: tp, ComplexityScore:result.ComplexityScore}
-	err := p.Insert(ctx, tx, boil.Whitelist("id", "sequence_pattern", "date_created", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern", "tag_positions", "complexity_score"))
+	err := p.Insert(ctx, tx, boil.Whitelist("id", "service_id", "sequence_pattern", "date_created", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern", "tag_positions", "complexity_score"))
 	if err != nil {
 		logger.DatabaseInsertFailed("pattern", result.PatternId, err.Error())
 		return false
 	}
-
-	//add the patternid and serviceid to the table
-	for _, s := range result.Services {
-		p.AddServiceServices(ctx, tx, false, s)
-	}
 	for _, e := range result.Examples {
-		insertExample(ctx, tx, e, result.PatternId)
+		insertExample(ctx, tx, e, result.PatternId, result.Service.ID)
 	}
 	return true
 }
@@ -260,10 +242,6 @@ func UpdatePattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult) {
 	_, err := p.Update(ctx, tx, boil.Infer())
 	if err != nil {
 		logger.DatabaseUpdateFailed("pattern", result.PatternId, err.Error())
-	}
-	//add the patternid and serviceid to the table
-	for _, s := range result.Services {
-		p.AddServiceServices(ctx, tx, false, s)
 	}
 
 	//if the example count is less than three, add the extra ones if different
@@ -279,18 +257,18 @@ func UpdatePattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult) {
 				}
 			}
 			if !found {
-				insertExample(ctx, tx, e, result.PatternId)
+				insertExample(ctx, tx, e, result.PatternId, result.Service.ID)
 			}
 		}
 	}
 }
 
-func insertExample(ctx context.Context, tx *sql.Tx, lr LogRecord, pid string) {
+func insertExample(ctx context.Context, tx *sql.Tx, lr LogRecord, pid string, sid string) {
 	id, err := uuid.NewV4()
 	if err != nil {
 		logger.DatabaseInsertFailed("example", pid, err.Error())
 	}
-	ex := models.Example{ExampleDetail: strings.TrimRight(lr.Message, " "), PatternID: pid, ID: id.String(), ServiceID: GenerateIDFromString(lr.Service)}
+	ex := models.Example{ExampleDetail: strings.TrimRight(lr.Message, " "), PatternID: pid, ID: id.String(), ServiceID: sid}
 	err = ex.Insert(ctx, tx, boil.Infer())
 	if err != nil {
 		logger.DatabaseInsertFailed("example", pid, err.Error())
@@ -306,12 +284,10 @@ func SaveExistingToDatabase(rmap map[string]AnalyzerResult) {
 	nmap := make(map[string]string)
 	//add the patterns and examples
 	for _, result := range rmap {
-		for _, s := range result.Services {
-			//check the services if it exists and if not append.
-			_, ok := smap[s.ID]
-			if !ok {
-				nmap[s.ID] = s.Name
-			}
+		//check the services if it exists and if not append.
+		_, ok := smap[result.Service.ID]
+		if !ok {
+			nmap[result.Service.ID] = result.Service.Name
 		}
 	}
 	tx, err := db.BeginTx(ctx, nil)
@@ -353,12 +329,10 @@ func SaveToDatabase(amap map[string]AnalyzerResult) (int, int) {
 	nmap := make(map[string]string)
 	//add the patterns and examples
 	for _, result := range amap {
-		for _, s := range result.Services {
-			//check the services if it exists and if not append.
-			_, ok := smap[s.ID]
-			if !ok {
-				nmap[s.ID] = s.Name
-			}
+		//check the services if it exists and if not append.
+		_, ok := smap[result.Service.ID]
+		if !ok {
+			nmap[result.Service.ID] = result.Service.Name
 		}
 	}
 	tx, err := db.BeginTx(ctx, nil)

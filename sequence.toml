@@ -8,8 +8,7 @@ database = "sequence.sdb"
 createdbcommands = [
         "PRAGMA foreign_keys=OFF;",
         "CREATE TABLE Services (id STRING (20, 50) PRIMARY KEY NOT NULL, name STRING NOT NULL, date_created DATETIME NOT NULL);",
-        "CREATE TABLE PatternsServices (pattern_id STRING REFERENCES Patterns (id) ON DELETE NO ACTION NOT NULL, service_id STRING REFERENCES Services (id) ON DELETE NO ACTION NOT NULL, PRIMARY KEY (pattern_id, service_id));",
-        "CREATE TABLE Patterns (id STRING (20, 50) PRIMARY KEY NOT NULL, sequence_pattern STRING (1000) NOT NULL, tag_positions STRING, date_created DATETIME NOT NULL, date_last_matched DATETIME NOT NULL, original_match_count INTEGER NOT NULL, cumulative_match_count INTEGER NOT NULL, ignore_pattern BOOLEAN NOT NULL, complexity_score DOUBLE NOT NULL DEFAULT (0.0));",
+        "CREATE TABLE Patterns (id STRING (20, 50) PRIMARY KEY NOT NULL, service_id STRING REFERENCES Services (id) NOT NULL, sequence_pattern STRING (1000) NOT NULL, tag_positions STRING, date_created DATETIME NOT NULL, date_last_matched DATETIME NOT NULL, original_match_count INTEGER NOT NULL, cumulative_match_count INTEGER NOT NULL, ignore_pattern BOOLEAN NOT NULL, complexity_score DOUBLE NOT NULL DEFAULT (0.0));",
         "CREATE TABLE Examples (id STRING PRIMARY KEY NOT NULL, service_id STRING REFERENCES Services (id) ON DELETE NO ACTION NOT NULL, pattern_id STRING (20, 50) REFERENCES Patterns (id) ON DELETE NO ACTION NOT NULL, example_detail STRING (1000) NOT NULL);",
         "PRAGMA foreign_keys=ON;"
 ]
@@ -268,7 +267,7 @@ tags = [
     31 = ["1/2/2006 15:04", "99"]
     32 = ["02Jan2006 03:04:05", "99"]
     33 = ["Jan _2, 2006 _3:04:05 PM", "2"]
-    34 = ["2006-01-02T15:04:05Z", ""]              #type empty string - matches all the types with no spaces, no regex needed 2015-01-21 21:41:27
+    34 = ["04:54:57 PM", "99"]           #type empty string - matches all the types with no spaces, no regex needed 2015-01-21 21:41:27
     35 = ["2006-01-02T15:04:05-0700", ""]
     36 = ["2006-01-02T15:04:05.999-0700", ""]
     37 = ["2006-01-02T15:04:05Z07:00", ""]
@@ -284,6 +283,7 @@ tags = [
     47 = ["15:04:05", ""]
     48 = ["2006-01-02", ""]
     49 = ["15:04:05.999999", ""]
+    50 = ["2006-01-02T15:04:05Z", ""]
 
 
     #this is if you are using a parser that is not sequence, such as sys-log patterndb

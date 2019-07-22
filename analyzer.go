@@ -18,8 +18,8 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
-	"math"
 	"gitlab.in2p3.fr/cc-in2p3-system/sequence/models"
+	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -84,7 +84,7 @@ type Analyzer struct {
 //pattern to be used as the starting block for
 //all conversions
 type AnalyzerResult struct {
-	Services        models.ServiceSlice
+	Service		    models.Service
 	PatternId       string
 	Pattern         string
 	TagPositions    string
@@ -143,16 +143,6 @@ func SplitToInt(s string, sep string) []int {
 	return b
 }
 
-func AddServiceToAnalyzerResult(this *AnalyzerResult, service string) {
-	for _, s := range this.Services {
-		if s.Name == service {
-			return
-		}
-	}
-	s := models.Service{ID: GenerateIDFromString(service), Name: service, DateCreated: time.Now()}
-	this.Services = append(this.Services, &s)
-}
-
 func AddExampleToAnalyzerResult(this *AnalyzerResult, lr LogRecord, threshold int) {
 	if len(this.Examples) >= 3 {
 		//nothing to here
@@ -174,10 +164,10 @@ func AddExampleToAnalyzerResult(this *AnalyzerResult, lr LogRecord, threshold in
 //this is so that the same pattern will have the same id
 //in all files and the id is reproducible
 //returns a sha1 hash as the id
-func GenerateIDFromString(pattern string) string {
+func GenerateIDFromString(pattern string, service string) string {
 	h := sha1.New()
-	h.Write([]byte(pattern))
-	sha := h.Sum(nil)                 // "sha" is uint8 type, encoded in base16
+	h.Write([]byte(pattern+service))
+	sha := h.Sum(nil)              // "sha" is uint8 type, encoded in base16
 	shaStr := hex.EncodeToString(sha) // String representation
 	return shaStr
 }

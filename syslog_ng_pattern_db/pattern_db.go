@@ -3,10 +3,9 @@ package syslog_ng_pattern_db
 import (
 	"fmt"
 	"github.com/BurntSushi/toml"
+	"gitlab.in2p3.fr/cc-in2p3-system/sequence"
 	"index/suffixarray"
 	"os"
-	"gitlab.in2p3.fr/cc-in2p3-system/sequence"
-	"gitlab.in2p3.fr/cc-in2p3-system/sequence/models"
 	"sort"
 	"strconv"
 	"strings"
@@ -178,25 +177,6 @@ func getSpecial(p string, mtc map[string]int) (string, map[string]int) {
 		}
 	}
 	return k, mtc
-}
-
-func CreateRulesetName(slice models.ServiceSlice) (string, string) {
-	//order the services, so concat is always in the same order
-	sort.Slice(slice, func(i, j int) bool {
-		return slice[i].Name < slice[j].Name
-	})
-	rname := ""
-	for _, s := range slice {
-		//try a couple of small intelligent guesses
-		d := strings.Split(s.Name, "-")
-		if rname != d[0] {
-			if len(rname) > 0 {
-				rname += "_"
-			}
-			rname += d[0]
-		}
-	}
-	return rname, sequence.GenerateIDFromString(rname)
 }
 
 func checkForCustomFieldName(f string) string {

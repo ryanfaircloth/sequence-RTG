@@ -98,11 +98,8 @@ func AddToRuleset(pattern sequence.AnalyzerResult, document XPatternDB) XPattern
 	rule := buildRuleXML(pattern)
 	//get the ruleset name for the example
 	//it will be the service value
-	rs := pattern.Services[0].Name
-	rsID := pattern.Services[0].ID
-	if len(pattern.Services) > 1 {
-		rs, rsID = CreateRulesetName(pattern.Services)
-	}
+	rs := pattern.Service.Name
+	rsID := pattern.Service.ID
 	found := false
 	//look in the ruleset if it exists already
 	for i, rls := range document.Rulesets {
@@ -120,7 +117,7 @@ func AddToRuleset(pattern sequence.AnalyzerResult, document XPatternDB) XPattern
 	//if not found make a new ruleset
 	if !found {
 		//create the ruleset
-		rs := buildRulesetXML(rsID, rs, pattern.Services)
+		rs := buildRulesetXML(rsID, rs, pattern.Service)
 		//add the rule
 		rs.Rules.Rules = append(rs.Rules.Rules, rule)
 		//add the ruleset
@@ -168,10 +165,8 @@ func buildRuleXML(result sequence.AnalyzerResult) XRule {
 	return rule
 }
 
-func buildRulesetXML(rsID string, rsName string, slice models.ServiceSlice) XRuleset {
+func buildRulesetXML(rsID string, rsName string, svc models.Service) XRuleset {
 	rs := XRuleset{Name: rsName, ID: rsID}
-	for _, s := range slice {
-		rs.Patterns.Patterns = append(rs.Patterns.Patterns, s.Name)
-	}
+	rs.Patterns.Patterns = append(rs.Patterns.Patterns, svc.Name)
 	return rs
 }

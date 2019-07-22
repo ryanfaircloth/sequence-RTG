@@ -55,16 +55,16 @@ var ServiceWhere = struct {
 // ServiceRels is where relationship names are stored.
 var ServiceRels = struct {
 	ServiceExamples string
-	PatternPatterns string
+	ServicePatterns string
 }{
 	ServiceExamples: "ServiceExamples",
-	PatternPatterns: "PatternPatterns",
+	ServicePatterns: "ServicePatterns",
 }
 
 // serviceR is where relationships are stored.
 type serviceR struct {
 	ServiceExamples ExampleSlice
-	PatternPatterns PatternSlice
+	ServicePatterns PatternSlice
 }
 
 // NewStruct creates a new relationship struct
@@ -378,16 +378,15 @@ func (o *Service) ServiceExamples(mods ...qm.QueryMod) exampleQuery {
 	return query
 }
 
-// PatternPatterns retrieves all the Pattern's Patterns with an executor via id column.
-func (o *Service) PatternPatterns(mods ...qm.QueryMod) patternQuery {
+// ServicePatterns retrieves all the Pattern's Patterns with an executor via service_id column.
+func (o *Service) ServicePatterns(mods ...qm.QueryMod) patternQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
 	}
 
 	queryMods = append(queryMods,
-		qm.InnerJoin("\"PatternsServices\" on \"Patterns\".\"id\" = \"PatternsServices\".\"pattern_id\""),
-		qm.Where("\"PatternsServices\".\"service_id\"=?", o.ID),
+		qm.Where("\"Patterns\".\"service_id\"=?", o.ID),
 	)
 
 	query := Patterns(queryMods...)
@@ -495,9 +494,9 @@ func (serviceL) LoadServiceExamples(ctx context.Context, e boil.ContextExecutor,
 	return nil
 }
 
-// LoadPatternPatterns allows an eager lookup of values, cached into the
+// LoadServicePatterns allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for a 1-M or N-M relationship.
-func (serviceL) LoadPatternPatterns(ctx context.Context, e boil.ContextExecutor, singular bool, maybeService interface{}, mods queries.Applicator) error {
+func (serviceL) LoadServicePatterns(ctx context.Context, e boil.ContextExecutor, singular bool, maybeService interface{}, mods queries.Applicator) error {
 	var slice []*Service
 	var object *Service
 
@@ -534,12 +533,7 @@ func (serviceL) LoadPatternPatterns(ctx context.Context, e boil.ContextExecutor,
 		return nil
 	}
 
-	query := NewQuery(
-		qm.Select("\"Patterns\".*, \"a\".\"service_id\""),
-		qm.From("\"Patterns\""),
-		qm.InnerJoin("\"PatternsServices\" as \"a\" on \"Patterns\".\"id\" = \"a\".\"pattern_id\""),
-		qm.WhereIn("\"a\".\"service_id\" in ?", args...),
-	)
+	query := NewQuery(qm.From(`Patterns`), qm.WhereIn(`service_id in ?`, args...))
 	if mods != nil {
 		mods.Apply(query)
 	}
@@ -550,22 +544,8 @@ func (serviceL) LoadPatternPatterns(ctx context.Context, e boil.ContextExecutor,
 	}
 
 	var resultSlice []*Pattern
-
-	var localJoinCols []string
-	for results.Next() {
-		one := new(Pattern)
-		var localJoinCol string
-
-		err = results.Scan(&one.ID, &one.SequencePattern, &one.TagPositions, &one.DateCreated, &one.DateLastMatched, &one.OriginalMatchCount, &one.CumulativeMatchCount, &one.IgnorePattern, &one.ComplexityScore, &localJoinCol)
-		if err != nil {
-			return errors.Wrap(err, "failed to scan eager loaded results for Patterns")
-		}
-		if err = results.Err(); err != nil {
-			return errors.Wrap(err, "failed to plebian-bind eager loaded slice Patterns")
-		}
-
-		resultSlice = append(resultSlice, one)
-		localJoinCols = append(localJoinCols, localJoinCol)
+	if err = queries.Bind(results, &resultSlice); err != nil {
+		return errors.Wrap(err, "failed to bind eager loaded slice Patterns")
 	}
 
 	if err = results.Close(); err != nil {
@@ -583,25 +563,24 @@ func (serviceL) LoadPatternPatterns(ctx context.Context, e boil.ContextExecutor,
 		}
 	}
 	if singular {
-		object.R.PatternPatterns = resultSlice
+		object.R.ServicePatterns = resultSlice
 		for _, foreign := range resultSlice {
 			if foreign.R == nil {
 				foreign.R = &patternR{}
 			}
-			foreign.R.ServiceServices = append(foreign.R.ServiceServices, object)
+			foreign.R.Service = object
 		}
 		return nil
 	}
 
-	for i, foreign := range resultSlice {
-		localJoinCol := localJoinCols[i]
+	for _, foreign := range resultSlice {
 		for _, local := range slice {
-			if local.ID == localJoinCol {
-				local.R.PatternPatterns = append(local.R.PatternPatterns, foreign)
+			if local.ID == foreign.ServiceID {
+				local.R.ServicePatterns = append(local.R.ServicePatterns, foreign)
 				if foreign.R == nil {
 					foreign.R = &patternR{}
 				}
-				foreign.R.ServiceServices = append(foreign.R.ServiceServices, local)
+				foreign.R.Service = local
 				break
 			}
 		}
@@ -663,144 +642,57 @@ func (o *Service) AddServiceExamples(ctx context.Context, exec boil.ContextExecu
 	return nil
 }
 
-// AddPatternPatterns adds the given related objects to the existing relationships
+// AddServicePatterns adds the given related objects to the existing relationships
 // of the Service, optionally inserting them as new records.
-// Appends related to o.R.PatternPatterns.
-// Sets related.R.ServiceServices appropriately.
-func (o *Service) AddPatternPatterns(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Pattern) error {
+// Appends related to o.R.ServicePatterns.
+// Sets related.R.Service appropriately.
+func (o *Service) AddServicePatterns(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Pattern) error {
 	var err error
 	for _, rel := range related {
 		if insert {
+			rel.ServiceID = o.ID
 			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
+		} else {
+			updateQuery := fmt.Sprintf(
+				"UPDATE \"Patterns\" SET %s WHERE %s",
+				strmangle.SetParamNames("\"", "\"", 0, []string{"service_id"}),
+				strmangle.WhereClause("\"", "\"", 0, patternPrimaryKeyColumns),
+			)
+			values := []interface{}{o.ID, rel.ID}
+
+			if boil.DebugMode {
+				fmt.Fprintln(boil.DebugWriter, updateQuery)
+				fmt.Fprintln(boil.DebugWriter, values)
+			}
+
+			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
+				return errors.Wrap(err, "failed to update foreign table")
+			}
+
+			rel.ServiceID = o.ID
 		}
 	}
 
-	for _, rel := range related {
-		query := "insert into \"PatternsServices\" (\"service_id\", \"pattern_id\") values (?, ?)"
-		values := []interface{}{o.ID, rel.ID}
-
-		if boil.DebugMode {
-			fmt.Fprintln(boil.DebugWriter, query)
-			fmt.Fprintln(boil.DebugWriter, values)
-		}
-
-		_, err = exec.ExecContext(ctx, query, values...)
-		if err != nil {
-			return errors.Wrap(err, "failed to insert into join table")
-		}
-	}
 	if o.R == nil {
 		o.R = &serviceR{
-			PatternPatterns: related,
+			ServicePatterns: related,
 		}
 	} else {
-		o.R.PatternPatterns = append(o.R.PatternPatterns, related...)
+		o.R.ServicePatterns = append(o.R.ServicePatterns, related...)
 	}
 
 	for _, rel := range related {
 		if rel.R == nil {
 			rel.R = &patternR{
-				ServiceServices: ServiceSlice{o},
+				Service: o,
 			}
 		} else {
-			rel.R.ServiceServices = append(rel.R.ServiceServices, o)
+			rel.R.Service = o
 		}
 	}
 	return nil
-}
-
-// SetPatternPatterns removes all previously related items of the
-// Service replacing them completely with the passed
-// in related items, optionally inserting them as new records.
-// Sets o.R.ServiceServices's PatternPatterns accordingly.
-// Replaces o.R.PatternPatterns with related.
-// Sets related.R.ServiceServices's PatternPatterns accordingly.
-func (o *Service) SetPatternPatterns(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Pattern) error {
-	query := "delete from \"PatternsServices\" where \"service_id\" = ?"
-	values := []interface{}{o.ID}
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, query)
-		fmt.Fprintln(boil.DebugWriter, values)
-	}
-
-	_, err := exec.ExecContext(ctx, query, values...)
-	if err != nil {
-		return errors.Wrap(err, "failed to remove relationships before set")
-	}
-
-	removePatternPatternsFromServiceServicesSlice(o, related)
-	if o.R != nil {
-		o.R.PatternPatterns = nil
-	}
-	return o.AddPatternPatterns(ctx, exec, insert, related...)
-}
-
-// RemovePatternPatterns relationships from objects passed in.
-// Removes related items from R.PatternPatterns (uses pointer comparison, removal does not keep order)
-// Sets related.R.ServiceServices.
-func (o *Service) RemovePatternPatterns(ctx context.Context, exec boil.ContextExecutor, related ...*Pattern) error {
-	var err error
-	query := fmt.Sprintf(
-		"delete from \"PatternsServices\" where \"service_id\" = ? and \"pattern_id\" in (%s)",
-		strmangle.Placeholders(dialect.UseIndexPlaceholders, len(related), 2, 1),
-	)
-	values := []interface{}{o.ID}
-	for _, rel := range related {
-		values = append(values, rel.ID)
-	}
-
-	if boil.DebugMode {
-		fmt.Fprintln(boil.DebugWriter, query)
-		fmt.Fprintln(boil.DebugWriter, values)
-	}
-
-	_, err = exec.ExecContext(ctx, query, values...)
-	if err != nil {
-		return errors.Wrap(err, "failed to remove relationships before set")
-	}
-	removePatternPatternsFromServiceServicesSlice(o, related)
-	if o.R == nil {
-		return nil
-	}
-
-	for _, rel := range related {
-		for i, ri := range o.R.PatternPatterns {
-			if rel != ri {
-				continue
-			}
-
-			ln := len(o.R.PatternPatterns)
-			if ln > 1 && i < ln-1 {
-				o.R.PatternPatterns[i] = o.R.PatternPatterns[ln-1]
-			}
-			o.R.PatternPatterns = o.R.PatternPatterns[:ln-1]
-			break
-		}
-	}
-
-	return nil
-}
-
-func removePatternPatternsFromServiceServicesSlice(o *Service, related []*Pattern) {
-	for _, rel := range related {
-		if rel.R == nil {
-			continue
-		}
-		for i, ri := range rel.R.ServiceServices {
-			if o.ID != ri.ID {
-				continue
-			}
-
-			ln := len(rel.R.ServiceServices)
-			if ln > 1 && i < ln-1 {
-				rel.R.ServiceServices[i] = rel.R.ServiceServices[ln-1]
-			}
-			rel.R.ServiceServices = rel.R.ServiceServices[:ln-1]
-			break
-		}
-	}
 }
 
 // Services retrieves all the records using an executor.

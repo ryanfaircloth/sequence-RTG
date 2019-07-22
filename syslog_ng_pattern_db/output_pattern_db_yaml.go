@@ -57,11 +57,8 @@ func SaveAsYaml(oFile *os.File, db YPatternDB) error {
 
 func AddToYaml(pattern sequence.AnalyzerResult, db YPatternDB) YPatternDB {
 	//do we have a special case where it belongs to more that one service
-	rsName := pattern.Services[0].Name
-	rsID := pattern.Services[0].ID
-	if len(pattern.Services) > 1 {
-		rsName, rsID = CreateRulesetName(pattern.Services)
-	}
+	rsName := pattern.Service.Name
+	rsID := pattern.Service.ID
 	//look in the ruleset if it exists already
 	_, ok := db.Rulesets[rsName]
 	if !ok {
@@ -107,9 +104,7 @@ func buildRuleset(result sequence.AnalyzerResult, rsID string) YRuleset {
 	rs.Pubdate = time.Now().Format("2006-01-02")
 	//get the ruleset from the example (service)
 	rs.Parser = "sequence"
-	for _, s := range result.Services {
-		rs.Patterns = append(rs.Patterns, s.Name)
-	}
+	rs.Patterns = append(rs.Patterns, result.Service.Name)
 	//create a new UUID
 	rs.ID = rsID
 	return rs
