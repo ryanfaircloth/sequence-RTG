@@ -40,6 +40,7 @@ func testJson(data string) bool {
 	return false
 }
 
+//Builds the parser from a pattern file or series of pattern files in the same directory.
 func BuildParser(patfile string) *Parser {
 	parser := NewParser()
 
@@ -53,7 +54,7 @@ func BuildParser(patfile string) *Parser {
 	if fi, err := os.Stat(patfile); err != nil {
 		logger.HandleFatal(err.Error())
 	} else if fi.Mode().IsDir() {
-		files, err = GetDirOfFiles(patfile)
+		files, err = getDirOfFiles(patfile)
 	} else {
 		files = append(files, patfile)
 	}

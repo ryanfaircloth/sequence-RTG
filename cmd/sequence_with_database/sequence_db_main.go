@@ -354,14 +354,14 @@ func export(cmap map[string]sequence.AnalyzerResult){
 		if err != nil {
 			standardLogger.HandleError(err.Error())
 		} else {
-			standardLogger.OutputToFileInfo(processed, top5, time.Since(startTime))
+			standardLogger.ExportPatternsInfo(processed, top5, time.Since(startTime))
 		}
 	} else if outsystem == "grok" {
 		processed, top5, err := logstash_grok.OutputToFiles(outfile, cfgfile, complimit, cmap)
 		if err != nil {
 			standardLogger.HandleError(err.Error())
 		} else {
-			standardLogger.OutputToFileInfo(processed, top5, time.Since(startTime))
+			standardLogger.ExportPatternsInfo(processed, top5, time.Since(startTime))
 		}
 	} else {
 		standardLogger.HandleError("No export format provided, could not export the patterns.")

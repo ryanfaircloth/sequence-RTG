@@ -1,3 +1,8 @@
+//This package is solely for the transformation and the output to file of sequence patterns found in server logs
+//for use with Syslog-ng's patterndb parser. The transformation is solid, but not perfect and this is designed to assist
+//a system administrator to create the patterns, not to be a full automation of the process.
+//The outputs for patterndb have been tested with a live patterndb and pass at a rate close to 80% with the pdb test tool.
+//The variable names usually need a bit of review as they can be string, string1 etc as the tool can detect a variable, but not what the variable is eg:server name.
 package syslog_ng_pattern_db
 
 import (

@@ -61,6 +61,7 @@ const (
 	hexColon
 )
 
+//This is used in combination with scan the patterns to find a valid tag position.
 func isValidTokenStartPosition(start int, pos []int) bool {
 	for _, p := range pos {
 		if p == start {
@@ -70,6 +71,7 @@ func isValidTokenStartPosition(start int, pos []int) bool {
 	return false
 }
 
+//This is used in combination with scan the patterns to find a valid tag position.
 func getNextTokenStartPosition(start int, pos []int) int {
 	for _, p := range pos {
 		if p > start {

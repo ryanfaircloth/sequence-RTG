@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func GetDirOfFiles(path string) ([]string, error) {
+func getDirOfFiles(path string) ([]string, error) {
 	filenames := make([]string, 0, 10)
 
 	files, err := ioutil.ReadDir(path)
@@ -23,6 +23,7 @@ func GetDirOfFiles(path string) ([]string, error) {
 	return filenames, err
 }
 
+//Opens an input file for reading.
 func OpenInputFile(fname string) (*bufio.Scanner, *os.File, error) {
 	var s *bufio.Scanner
 	var f *os.File
@@ -51,6 +52,7 @@ func OpenInputFile(fname string) (*bufio.Scanner, *os.File, error) {
 	return s, f, err
 }
 
+//Opens and clears output file for writing.
 func OpenOutputFile(fname string) (*os.File, error) {
 	var (
 		ofile *os.File

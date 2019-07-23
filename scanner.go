@@ -507,7 +507,8 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 	return this.seq, nil
 }
 
-//need to keep spaces, commas, and brackets
+//This is essentially the same function as Scan Json about but it preserves the structure of the message for text matching.
+//It does not remove spaces, commas or brackets.
 func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 	var (
 		err error

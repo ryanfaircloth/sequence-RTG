@@ -111,7 +111,8 @@ func (l *StandardLogger) AnalyzeInfo(analyzedCount int, patternsCount int, new i
 	}).Infof(eventAnalyzeInfo.message, analyzedCount, patternsCount, new, saved, errCount, totaltaken, analysis)
 }
 
-func (l *StandardLogger) OutputToFileInfo(outputCount int, top5 string, taken time.Duration) {
+//
+func (l *StandardLogger) ExportPatternsInfo(outputCount int, top5 string, taken time.Duration) {
 	l.WithFields(logrus.Fields{
 		"id":              eventOutputInfo.id,
 		"output_patterns": outputCount,
@@ -120,6 +121,7 @@ func (l *StandardLogger) OutputToFileInfo(outputCount int, top5 string, taken ti
 	}).Infof(eventOutputInfo.message, outputCount, top5, taken)
 }
 
+//Generic fatal level message handler
 func (l *StandardLogger) HandleFatal(err string) {
 	l.WithFields(logrus.Fields{
 		"id":      eventGenericFatal.id,
@@ -127,6 +129,7 @@ func (l *StandardLogger) HandleFatal(err string) {
 	}).Fatalf(eventGenericFatal.message, err)
 }
 
+//Generic panic level message handler
 func (l *StandardLogger) HandlePanic(err string) {
 	l.WithFields(logrus.Fields{
 		"id":      eventGenericPanic.id,
@@ -134,6 +137,7 @@ func (l *StandardLogger) HandlePanic(err string) {
 	}).Panicf(eventGenericPanic.message, err)
 }
 
+//Generic debug level message handler
 func (l *StandardLogger) HandleInfo(message string) {
 	l.WithFields(logrus.Fields{
 		"id":      eventGenericInfo.id,
@@ -141,6 +145,7 @@ func (l *StandardLogger) HandleInfo(message string) {
 	}).Infof(eventGenericInfo.message, message)
 }
 
+//Generic error level message handler
 func (l *StandardLogger) HandleError(message string) {
 	l.WithFields(logrus.Fields{
 		"id":      eventGenericError.id,
@@ -148,6 +153,7 @@ func (l *StandardLogger) HandleError(message string) {
 	}).Errorf(eventGenericError.message, message)
 }
 
+//Generic debug level message handler
 func (l *StandardLogger) HandleDebug(message string) {
 	l.WithFields(logrus.Fields{
 		"id":      eventGenericDebug.id,

@@ -16,8 +16,11 @@ type LogRecordCollection struct {
 	Records []LogRecord
 }
 
-//if json, this method expects record in the format {"service": "service-name", message: "log message"}
-//eg {"service":"remctld","message":"error receiving initial token: unexpected end of file"}
+//This method expects records in the format {"service": "service-name", message: "log message"}
+//eg {"service":"remctld","message":"error receiving initial token: unexpected end of file"} if json or for text
+//service [space] message, eg: remctld error receiving initial token: unexpected end of file.
+//See Examples folder for example files.
+//Returns a collection of log records.
 func ReadLogRecord(fname string, format string, lr []LogRecord, batchLimit int) []LogRecord {
 	iscan, ifile, err := OpenInputFile(fname)
 	defer ifile.Close()
@@ -67,8 +70,12 @@ func ReadLogRecord(fname string, format string, lr []LogRecord, batchLimit int) 
 	return lr
 }
 
-//if json, this method expects record in the format {"service": "service-name", message: "log message"}
-//eg {"service":"remctld","message":"error receiving initial token: unexpected end of file"}
+
+//This method expects records in the format {"service": "service-name", message: "log message"}
+//eg {"service":"remctld","message":"error receiving initial token: unexpected end of file"} if json or for text
+//service [space] message, eg: remctld error receiving initial token: unexpected end of file.
+//See Examples folder for example files.
+//Returns a map.
 func ReadLogRecordAsMap(iscan *bufio.Scanner, format string, smap map[string]LogRecordCollection, batchLimit int) (int, map[string]LogRecordCollection, bool) {
 	var lr LogRecordCollection
 	var count = 0
