@@ -1,0 +1,7 @@
+kernel usb 1-1.6: Product: Gadget USB HUB
+kernel hub 1-1.6:1.0: USB hub found
+kernel usb 1-1.6: Manufacturer: no manufacturer
+kernel usb 1-1.6.1: SerialNumber: 20121018
+kernel ll header: ff:ff:ff:ff:ff:ff:14:18:77:68:3b:06:08:00
+kernel CPU8: Package temperature/speed normal
+kernel CPU4: Package temperature above threshold, cpu clock throttled (total events = 994836509)

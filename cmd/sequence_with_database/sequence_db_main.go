@@ -327,26 +327,11 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 			//output directly to the files
 			//merge pmap and amap
 			//syslog-ng patterndb
-			fileTime := time.Now()
 			cmap := amap
 			for k, v := range pmap {
 				cmap[k] = v
 			}
-			if outsystem == "patterndb" {
-				processed, top5, err := syslog_ng_pattern_db.OutputToFiles(outformat, outfile, cfgfile, complimit, cmap)
-				if err != nil {
-					standardLogger.HandleError(err.Error())
-				} else {
-					standardLogger.OutputToFileInfo(processed, top5, time.Since(fileTime))
-				}
-			} else if outsystem == "grok" {
-				processed, top5, err := logstash_grok.OutputToFiles(outfile, cfgfile, complimit, cmap)
-				if err != nil {
-					standardLogger.HandleError(err.Error())
-				} else {
-					standardLogger.OutputToFileInfo(processed, top5, time.Since(fileTime))
-				}
-			}
+			export(cmap)
 			//always output to a txt file for parsing later
 			oFile, _ := sequence.OpenOutputFile("C:\\data\\debug.txt")
 			defer oFile.Close()
@@ -361,25 +346,29 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 	}
 }
 
-func outputforpatterndb(cmd *cobra.Command, args []string) {
-	start("outputtofile")
-	startTime := time.Now()
-	processed, top5, err := syslog_ng_pattern_db.OutputToFiles(outformat, outfile, cfgfile, complimit, nil)
-	if err != nil {
-		standardLogger.HandleError(err.Error())
-	} else {
-		standardLogger.OutputToFileInfo(processed, top5, time.Since(startTime))
-	}
+func exportPatterns(cmd *cobra.Command, args []string) {
+	start("exportPatterns")
+	export(nil)
 }
 
-func outputforgrok(cmd *cobra.Command, args []string) {
-	start("outputtofile")
+func export(cmap map[string]sequence.AnalyzerResult){
 	startTime := time.Now()
-	processed, top5, err := logstash_grok.OutputToFiles(outfile, cfgfile, complimit, nil)
-	if err != nil {
-		standardLogger.HandleError(err.Error())
+	if outsystem == "patterndb" {
+		processed, top5, err := syslog_ng_pattern_db.OutputToFiles(outformat, outfile, cfgfile, complimit, cmap)
+		if err != nil {
+			standardLogger.HandleError(err.Error())
+		} else {
+			standardLogger.OutputToFileInfo(processed, top5, time.Since(startTime))
+		}
+	} else if outsystem == "grok" {
+		processed, top5, err := logstash_grok.OutputToFiles(outfile, cfgfile, complimit, cmap)
+		if err != nil {
+			standardLogger.HandleError(err.Error())
+		} else {
+			standardLogger.OutputToFileInfo(processed, top5, time.Since(startTime))
+		}
 	} else {
-		standardLogger.OutputToFileInfo(processed, top5, time.Since(startTime))
+		standardLogger.HandleError("No export format provided, could not export the patterns.")
 	}
 }
 
@@ -428,7 +417,7 @@ func validateInputs(commandType string) {
 		if err != "" {
 			errors = errors + ", " + err
 		}
-	case "outputtofiles":
+	case "exportpatterns":
 		//set the formats to lower before we start
 		outformat = strings.ToLower(outformat)
 		err := sequence.ValidateOutformat(outformat)
@@ -519,14 +508,9 @@ func main() {
 			Short: "analyzes a log file and output a list of patterns that will match all the log messages",
 		}
 
-		outForpPatternDbCmd = &cobra.Command{
-			Use:   "outputforpatterndb",
-			Short: "outputs a list of patterns to the files in the formats requested for syslog_ng_pattern_db",
-		}
-
-		outForGrokCmd = &cobra.Command{
-			Use:   "outputforgrok",
-			Short: "outputs a list of patterns to the files in the formats requested for logstash_grok",
+		exportPatternsCmd = &cobra.Command{
+			Use:   "exportpatterns",
+			Short: "outputs a list of patterns to the files in the formats requested.",
 		}
 	)
 
@@ -550,8 +534,7 @@ func main() {
 	purgePatternsCmd.Run = purgepatterns
 	analyzeCmd.Run = analyze
 	analyzeByServiceCmd.Run = analyzebyservice
-	outForpPatternDbCmd.Run = outputforpatterndb
-	outForGrokCmd.Run = outputforgrok
+	exportPatternsCmd.Run = exportPatterns
 
 	sequenceCmd.AddCommand(scanCmd)
 	sequenceCmd.AddCommand(createDatabaseCmd)
@@ -559,8 +542,7 @@ func main() {
 	sequenceCmd.AddCommand(purgePatternsCmd)
 	sequenceCmd.AddCommand(analyzeCmd)
 	sequenceCmd.AddCommand(analyzeByServiceCmd)
-	sequenceCmd.AddCommand(outForpPatternDbCmd)
-	sequenceCmd.AddCommand(outForGrokCmd)
+	sequenceCmd.AddCommand(exportPatternsCmd)
 
 	sequenceCmd.Execute()
 }
