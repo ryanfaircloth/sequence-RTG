@@ -121,7 +121,7 @@ func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context, comple
 			threshold, _ = strconv.ParseInt(config.matchThresholdValue, 10, 64)
 		} else {
 			total := getRecordProcessed(db, ctx)
-			threshold = int64(GetThreshold(total))
+			threshold = int64(getThreshold(total))
 		}
 		patterns, err = models.Patterns(models.PatternWhere.CumulativeMatchCount.GTE(threshold), qm.And(models.PatternColumns.ComplexityScore+" <=? ", complexityLevel), qm.OrderBy(models.PatternColumns.CumulativeMatchCount+" DESC")).All(ctx, db)
 		if err != nil {
