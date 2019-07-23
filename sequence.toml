@@ -3,8 +3,11 @@ version = "0.1"
 # in the original message, the default parser for sequence has this set to false, for syslog-ng set to true.
 markSpaces = true
 
+#database settings
 usedatabase = true
 database = "sequence.sdb"
+databasetype = "sqlite3"
+
 createdbcommands = [
         "PRAGMA foreign_keys=OFF;",
         "CREATE TABLE Services (id STRING (20, 50) PRIMARY KEY NOT NULL, name STRING NOT NULL, date_created DATETIME NOT NULL);",

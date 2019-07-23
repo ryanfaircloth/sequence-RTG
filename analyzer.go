@@ -19,7 +19,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"gitlab.in2p3.fr/cc-in2p3-system/sequence/models"
-	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -117,6 +116,7 @@ type stackAnalyzerNode struct {
 	score int
 }
 
+//Splits a slice of integers into a separated string, the separator is passed to the function.
 func SplitToString(a []int, sep string) string {
 	if len(a) == 0 {
 		return ""
@@ -129,13 +129,14 @@ func SplitToString(a []int, sep string) string {
 	return strings.Join(b, sep)
 }
 
+//Splits a string of separated numbers to a slice of integers, the separator is passed to the function.
 func SplitToInt(s string, sep string) []int {
 	var p []int
 	if len(s) == 0 {
 		return p
 	}
 
-	a := strings.Split(s, ",")
+	a := strings.Split(s, sep)
 	b := make([]int, len(a))
 	for i, v := range a {
 		b[i], _ = strconv.Atoi(v)
@@ -143,7 +144,8 @@ func SplitToInt(s string, sep string) []int {
 	return b
 }
 
-func AddExampleToAnalyzerResult(this *AnalyzerResult, lr LogRecord, threshold int) {
+//Tests the passed log record to see if it should be added to the examples collection for the Analyzer Result.
+func AddExampleToAnalyzerResult(this *AnalyzerResult, lr LogRecord) {
 	if len(this.Examples) >= 3 {
 		//nothing to here
 		return
@@ -161,9 +163,7 @@ func AddExampleToAnalyzerResult(this *AnalyzerResult, lr LogRecord, threshold in
 	}
 }
 
-//this is so that the same pattern will have the same id
-//in all files and the id is reproducible
-//returns a sha1 hash as the id
+//This ensures that the same pattern will always have the same id, returns a sha1 hash of the pattern + service name.
 func GenerateIDFromString(pattern string, service string) string {
 	h := sha1.New()
 	h.Write([]byte(pattern+service))
@@ -172,29 +172,8 @@ func GenerateIDFromString(pattern string, service string) string {
 	return shaStr
 }
 
-func GetThreshold(numTotal int) int {
-	t := config.matchThresholdType
-	if t == "count" {
-		tr, err := strconv.Atoi(config.matchThresholdValue)
-		if err != nil {
-			return 0
-		} else {
-			return tr
-		}
-	} else {
-		f, err := strconv.ParseFloat(config.matchThresholdValue, 64)
-		if err != nil {
-			return 0
-		} else {
-			total := float64(numTotal)
-			t := f * total
-			tr := int(math.Floor(t))
-			return tr
-		}
-	}
-	return 0
-}
-
+//This calculates the complexity of the pattern, looking at the ratio if non-string tokens to string tokens.
+//This value helps the reviewer of the pattern  filter out the patterns that may be over tokenized.
 func CalculatePatternComplexity(seq Sequence, lgt int) float64{
 
 	var (
@@ -233,8 +212,10 @@ func CalculatePatternComplexity(seq Sequence, lgt int) float64{
 	return 0.05
 }
 
-func GetSaveThreshold() int {
-	//check that the pattern has reached the save threshold example limit
+//The save threshold prevents messages with a low number of examples from saving to the database
+// as they are likely to be poorly formed.
+func getSaveThreshold() int {
+	//Get save threshold from the config
 	tr, err := strconv.Atoi(config.saveThreshold)
 	if err != nil {
 		logger.HandleError("Save Threshold value cannot be parsed to an integer. Setting it to 0")

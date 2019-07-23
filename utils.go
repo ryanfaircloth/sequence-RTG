@@ -2,7 +2,9 @@ package sequence
 
 import (
 	"encoding/json"
+	"math"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -105,4 +107,28 @@ func BuildParserFromDb(serviceid string) *Parser {
 		}
 	}
 	return parser
+}
+
+//Calculate the threshold value to use when exporting patterns from the database.
+func getThreshold(numTotal int) int {
+	t := config.matchThresholdType
+	if t == "count" {
+		tr, err := strconv.Atoi(config.matchThresholdValue)
+		if err != nil {
+			return 0
+		} else {
+			return tr
+		}
+	} else {
+		f, err := strconv.ParseFloat(config.matchThresholdValue, 64)
+		if err != nil {
+			return 0
+		} else {
+			total := float64(numTotal)
+			t := f * total
+			tr := int(math.Floor(t))
+			return tr
+		}
+	}
+	return 0
 }

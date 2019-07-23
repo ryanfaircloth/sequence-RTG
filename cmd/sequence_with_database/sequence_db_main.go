@@ -130,10 +130,6 @@ func analyze(cmd *cobra.Command, args []string) {
 	var lr []sequence.LogRecord
 	lr = sequence.ReadLogRecord(infile, informat, lr, batchsize)
 
-	//get the threshold for including the pattern in the
-	//output files
-	threshold := sequence.GetThreshold(len(lr))
-
 	// For all the log messages, if we can't parse it, then let's add it to the
 	// analyzer for pattern analysis, this requires the previous pattern file/folder
 	//	to be passed in
@@ -192,7 +188,7 @@ func analyze(cmd *cobra.Command, args []string) {
 				if !ok {
 					stat = sequence.AnalyzerResult{}
 				}
-				sequence.AddExampleToAnalyzerResult(&stat, l, threshold)
+				sequence.AddExampleToAnalyzerResult(&stat, l)
 				stat.PatternId = sequence.GenerateIDFromString(pat, l.Service)
 				stat.TagPositions = sequence.SplitToString(pos, ",")
 				stat.ExampleCount++
@@ -208,7 +204,7 @@ func analyze(cmd *cobra.Command, args []string) {
 
 func createdatabase(cmd *cobra.Command, args []string) {
 	start("createdatabase")
-	sequence.CreateDatabase(outfile)
+	sequence.CreateDatabase(outfile, "sqlite3")
 	standardLogger.HandleInfo(fmt.Sprintf("Database created successfully"))
 }
 
@@ -281,7 +277,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 					if !ok {
 						ar = sequence.AnalyzerResult{}
 					}
-					sequence.AddExampleToAnalyzerResult(&ar, l, threshold)
+					sequence.AddExampleToAnalyzerResult(&ar, l)
 					ar.Service.ID = sid
 					ar.Service.Name = svc
 					ar.TagPositions = sequence.SplitToString(pos, ",")
@@ -300,7 +296,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 						if !ok {
 							ar = sequence.AnalyzerResult{}
 						}
-						sequence.AddExampleToAnalyzerResult(&ar, l, threshold)
+						sequence.AddExampleToAnalyzerResult(&ar, l)
 						ar.Service.ID = sid
 						ar.Service.Name = svc
 						ar.TagPositions = sequence.SplitToString(pos, ",")

@@ -15,8 +15,9 @@ import (
 	"time"
 )
 
-func CreateDatabase(fname string) {
-	database, err := sql.Open("sqlite3", fname)
+//This creates the database from the scripts in the toml file at the location and db type specified.
+func CreateDatabase(fname string, driver string) {
+	database, err := sql.Open(driver , fname)
 	if err != nil {
 		logger.HandleFatal(err.Error())
 	}
@@ -34,8 +35,9 @@ func CreateDatabase(fname string) {
 	tx.Commit()
 }
 
+//This runs the update scripts in the toml file to change the database when required.
 func UpdateDatabase() {
-	database, err := sql.Open("sqlite3", config.database)
+	database, err := sql.Open(config.databaseType, config.databasePath)
 	if err != nil {
 		logger.HandleFatal(err.Error())
 	}
@@ -53,6 +55,8 @@ func UpdateDatabase() {
 	tx.Commit()
 }
 
+//This deletes all the patterns and related data from the database
+//which have a cumulative match count below the passed threshold.
 func PurgePatternsfromDatabase(threshold int64) int64 {
 	database, ctx := OpenDbandSetContext()
 	tx, err := database.Begin()
@@ -74,9 +78,10 @@ func PurgePatternsfromDatabase(threshold int64) int64 {
 	return 0
 }
 
+//This opens tha database for use.
 func OpenDbandSetContext() (*sql.DB, context.Context) {
 	// Get a handle to the SQLite database, using mattn/go-sqlite3
-	db, err := sql.Open("sqlite3", config.database)
+	db, err := sql.Open(config.databaseType, config.databasePath)
 	if err != nil {
 		logger.HandleFatal(err.Error())
 	}
@@ -87,7 +92,8 @@ func OpenDbandSetContext() (*sql.DB, context.Context) {
 	return db, ctx
 }
 
-func GetPatternsFromDatabase(db *sql.DB, ctx context.Context) map[string]string {
+//Returns all of the patterns from the database.
+func getPatternsFromDatabase(db *sql.DB, ctx context.Context) map[string]string {
 	pmap := make(map[string]string)
 	// This pulls 'all' of the patterns from the patterns database
 	patterns, err := models.Patterns().All(ctx, db)
@@ -100,7 +106,8 @@ func GetPatternsFromDatabase(db *sql.DB, ctx context.Context) map[string]string 
 	return pmap
 }
 
-//this is for the output to files
+//This gets all the patterns complete with examples and service for exporting them to file.
+//The pattern numbers returned are limited by the complexity score and threshold if the values are passed/configured.
 func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context, complexityLevel float64) (map[string]AnalyzerResult, string) {
 	var (
 		patterns models.PatternSlice
@@ -160,7 +167,8 @@ func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context, comple
 	return pmap, top5
 }
 
-// this sums the cumulative pattern couln in the pattern table
+//This sums the cumulative_match_count column in the pattern table
+// to allow for calculation of the whether the threshold has been reached or not.
 func getRecordProcessed(db *sql.DB, ctx context.Context) int {
 	// Custom struct for selecting a subset of data
 	type Info struct {
@@ -176,7 +184,7 @@ func getRecordProcessed(db *sql.DB, ctx context.Context) int {
 	return info.MessageSum
 }
 
-//this is for the parser
+//This is used to build the parser trie by service from the patterns for the parsing step.
 func GetPatternsFromDatabaseByService(db *sql.DB, ctx context.Context, sid string) map[string]AnalyzerResult {
 	pmap := make(map[string]AnalyzerResult)
 	svc, err := models.Services(models.ServiceWhere.ID.EQ(sid)).One(ctx, db)
@@ -193,7 +201,8 @@ func GetPatternsFromDatabaseByService(db *sql.DB, ctx context.Context, sid strin
 	return pmap
 }
 
-func GetServicesFromDatabase(db *sql.DB, ctx context.Context) map[string]string {
+//This returns all of the current services saved to the database.
+func getServicesFromDatabase(db *sql.DB, ctx context.Context) map[string]string {
 	// This pulls 'all' of the services from the services table
 	smap := make(map[string]string)
 	services, err := models.Services().All(ctx, db)
@@ -205,8 +214,9 @@ func GetServicesFromDatabase(db *sql.DB, ctx context.Context) map[string]string 
 	}
 	return smap
 }
-func AddService(ctx context.Context, tx *sql.Tx, id string, name string) {
-	// This pulls 'all' of the services from the services table
+
+//This saves an individual service record to the database.
+func addService(ctx context.Context, tx *sql.Tx, id string, name string) {
 	var s models.Service
 	s.ID = id
 	s.Name = name
@@ -216,7 +226,9 @@ func AddService(ctx context.Context, tx *sql.Tx, id string, name string) {
 		logger.DatabaseInsertFailed("service", id, err.Error())
 	}
 }
-func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, tr int) bool {
+
+//this save a pattern to the database, with its example patterns.
+func addPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, tr int) bool {
 	if tr > result.ExampleCount {
 		//do not add the pattern
 		return false
@@ -235,7 +247,8 @@ func AddPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, tr int) 
 	return true
 }
 
-func UpdatePattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult) {
+//This updates an existing pattern record and updates any related examples.
+func updatePattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult) {
 	p, _ := models.FindPattern(ctx, tx, result.PatternId)
 	p.DateLastMatched = time.Now()
 	p.CumulativeMatchCount += int64(result.ExampleCount)
@@ -263,6 +276,7 @@ func UpdatePattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult) {
 	}
 }
 
+//This inserts an example record into the database.
 func insertExample(ctx context.Context, tx *sql.Tx, lr LogRecord, pid string, sid string) {
 	id, err := uuid.NewV4()
 	if err != nil {
@@ -275,11 +289,12 @@ func insertExample(ctx context.Context, tx *sql.Tx, lr LogRecord, pid string, si
 	}
 }
 
+//This updates the patterns. services and examples in the database.
 func SaveExistingToDatabase(rmap map[string]AnalyzerResult) {
 	db, ctx := OpenDbandSetContext()
 	defer db.Close()
 	//exisitng services
-	smap := GetServicesFromDatabase(db, ctx)
+	smap := getServicesFromDatabase(db, ctx)
 	//services to be added to db
 	nmap := make(map[string]string)
 	//add the patterns and examples
@@ -296,7 +311,7 @@ func SaveExistingToDatabase(rmap map[string]AnalyzerResult) {
 	}
 	//start with the service, so not to cause a primary key violation
 	for sid, m := range nmap {
-		AddService(ctx, tx, sid, m)
+		addService(ctx, tx, sid, m)
 	}
 	tx.Commit()
 
@@ -305,17 +320,18 @@ func SaveExistingToDatabase(rmap map[string]AnalyzerResult) {
 		logger.HandleFatal("Could not start a transaction to save to the database.")
 	}
 	//here we want to update the existing patterns with count and last matched
-	pmap := GetPatternsFromDatabase(db, ctx)
+	pmap := getPatternsFromDatabase(db, ctx)
 	for _, result := range rmap {
 		_, found := pmap[result.PatternId]
 		if found {
-			UpdatePattern(ctx, tx, result)
+			updatePattern(ctx, tx, result)
 		}
 	}
 	tx.Commit()
 
 }
 
+//This saves the new patterns and related data to the database
 func SaveToDatabase(amap map[string]AnalyzerResult) (int, int) {
 	var (
 		new   = 0
@@ -324,7 +340,7 @@ func SaveToDatabase(amap map[string]AnalyzerResult) (int, int) {
 	db, ctx := OpenDbandSetContext()
 	defer db.Close()
 	//exisitng services
-	smap := GetServicesFromDatabase(db, ctx)
+	smap := getServicesFromDatabase(db, ctx)
 	//services to be added to db
 	nmap := make(map[string]string)
 	//add the patterns and examples
@@ -341,7 +357,7 @@ func SaveToDatabase(amap map[string]AnalyzerResult) (int, int) {
 	}
 	//start with the service, so not to cause a primary key violation
 	for sid, m := range nmap {
-		AddService(ctx, tx, sid, m)
+		addService(ctx, tx, sid, m)
 	}
 	tx.Commit()
 
@@ -350,19 +366,19 @@ func SaveToDatabase(amap map[string]AnalyzerResult) (int, int) {
 		logger.HandleFatal("Could not start a transaction to save to the database.")
 	}
 
-	tr := GetSaveThreshold()
+	tr := getSaveThreshold()
 	//technically we should not have any existing patterns passed to here, but just in case
 	//lets check first
-	pmap := GetPatternsFromDatabase(db, ctx)
+	pmap := getPatternsFromDatabase(db, ctx)
 	for _, result := range amap {
 		_, found := pmap[result.PatternId]
 		if !found {
-			if AddPattern(ctx, tx, result, tr) {
+			if addPattern(ctx, tx, result, tr) {
 				saved++
 			}
 			new++
 		} else {
-			UpdatePattern(ctx, tx, result)
+			updatePattern(ctx, tx, result)
 		}
 	}
 	tx.Commit()

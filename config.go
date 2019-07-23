@@ -35,7 +35,8 @@ var (
 		matchThresholdValue  string
 		saveThreshold        string
 		inclBelThresholdRecs bool
-		database             string
+		databasePath         string
+		databaseType		 string
 		useDatabase          bool
 		createDbCommands     []string
 		updateDbCommands     []string
@@ -58,6 +59,7 @@ var (
 	logger          *StandardLogger
 )
 
+//Reads the sequence.toml file and loads the values into a struct for use as the program runs.
 func ReadConfig(file string) error {
 	var configInfo struct {
 		Version             string
@@ -68,7 +70,8 @@ func ReadConfig(file string) error {
 		BelowThresholdPath  string
 		SaveThreshold       string
 		UseDatabase         bool
-		Database            string
+		DatabasePath        string
+		DatabaseType		string
 		CreateDBCommands    []string
 		UpdateDBCommands    []string
 
@@ -96,7 +99,10 @@ func ReadConfig(file string) error {
 	config.matchThresholdValue = configInfo.MatchThresholdValue
 	config.saveThreshold = configInfo.SaveThreshold
 	config.useDatabase = configInfo.UseDatabase
-	config.database = configInfo.Database
+	config.databasePath = configInfo.DatabasePath
+	config.databaseType = configInfo.DatabaseType
+
+
 	config.createDbCommands = configInfo.CreateDBCommands
 	config.updateDbCommands = configInfo.UpdateDBCommands
 
@@ -167,20 +173,24 @@ func ReadConfig(file string) error {
 	return nil
 }
 
+//Returns the regular expression for patterndb matching the passed time format identifier.
 func GetTimeSettingsRegExValue(id string) (string, bool) {
 	f, ok := timesettings.regex[id]
 	return f, ok
 }
 
+//Returns the regular expression for grok matching the passed time format identifier.
 func GetTimeSettingsGrokValue(id string) (string, bool) {
 	f, ok := timesettings.grok[id]
 	return f, ok
 }
 
+//globally sets the logging for the application
 func SetLogger(log *StandardLogger) {
 	logger = log
 }
 
+//Returns the flag to signal if sequence is configured to use a database or not.
 func GetUseDatabase() bool {
 	return config.useDatabase
 }
