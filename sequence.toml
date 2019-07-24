@@ -5,7 +5,7 @@ markSpaces = true
 
 #database settings
 usedatabase = true
-database = "sequence.sdb"
+databasepath = "sequence.sdb"
 databasetype = "sqlite3"
 
 createdbcommands = [

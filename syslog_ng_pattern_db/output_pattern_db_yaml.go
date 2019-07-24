@@ -9,22 +9,22 @@ import (
 	"time"
 )
 
-type YPatternDB struct {
-	Rules    map[string]YRule    `yaml:"coloss::patterndb::simple::rule"`
-	Rulesets map[string]YRuleset `yaml:"coloss::patterndb::simple::ruleset"`
+type yPatternDB struct {
+	Rules    map[string]yRule    `yaml:"coloss::patterndb::simple::rule"`
+	Rulesets map[string]yRuleset `yaml:"coloss::patterndb::simple::ruleset"`
 }
 
 //This represents a rule section in the sys-log ng yaml file
-type YRule struct {
+type yRule struct {
 	Ruleset   string         `yaml:"ruleset"`
 	RuleClass string         `yaml:"ruleclass"`
 	Patterns  []string       `yaml:"patterns"`
-	Examples  []YRuleExample `yaml:"examples"`
-	Values    YRuleValues    `yaml:"values"`
+	Examples  []yRuleExample `yaml:"examples"`
+	Values    yRuleValues    `yaml:"values"`
 	ID        string         `yaml:"id,omitempty"`
 }
 
-type YRuleValues struct {
+type yRuleValues struct {
 	Complexity      float64`yaml:"seq-complexity"`
 	Seqmatches      int    `yaml:"seq-matches"`
 	New             bool   `yaml:"seq-new"`
@@ -33,20 +33,20 @@ type YRuleValues struct {
 }
 
 //This represents a ruleset section in the sys-log ng yaml file
-type YRuleset struct {
+type yRuleset struct {
 	Pubdate  string
 	ID       string `yaml:"id,omitempty"`
 	Parser   string
 	Patterns []string `yaml:"patterns"`
 }
 
-type YRuleExample struct {
+type yRuleExample struct {
 	Program     string            `yaml:"program"`
 	TestMessage string            `yaml:"test_message"`
 	TextValues  map[string]string `yaml:"test_values"`
 }
 
-func SaveAsYaml(oFile *os.File, db YPatternDB) error {
+func saveAsYaml(oFile *os.File, db yPatternDB) error {
 	//check if the pattern exists
 	// turn the rule into YAML format
 	en := yaml.NewEncoder(oFile)
@@ -55,7 +55,7 @@ func SaveAsYaml(oFile *os.File, db YPatternDB) error {
 	return y
 }
 
-func AddToYaml(pattern sequence.AnalyzerResult, db YPatternDB) YPatternDB {
+func addToYaml(pattern sequence.AnalyzerResult, db yPatternDB) yPatternDB {
 	//do we have a special case where it belongs to more that one service
 	rsName := pattern.Service.Name
 	rsID := pattern.Service.ID
@@ -73,21 +73,21 @@ func AddToYaml(pattern sequence.AnalyzerResult, db YPatternDB) YPatternDB {
 	return db
 }
 
-func buildRule(result sequence.AnalyzerResult, rsName string) YRule {
-	rule := YRule{}
+func buildRule(result sequence.AnalyzerResult, rsName string) yRule {
+	rule := yRule{}
 	rule.Values.Seqmatches = result.ExampleCount
 	//get the ruleset from the example (service)
 	rule.Ruleset = rsName
 	rule.RuleClass = "sequence"
 	rule.Patterns = append(rule.Patterns, replaceTags(result.Pattern))
 	for _, ex := range result.Examples {
-		m, err := ExtractTestValuesForTokens(ex.Message, result)
+		m, err := extractTestValuesForTokens(ex.Message, result)
 		if err != nil {
 			//make an empty map, log an error and continue
 			m = make(map[string]string)
 			logger.HandleError(fmt.Sprintf("Unable to make test_values map for examples for pattern %s", result.PatternId))
 		}
-		example := YRuleExample{ex.Service, ex.Message, m}
+		example := yRuleExample{ex.Service, ex.Message, m}
 		rule.Examples = append(rule.Examples, example)
 	}
 	rule.Values.New = true
@@ -99,8 +99,8 @@ func buildRule(result sequence.AnalyzerResult, rsName string) YRule {
 	return rule
 }
 
-func buildRuleset(result sequence.AnalyzerResult, rsID string) YRuleset {
-	rs := YRuleset{}
+func buildRuleset(result sequence.AnalyzerResult, rsID string) yRuleset {
+	rs := yRuleset{}
 	rs.Pubdate = time.Now().Format("2006-01-02")
 	//get the ruleset from the example (service)
 	rs.Parser = "sequence"

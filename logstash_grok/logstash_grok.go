@@ -25,7 +25,7 @@ var (
 	logger *sequence.StandardLogger
 )
 
-//Allows the user to set the logger to a global instance.
+
 func SetLogger(log *sequence.StandardLogger) {
 	logger = log
 }

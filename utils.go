@@ -2,12 +2,15 @@ package sequence
 
 import (
 	"encoding/json"
+	"fmt"
 	"math"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
 
+//Scans the message using the appropriate format
 func ScanMessage(scanner *Scanner, data string, format string) (Sequence, error) {
 	var (
 		seq Sequence
@@ -132,4 +135,41 @@ func getThreshold(numTotal int) int {
 		}
 	}
 	return 0
+}
+
+//This can be useful for debugging
+func SortLogMessages(lr []LogRecord) []LogRecord {
+	sort.Slice(lr, func(i, j int) bool {
+		if lr[i].Service != lr[j].Service {
+			return lr[i].Service < lr[j].Service
+		}
+
+		return lr[i].Message < lr[j].Message
+	})
+	return lr
+}
+
+//This can be used to sort and inspect the records in order
+//useful for checking the patterns against all the examples
+func SortandSaveLogMessages(lr []LogRecord, fname string) {
+	sort.Slice(lr, func(i, j int) bool {
+		if lr[i].Service != lr[j].Service {
+			return lr[i].Service < lr[j].Service
+		}
+		return lr[i].Message < lr[j].Message
+	})
+	ofile, _ := OpenOutputFile(fname)
+	defer ofile.Close()
+	for _, r := range lr {
+		fmt.Fprintf(ofile, "%s  %s\n", r.Service, r.Message)
+	}
+}
+
+//This can be useful to save the service and message in text format.
+func SaveLogMessages(lr LogRecordCollection, fname string) {
+	ofile, _ := OpenOutputFile(fname)
+	defer ofile.Close()
+	for _, r := range lr.Records {
+		fmt.Fprintf(ofile, "%s  %s\n", r.Service, r.Message)
+	}
 }

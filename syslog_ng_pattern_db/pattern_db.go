@@ -26,6 +26,7 @@ var (
 	logger *sequence.StandardLogger
 )
 
+//Allows the user to set the logger to a global instance.
 func SetLogger(log *sequence.StandardLogger) {
 	logger = log
 }
@@ -234,49 +235,18 @@ func getTimeRegex(p string) (string, string) {
 	return p, rg
 }
 
-func SortLogMessages(lr []sequence.LogRecord) []sequence.LogRecord {
-	sort.Slice(lr, func(i, j int) bool {
-		if lr[i].Service != lr[j].Service {
-			return lr[i].Service < lr[j].Service
-		}
 
-		return lr[i].Message < lr[j].Message
-	})
-	return lr
-}
-
-//this can be used to sort and inspect the records in order
-//useful for checking the patterns against all the examples
-func SortandSaveLogMessages(lr []sequence.LogRecord, fname string) {
-	sort.Slice(lr, func(i, j int) bool {
-		if lr[i].Service != lr[j].Service {
-			return lr[i].Service < lr[j].Service
-		}
-		return lr[i].Message < lr[j].Message
-	})
-	ofile, _ := sequence.OpenOutputFile(fname)
-	defer ofile.Close()
-	for _, r := range lr {
-		fmt.Fprintf(ofile, "%s  %s\n", r.Service, r.Message)
-	}
-}
-
-func SaveLogMessages(lr sequence.LogRecordCollection, fname string) {
-	ofile, _ := sequence.OpenOutputFile(fname)
-	defer ofile.Close()
-	for _, r := range lr.Records {
-		fmt.Fprintf(ofile, "%s  %s\n", r.Service, r.Message)
-	}
-}
-
+//This is the function that drives the output to file.
+//The user can pass the pattern map if no database is used or
+//pass the map created during the analysis
 func OutputToFiles(outformat string, outfile string, config string, complexitylevel float64, cmap map[string]sequence.AnalyzerResult) (int, string, error) {
 
 	var (
 		txtFile  *os.File
 		xmlFile  *os.File
 		yamlFile *os.File
-		xPattDB  XPatternDB
-		yPattDB  YPatternDB
+		xPattDB  xPatternDB
+		yPattDB  yPatternDB
 		err      error
 		count    int
 		top5     string
@@ -325,9 +295,9 @@ func OutputToFiles(outformat string, outfile string, config string, complexityle
 			if err != nil {
 				return count, top5, err
 			}
-			yPattDB = YPatternDB{}
-			yPattDB.Rulesets = make(map[string]YRuleset)
-			yPattDB.Rules = make(map[string]YRule)
+			yPattDB = yPatternDB{}
+			yPattDB.Rulesets = make(map[string]yRuleset)
+			yPattDB.Rules = make(map[string]yRule)
 		}
 		if fmat == "xml" {
 			//open the file for the xml output and write the header
@@ -340,7 +310,7 @@ func OutputToFiles(outformat string, outfile string, config string, complexityle
 				return count, top5, err
 			}
 			fmt.Fprintf(xmlFile, "<?xml version='1.0' encoding='UTF-8'?>\n")
-			xPattDB = XPatternDB{Version: "4", Pubdate: time.Now().Format("2006-01-02 15:04:05")}
+			xPattDB = xPatternDB{Version: "4", Pubdate: time.Now().Format("2006-01-02 15:04:05")}
 		}
 	}
 	//add the patterns and examples
@@ -350,10 +320,10 @@ func OutputToFiles(outformat string, outfile string, config string, complexityle
 				fmt.Fprintf(txtFile, "# %s\n %s\n# %d log messages matched\n# %s\n\n", result.PatternId, result.Pattern, result.ExampleCount, result.Examples[0].Message)
 			}
 			if fmat == "yaml" {
-				yPattDB = AddToYaml(result, yPattDB)
+				yPattDB = addToYaml(result, yPattDB)
 			}
 			if fmat == "xml" {
-				xPattDB = AddToRuleset(result, xPattDB)
+				xPattDB = addToRuleset(result, xPattDB)
 			}
 		}
 	}
@@ -362,14 +332,14 @@ func OutputToFiles(outformat string, outfile string, config string, complexityle
 	for _, fmat := range outformats {
 		if fmat == "yaml" {
 			//write to the file
-			err := SaveAsYaml(yamlFile, yPattDB)
+			err := saveAsYaml(yamlFile, yPattDB)
 			if err != nil {
 				logger.HandleError(err.Error())
 			}
 		}
 		if fmat == "xml" {
 			//write to the file
-			x := ConvertToXml(xPattDB)
+			x := convertToXml(xPattDB)
 			fmt.Fprintf(xmlFile, "%s", x)
 		}
 	}
@@ -377,7 +347,8 @@ func OutputToFiles(outformat string, outfile string, config string, complexityle
 	return count, top5, err
 }
 
-func ExtractTestValuesForTokens(message string, ar sequence.AnalyzerResult) (map[string]string, error) {
+//This function extracts the values of the tokens for the test examples
+func extractTestValuesForTokens(message string, ar sequence.AnalyzerResult) (map[string]string, error) {
 	var (
 		tok string
 	)
