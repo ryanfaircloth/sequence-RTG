@@ -5,16 +5,8 @@ markSpaces = true
 
 #database settings
 usedatabase = true
-databasepath = "sequence.sdb"
+connectioninfo = "sequence.sdb"
 databasetype = "sqlite3"
-
-createdbcommands = [
-        "PRAGMA foreign_keys=OFF;",
-        "CREATE TABLE Services (id STRING (20, 50) PRIMARY KEY NOT NULL, name STRING NOT NULL, date_created DATETIME NOT NULL);",
-        "CREATE TABLE Patterns (id STRING (20, 50) PRIMARY KEY NOT NULL, service_id STRING REFERENCES Services (id) NOT NULL, sequence_pattern STRING (1000) NOT NULL, tag_positions STRING, date_created DATETIME NOT NULL, date_last_matched DATETIME NOT NULL, original_match_count INTEGER NOT NULL, cumulative_match_count INTEGER NOT NULL, ignore_pattern BOOLEAN NOT NULL, complexity_score DOUBLE NOT NULL DEFAULT (0.0));",
-        "CREATE TABLE Examples (id STRING PRIMARY KEY NOT NULL, service_id STRING REFERENCES Services (id) ON DELETE NO ACTION NOT NULL, pattern_id STRING (20, 50) REFERENCES Patterns (id) ON DELETE NO ACTION NOT NULL, example_detail STRING (1000) NOT NULL);",
-        "PRAGMA foreign_keys=ON;"
-]
 
 updatedbcommands = [
     #Add any database schema updates here in the same format as above

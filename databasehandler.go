@@ -16,8 +16,10 @@ import (
 )
 
 //This creates the database from the scripts in the toml file at the location and db type specified.
-func CreateDatabase(fname string, driver string) {
-	database, err := sql.Open(driver , fname)
+//SQLite3 needs cinfo and driver
+//Microsoft SQL Server needs cinfo, driver, path and dbname
+func CreateDatabase(cinfo string, driver string, path string, dbname string) {
+	database, err := sql.Open(driver, cinfo)
 	if err != nil {
 		logger.HandleFatal(err.Error())
 	}
@@ -25,19 +27,44 @@ func CreateDatabase(fname string, driver string) {
 	if err != nil {
 		logger.HandleFatal(err.Error())
 	}
-	query := config.createDbCommands
-	for _, q := range query {
-		_, err = database.Exec(q)
-		if err != nil {
-			logger.HandleFatal(err.Error())
+    if driver == "sqlite3" {
+		s, file, err := OpenInputFile("database_scripts/sqlite3.txt")
+		defer file.Close()
+		for s.Scan() {
+			_, err = database.Exec(s.Text())
+			if err != nil {
+				logger.HandleFatal(err.Error())
+			}
 		}
+		tx.Commit()
+	} else if driver == "sqlserver" {
+		s, file, err := OpenInputFile("database_scripts/mssql.txt")
+		defer file.Close()
+		query := ""
+		for s.Scan() {
+			if strings.Contains(s.Text(), "GO") {
+				_, err = database.Exec(query)
+				query = ""
+			} else {
+				q := s.Text()
+				q = strings.Replace(q, "%path%", path, -1)
+				q = strings.Replace(q, "%databasename%", dbname, -1)
+				query = query + q + "\n"
+			}
+			if err != nil {
+				logger.HandleFatal(err.Error())
+			}
+		}
+		tx.Commit()
+	} else {
+		//Not supported
 	}
-	tx.Commit()
+
 }
 
 //This runs the update scripts in the toml file to change the database when required.
 func UpdateDatabase() {
-	database, err := sql.Open(config.databaseType, config.databasePath)
+	database, err := sql.Open(config.databaseType, config.connectionInfo)
 	if err != nil {
 		logger.HandleFatal(err.Error())
 	}
@@ -81,7 +108,7 @@ func PurgePatternsfromDatabase(threshold int64) int64 {
 //This opens tha database for use.
 func OpenDbandSetContext() (*sql.DB, context.Context) {
 	// Get a handle to the SQLite database, using mattn/go-sqlite3
-	db, err := sql.Open(config.databaseType, config.databasePath)
+	db, err := sql.Open(config.databaseType, config.connectionInfo)
 	if err != nil {
 		logger.HandleFatal(err.Error())
 	}

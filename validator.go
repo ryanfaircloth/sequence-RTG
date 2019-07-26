@@ -40,7 +40,7 @@ func ValidateOutFormatWithFile(outfile string, outformat string) string {
 //for the create database
 func ValidateOutFile(outfile string) string {
 	if outfile == "" {
-		return "Out file name must be specified for creating a database."
+		return "Out file name must be specified for exporting patterns."
 	}
 	return ""
 }

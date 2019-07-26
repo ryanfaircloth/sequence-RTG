@@ -25,6 +25,10 @@ var (
 	informat       string
 	patfile        string
 	cpuprofile     string
+	dbtype	       string
+	dbconn	       string
+	dbpath	       string
+	dbname	       string
 	workers        int
 	format         string
 	batchsize      int
@@ -204,7 +208,7 @@ func analyze(cmd *cobra.Command, args []string) {
 
 func createdatabase(cmd *cobra.Command, args []string) {
 	start("createdatabase")
-	sequence.CreateDatabase(outfile, "sqlite3")
+	sequence.CreateDatabase(dbconn, dbtype, dbpath, dbname)
 	standardLogger.HandleInfo(fmt.Sprintf("Database created successfully"))
 }
 
@@ -425,10 +429,7 @@ func validateInputs(commandType string) {
 			errors = errors + ", " + err
 		}
 	case "createdatabase":
-		err := sequence.ValidateOutFile(outfile)
-		if err != "" {
-			errors = errors + ", " + err
-		}
+
 	case "purgepatterns":
 		if threshold <= 0 {
 			errors = "Threshold must be greater than zero or no records will be deleted."
@@ -523,6 +524,10 @@ func main() {
 	sequenceCmd.PersistentFlags().StringVarP(&errorfile, "std-error-file", "e", "", "this redirects panics etc to a log file not stderr, set to a valid path to enable this")
 	sequenceCmd.PersistentFlags().IntVarP(&threshold, "below-threshold", "t", 0, "this is used with the purge patterns command, any patterns with cumulative match count less than the threshold will be deleted")
 	sequenceCmd.PersistentFlags().Float64VarP(&complimit, "complexity-limit", "c", 1, "the complexity of a pattern is between 0 and 1, higher numbers represent more tags. 0.5 is a good level to limit exporting over-tagged patterns.")
+	sequenceCmd.PersistentFlags().StringVarP(&dbtype, "type", "", "", "type of the database when creating it, can mssql, postgres, sqlite3 or mysql")
+	sequenceCmd.PersistentFlags().StringVarP(&dbpath, "dbpath", "d", "", "filepath for the database for mssql")
+	sequenceCmd.PersistentFlags().StringVarP(&dbconn, "conn", "", "", "connection details for the server")
+	sequenceCmd.PersistentFlags().StringVarP(&dbname, "name", "", "", "name of the database for mssql")
 
 	scanCmd.Run = scan
 	createDatabaseCmd.Run = createdatabase

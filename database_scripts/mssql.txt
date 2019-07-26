@@ -1,0 +1,189 @@
+USE [master]
+GO
+
+ALTER DATABASE [%databasename%] SET COMPATIBILITY_LEVEL = 120
+GO
+
+IF (1 = FULLTEXTSERVICEPROPERTY('IsFullTextInstalled'))
+begin
+EXEC [%databasename%].[dbo].[sp_fulltext_database] @action = 'enable'
+end
+GO
+
+ALTER DATABASE [%databasename%] SET ANSI_NULL_DEFAULT OFF
+GO
+
+ALTER DATABASE [%databasename%] SET ANSI_NULLS OFF
+GO
+
+ALTER DATABASE [%databasename%] SET ANSI_PADDING OFF
+GO
+
+ALTER DATABASE [%databasename%] SET ANSI_WARNINGS OFF
+GO
+
+ALTER DATABASE [%databasename%] SET ARITHABORT OFF
+GO
+
+ALTER DATABASE [%databasename%] SET AUTO_CLOSE OFF
+GO
+
+ALTER DATABASE [%databasename%] SET AUTO_SHRINK OFF
+GO
+
+ALTER DATABASE [%databasename%] SET AUTO_UPDATE_STATISTICS ON
+GO
+
+ALTER DATABASE [%databasename%] SET CURSOR_CLOSE_ON_COMMIT OFF
+GO
+
+ALTER DATABASE [%databasename%] SET CURSOR_DEFAULT  GLOBAL
+GO
+
+ALTER DATABASE [%databasename%] SET CONCAT_NULL_YIELDS_NULL OFF
+GO
+
+ALTER DATABASE [%databasename%] SET NUMERIC_ROUNDABORT OFF
+GO
+
+ALTER DATABASE [%databasename%] SET QUOTED_IDENTIFIER OFF
+GO
+
+ALTER DATABASE [%databasename%] SET RECURSIVE_TRIGGERS OFF
+GO
+
+ALTER DATABASE [%databasename%] SET  DISABLE_BROKER
+GO
+
+ALTER DATABASE [%databasename%] SET AUTO_UPDATE_STATISTICS_ASYNC OFF
+GO
+
+ALTER DATABASE [%databasename%] SET DATE_CORRELATION_OPTIMIZATION OFF
+GO
+
+ALTER DATABASE [%databasename%] SET TRUSTWORTHY OFF
+GO
+
+ALTER DATABASE [%databasename%] SET ALLOW_SNAPSHOT_ISOLATION OFF
+GO
+
+ALTER DATABASE [%databasename%] SET PARAMETERIZATION SIMPLE
+GO
+
+ALTER DATABASE [%databasename%] SET READ_COMMITTED_SNAPSHOT OFF
+GO
+
+ALTER DATABASE [%databasename%] SET HONOR_BROKER_PRIORITY OFF
+GO
+
+ALTER DATABASE [%databasename%] SET RECOVERY SIMPLE
+GO
+
+ALTER DATABASE [%databasename%] SET  MULTI_USER
+GO
+
+ALTER DATABASE [%databasename%] SET PAGE_VERIFY CHECKSUM
+GO
+
+ALTER DATABASE [%databasename%] SET DB_CHAINING OFF
+GO
+
+ALTER DATABASE [%databasename%] SET FILESTREAM( NON_TRANSACTED_ACCESS = OFF )
+GO
+
+ALTER DATABASE [%databasename%] SET TARGET_RECOVERY_TIME = 0 SECONDS
+GO
+
+ALTER DATABASE [%databasename%] SET DELAYED_DURABILITY = DISABLED
+GO
+
+ALTER DATABASE [%databasename%] SET  READ_WRITE
+GO
+
+USE [%databasename%]
+GO
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Services](
+	[id] [nvarchar](50) NOT NULL,
+	[name] [nvarchar](50) NOT NULL,
+	[date_created] [smalldatetime] NOT NULL,
+ CONSTRAINT [PK_Services] PRIMARY KEY CLUSTERED
+(
+	[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+GO
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Patterns](
+	[id] [nvarchar](50) NOT NULL,
+	[service_id] [nvarchar](50) NOT NULL,
+	[sequence_pattern] [nvarchar](max) NOT NULL,
+	[tag_positions] [nvarchar](max) NULL,
+	[date_created] [smalldatetime] NOT NULL,
+	[date_last_matched] [smalldatetime] NOT NULL,
+	[original_match_count] [bigint] NOT NULL,
+	[cumulative_match_count] [bigint] NOT NULL,
+	[ignore_pattern] [bit] NOT NULL CONSTRAINT [DF_Patterns_ignore_pattern]  DEFAULT ((0)),
+	[complexity_score] [float] NOT NULL CONSTRAINT [DF_Patterns_complexity_score]  DEFAULT ((0.0)),
+ CONSTRAINT [PK_Patterns] PRIMARY KEY CLUSTERED
+(
+	[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+
+GO
+
+ALTER TABLE [dbo].[Patterns]  WITH CHECK ADD  CONSTRAINT [FK_Patterns_Services] FOREIGN KEY([service_id])
+REFERENCES [dbo].[Services] ([id])
+GO
+
+ALTER TABLE [dbo].[Patterns] CHECK CONSTRAINT [FK_Patterns_Services]
+GO
+
+USE [%databasename%]
+GO
+
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Examples](
+	[id] [nvarchar](50) NOT NULL,
+	[service_id] [nvarchar](50) NOT NULL,
+	[pattern_id] [nvarchar](50) NOT NULL,
+	[example_detail] [nvarchar](max) NOT NULL,
+ CONSTRAINT [PK_Examples] PRIMARY KEY CLUSTERED
+(
+	[id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[Examples]  WITH CHECK ADD  CONSTRAINT [FK_Examples_Patterns] FOREIGN KEY([pattern_id])
+REFERENCES [dbo].[Patterns] ([id])
+GO
+
+ALTER TABLE [dbo].[Examples] CHECK CONSTRAINT [FK_Examples_Patterns]
+GO
+
+ALTER TABLE [dbo].[Examples]  WITH CHECK ADD  CONSTRAINT [FK_Examples_Services] FOREIGN KEY([service_id])
+REFERENCES [dbo].[Services] ([id])
+GO
+
+ALTER TABLE [dbo].[Examples] CHECK CONSTRAINT [FK_Examples_Services]
+GO
