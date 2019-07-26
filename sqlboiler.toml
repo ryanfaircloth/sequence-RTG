@@ -2,12 +2,13 @@
 	dbname = "sequence.sdb"
 
 [psql]
-  dbname = "dbname"
+  dbname = "Sequence"
   host   = "localhost"
   port   = 5432
-  user   = "dbusername"
-  pass   = "dbpassword"
-  schema = "myschema"
+  user   = "postgres"
+  pass   = "password"
+  schema = "public"
+  sslmode = "disable"
   blacklist = ["migrations", "other"]
 
 [mysql]
