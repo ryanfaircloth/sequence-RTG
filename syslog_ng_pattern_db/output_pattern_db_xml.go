@@ -130,8 +130,6 @@ func buildRuleXML(result sequence.AnalyzerResult) xRule {
 	rule := xRule{}
 	count := xRuleValue{Name: "seq-matches", Value: strconv.Itoa(result.ExampleCount)}
 	rule.Values.Values = append(rule.Values.Values, count)
-	new := xRuleValue{Name: "seq-new", Value: "true"}
-	rule.Values.Values = append(rule.Values.Values, new)
 	dc := xRuleValue{Name: "seq-created", Value: result.DateCreated.Format("2006-01-02")}
 	rule.Values.Values = append(rule.Values.Values, dc)
 	dlm := xRuleValue{Name: "seq-last-match", Value: result.DateLastMatched.Format("2006-01-02")}

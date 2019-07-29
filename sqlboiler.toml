@@ -12,11 +12,11 @@
   blacklist = ["migrations", "other"]
 
 [mysql]
-  dbname  = "dbname"
+  dbname  = "sequence"
   host    = "localhost"
   port    = 3306
-  user    = "dbusername"
-  pass    = "dbpassword"
+  user    = "root"
+  pass    = "password"
   sslmode = "false"
 
 [mssql]

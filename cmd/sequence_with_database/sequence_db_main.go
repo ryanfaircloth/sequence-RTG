@@ -34,6 +34,7 @@ var (
 	batchsize      int
 	threshold      int
 	complimit	   float64
+	allinone	   bool
 	standardLogger *sequence.StandardLogger
 
 	quit chan struct{}
@@ -307,6 +308,8 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 						ar.PatternId = sequence.GenerateIDFromString(pat, svc)
 						ar.Pattern = pat
 						ar.ExampleCount++
+						ar.DateCreated = time.Now()
+						ar.DateLastMatched = time.Now()
 						ar.ComplexityScore = sequence.CalculatePatternComplexity(aseq, len(l.Message))
 
 						amap[pat] = ar
@@ -317,7 +320,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 		}
 		anTime := time.Since(anStartTime)
 		standardLogger.HandleInfo(fmt.Sprintf("Analysed in: %s\n", anTime))
-		if sequence.GetUseDatabase() {
+		if sequence.GetUseDatabase() && !allinone {
 			standardLogger.HandleDebug("Starting save to the database.")
 			sequence.SaveExistingToDatabase(pmap)
 			new, saved := sequence.SaveToDatabase(amap)
@@ -521,10 +524,10 @@ func main() {
 	sequenceCmd.PersistentFlags().IntVarP(&batchsize, "batch-size", "b", 0, "if using a large file or stdin, the batch size sets the limit of how many to process at one time")
 	sequenceCmd.PersistentFlags().StringVarP(&logfile, "log-file", "l", "", "location of log file if different from the exe directory")
 	sequenceCmd.PersistentFlags().StringVarP(&loglevel, "log-level", "n", "", "defaults to info level, can be 'trace' 'debug', 'info', 'error', 'fatal'")
-	sequenceCmd.PersistentFlags().StringVarP(&errorfile, "std-error-file", "e", "", "this redirects panics etc to a log file not stderr, set to a valid path to enable this")
 	sequenceCmd.PersistentFlags().IntVarP(&threshold, "below-threshold", "t", 0, "this is used with the purge patterns command, any patterns with cumulative match count less than the threshold will be deleted")
 	sequenceCmd.PersistentFlags().Float64VarP(&complimit, "complexity-limit", "c", 1, "the complexity of a pattern is between 0 and 1, higher numbers represent more tags. 0.5 is a good level to limit exporting over-tagged patterns.")
-	sequenceCmd.PersistentFlags().StringVarP(&dbtype, "type", "", "", "type of the database when creating it, can mssql, postgres, sqlite3 or mysql")
+	sequenceCmd.PersistentFlags().BoolVarP(&allinone, "all", "", false, "if passed to analyzebyservice it by passes saving to the database and directly out puts the patterns.")
+	sequenceCmd.PersistentFlags().StringVarP(&dbtype,"type", "", "", "type of the database when creating it, can mssql, postgres, sqlite3 or mysql")
 	sequenceCmd.PersistentFlags().StringVarP(&dbpath, "dbpath", "d", "", "filepath for the database for mssql")
 	sequenceCmd.PersistentFlags().StringVarP(&dbconn, "conn", "", "", "connection details for the server")
 	sequenceCmd.PersistentFlags().StringVarP(&dbname, "name", "", "", "name of the database for mssql")

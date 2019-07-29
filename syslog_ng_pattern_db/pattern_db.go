@@ -260,7 +260,7 @@ func OutputToFiles(outformat string, outfile string, config string, complexityle
 	if err = readConfig(config); err != nil {
 		return count, top5, err
 	}
-	if sequence.GetUseDatabase() {
+	if sequence.GetUseDatabase() && cmap == nil {
 		db, ctx := sequence.OpenDbandSetContext()
 		defer db.Close()
 		patmap, top5 = sequence.GetPatternsWithExamplesFromDatabase(db, ctx, complexitylevel)

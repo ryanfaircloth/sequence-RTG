@@ -27,7 +27,6 @@ type yRule struct {
 type yRuleValues struct {
 	Complexity      float64`yaml:"seq-complexity"`
 	Seqmatches      int    `yaml:"seq-matches"`
-	New             bool   `yaml:"seq-new"`
 	DateCreated     string `yaml:"seq-created"`
 	DateLastMatched string `yaml:"seq-last-match"`
 }
@@ -90,7 +89,6 @@ func buildRule(result sequence.AnalyzerResult, rsName string) yRule {
 		example := yRuleExample{ex.Service, ex.Message, m}
 		rule.Examples = append(rule.Examples, example)
 	}
-	rule.Values.New = true
 	rule.Values.DateCreated = result.DateCreated.Format("2006-01-02")
 	rule.Values.DateLastMatched = result.DateLastMatched.Format("2006-01-02")
 	rule.Values.Complexity = math.Round(result.ComplexityScore*100)/100

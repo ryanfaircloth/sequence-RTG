@@ -1,0 +1,38 @@
+CREATE DATABASE `sequence` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+
+CREATE TABLE `services` (
+  `id` varchar(50) NOT NULL,
+  `name` varchar(50) NOT NULL,
+  `date_created` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+CREATE TABLE `patterns` (
+  `id` varchar(50) NOT NULL,
+  `service_id` varchar(50) NOT NULL,
+  `sequence_pattern` varchar(1000) NOT NULL,
+  `tag_positions` varchar(500) DEFAULT NULL,
+  `date_created` datetime NOT NULL,
+  `date_last_matched` datetime DEFAULT NULL,
+  `original_match_count` int(11) NOT NULL,
+  `cumulative_match_count` int(11) NOT NULL,
+  `ignore_pattern` tinyint(4) NOT NULL DEFAULT '0',
+  `complexity_score` float NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `FK_Patterns_Services_idx` (`serrvice_id`),
+  CONSTRAINT `FK_Patterns_Services` FOREIGN KEY (`service_id`) REFERENCES `services` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+CREATE TABLE `examples` (
+  `id` varchar(50) NOT NULL,
+  `service_id` varchar(50) NOT NULL,
+  `pattern_id` varchar(50) NOT NULL,
+  `example_detail` text NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_Examples_Services_idx` (`service_id`),
+  KEY `FK_Examples_Patterns_idx` (`pattern_id`),
+  CONSTRAINT `FK_Examples_Patterns` FOREIGN KEY (`pattern_id`) REFERENCES `patterns` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `FK_Examples_Services` FOREIGN KEY (`service_id`) REFERENCES `services` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
