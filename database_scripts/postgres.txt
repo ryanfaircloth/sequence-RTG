@@ -1,0 +1,100 @@
+CREATE DATABASE "Sequence"
+    WITH
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    LC_COLLATE = 'English_Australia.1252'
+    LC_CTYPE = 'English_Australia.1252'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1;
+
+CREATE TABLE public."Services"
+(
+    id character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    name character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    date_created date NOT NULL,
+    CONSTRAINT "PK_id" PRIMARY KEY (id)
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE public."Services"
+    OWNER to postgres;
+
+CREATE TABLE public."Patterns"
+(
+    id character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    service_id character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    sequence_pattern character varying(10000) COLLATE pg_catalog."default" NOT NULL,
+    tag_positions character varying(500) COLLATE pg_catalog."default",
+    date_created date NOT NULL,
+    date_last_matched date NOT NULL,
+    original_match_count bigint NOT NULL,
+    cumulative_match_count bigint NOT NULL,
+    ignore_pattern boolean NOT NULL DEFAULT false,
+    complexity_score double precision NOT NULL DEFAULT 0.0,
+    CONSTRAINT "PK_Patterns" PRIMARY KEY (id),
+    CONSTRAINT "FK_Patterns_Services" FOREIGN KEY (service_id)
+        REFERENCES public."Services" (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE public."Patterns"
+    OWNER to postgres;
+
+-- Index: fki_FK_Services
+
+-- DROP INDEX public."fki_FK_Services";
+
+CREATE INDEX "fki_FK_Services"
+    ON public."Patterns" USING btree
+    (service_id COLLATE pg_catalog."default")
+    TABLESPACE pg_default;
+
+CREATE TABLE public."Examples"
+(
+    id character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    service_id character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    pattern_id character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    example_detail text COLLATE pg_catalog."default" NOT NULL,
+    CONSTRAINT "PK_Examples" PRIMARY KEY (id),
+    CONSTRAINT "FK_Examples_Patterns" FOREIGN KEY (pattern_id)
+        REFERENCES public."Patterns" (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION,
+    CONSTRAINT "FK_Examples_Services" FOREIGN KEY (service_id)
+        REFERENCES public."Services" (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE NO ACTION
+)
+WITH (
+    OIDS = FALSE
+)
+TABLESPACE pg_default;
+
+ALTER TABLE public."Examples"
+    OWNER to postgres;
+
+-- Index: fki_FK_Examples_Patterns
+
+-- DROP INDEX public."fki_FK_Examples_Patterns";
+
+CREATE INDEX "fki_FK_Examples_Patterns"
+    ON public."Examples" USING btree
+    (pattern_id COLLATE pg_catalog."default")
+    TABLESPACE pg_default;
+
+-- Index: fki_FK_Services_Examples
+
+-- DROP INDEX public."fki_FK_Services_Examples";
+
+CREATE INDEX "fki_FK_Services_Examples"
+    ON public."Examples" USING btree
+    (service_id COLLATE pg_catalog."default")
+    TABLESPACE pg_default;
