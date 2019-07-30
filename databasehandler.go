@@ -150,14 +150,14 @@ func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context, comple
 			total := getRecordProcessed(db, ctx)
 			threshold = int64(getThreshold(total))
 		}
-		patterns, err = models.Patterns(models.PatternWhere.CumulativeMatchCount.GTE(threshold), qm.And(models.PatternColumns.ComplexityScore+" <=? ", complexityLevel), qm.OrderBy(models.PatternColumns.CumulativeMatchCount+" DESC")).All(ctx, db)
+		patterns, err = models.Patterns(models.PatternWhere.CumulativeMatchCount.GTE(threshold), qm.And(models.PatternColumns.IgnorePattern+" =?", false), qm.And(models.PatternColumns.ComplexityScore+" <=? ", complexityLevel), qm.OrderBy(models.PatternColumns.CumulativeMatchCount+" DESC")).All(ctx, db)
 		if err != nil {
-			logger.DatabaseSelectFailed("patterns", "Where threshold_reached=true", err.Error())
+			logger.DatabaseSelectFailed("patterns", "Where cumulative_match_count > threshold", err.Error())
 		}
 	} else {
-		patterns, err = models.Patterns(models.PatternWhere.ComplexityScore.LTE(complexityLevel), qm.OrderBy(models.PatternColumns.CumulativeMatchCount+" DESC")).All(ctx, db)
+		patterns, err = models.Patterns(models.PatternWhere.ComplexityScore.LTE(complexityLevel), qm.And(models.PatternColumns.IgnorePattern+" =?", false), qm.OrderBy(models.PatternColumns.CumulativeMatchCount+" DESC")).All(ctx, db)
 		if err != nil {
-			logger.DatabaseSelectFailed("patterns", "All", err.Error())
+			logger.DatabaseSelectFailed("patterns", "No threshold", err.Error())
 		}
 	}
 
@@ -272,6 +272,24 @@ func addPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, tr int) 
 		insertExample(ctx, tx, e, result.PatternId, result.Service.ID)
 	}
 	return true
+}
+
+func SaveIgnoredPatterns(pattids []string){
+	db, ctx := OpenDbandSetContext()
+	defer db.Close()
+	for _, p := range pattids{
+		ignorePattern(ctx, db, p)
+	}
+}
+
+//This updates an existing pattern record and marks it to be ignored.
+func ignorePattern(ctx context.Context, db *sql.DB, patternid string) {
+	p, _ := models.FindPattern(ctx, db, patternid)
+	p.IgnorePattern = true
+	_, err := p.Update(ctx, db, boil.Infer())
+	if err != nil {
+		logger.DatabaseUpdateFailed("pattern", patternid, err.Error())
+	}
 }
 
 //This updates an existing pattern record and updates any related examples.

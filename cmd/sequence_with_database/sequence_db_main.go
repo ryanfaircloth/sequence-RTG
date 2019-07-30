@@ -222,7 +222,22 @@ func updatedatabase(cmd *cobra.Command, args []string) {
 func purgepatterns(cmd *cobra.Command, args []string) {
 	start("purgepatterns")
 	rf := sequence.PurgePatternsfromDatabase(int64(threshold))
-	standardLogger.HandleInfo(fmt.Sprintf("%d patterns and their examples removed from the database", rf))
+	standardLogger.HandleInfo(fmt.Sprintf("%d patterns and their examples removed from the database.", rf))
+}
+
+func updateignorepatterns(cmd *cobra.Command, args []string){
+	start("ignorepatterns")
+	iscan, ifile, err := sequence.OpenInputFile(infile)
+	if err != nil {
+		standardLogger.HandleFatal(err.Error())
+	}
+	defer ifile.Close()
+	var ids []string
+	for iscan.Scan(){
+		ids = append(ids, iscan.Text())
+	}
+	sequence.SaveIgnoredPatterns(ids)
+	standardLogger.HandleInfo(fmt.Sprintf("Ignore patterns updated."))
 }
 
 func analyzebyservice(cmd *cobra.Command, args []string) {
@@ -377,6 +392,8 @@ func export(cmap map[string]sequence.AnalyzerResult){
 
 func validateInputs(commandType string) {
 	var errors string
+	//var warnings string
+	errors = sequence.ValidateLogLevel(loglevel)
 	switch commandType {
 	case "analyze":
 		//set the formats to lower before we start
@@ -420,6 +437,12 @@ func validateInputs(commandType string) {
 		if err != "" {
 			errors = errors + ", " + err
 		}
+		if allinone{
+			err = sequence.ValidateAllInOne(outfile, outformat, outsystem)
+			if err != "" {
+				errors = errors + ", " + err
+			}
+		}
 	case "exportpatterns":
 		//set the formats to lower before we start
 		outformat = strings.ToLower(outformat)
@@ -432,6 +455,8 @@ func validateInputs(commandType string) {
 			errors = errors + ", " + err
 		}
 	case "createdatabase":
+		//create database only works with Sqlite3 at the moment.
+
 
 	case "purgepatterns":
 		if threshold <= 0 {
@@ -512,6 +537,11 @@ func main() {
 			Use:   "exportpatterns",
 			Short: "outputs a list of patterns to the files in the formats requested.",
 		}
+
+		updateIgnoreCmd = &cobra.Command{
+			Use:   "updateignorepatterns",
+			Short: "outputs a list of patterns to the files in the formats requested.",
+		}
 	)
 
 	sequenceCmd.PersistentFlags().StringVarP(&cfgfile, "config", "", "", "TOML-formatted configuration file, default checks ./sequence.toml, then sequence.toml in the same directory as program")
@@ -539,6 +569,7 @@ func main() {
 	analyzeCmd.Run = analyze
 	analyzeByServiceCmd.Run = analyzebyservice
 	exportPatternsCmd.Run = exportPatterns
+	updateIgnoreCmd.Run = updateignorepatterns
 
 	sequenceCmd.AddCommand(scanCmd)
 	sequenceCmd.AddCommand(createDatabaseCmd)
@@ -547,6 +578,7 @@ func main() {
 	sequenceCmd.AddCommand(analyzeCmd)
 	sequenceCmd.AddCommand(analyzeByServiceCmd)
 	sequenceCmd.AddCommand(exportPatternsCmd)
+	sequenceCmd.AddCommand(updateIgnoreCmd)
 
 	sequenceCmd.Execute()
 }
