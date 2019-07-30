@@ -47,7 +47,7 @@ type Token struct {
 }
 
 func (this Token) String() string {
-	return fmt.Sprintf("{ Tag=%q, Type=%q, Value=%q, isKey=%t, isValue=%t, minus=%t, plus=%t, star=%t }", this.Tag, this.Type, this.Value, this.isKey, this.isValue, this.minus, this.plus, this.star)
+	return fmt.Sprintf("{ Tag=%q, Type=%q, Value=%q, isKey=%t, isValue=%t, isSpaceBefore=%t, minus=%t, plus=%t, star=%t }", this.Tag, this.Type, this.Value, this.isKey, this.isValue, this.IsSpaceBefore, this.minus, this.plus, this.star)
 }
 
 const (
