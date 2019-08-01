@@ -135,20 +135,20 @@ func getPatternsFromDatabase(db *sql.DB, ctx context.Context) map[string]string 
 
 //This gets all the patterns complete with examples and service for exporting them to file.
 //The pattern numbers returned are limited by the complexity score and threshold if the values are passed/configured.
-func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context, complexityLevel float64) (map[string]AnalyzerResult, string) {
+func GetPatternsWithExamplesFromDatabase(db *sql.DB, ctx context.Context, complexityLevel float64, thresholdType string, thresholdValue string) (map[string]AnalyzerResult, string) {
 	var (
 		patterns models.PatternSlice
 		err      error
 		top5     string
 	)
 	pmap := make(map[string]AnalyzerResult)
-	if config.matchThresholdValue != "0" {
+	if thresholdValue != "0" {
 		var threshold int64
-		if config.matchThresholdType == "count" {
+		if thresholdType == "count" {
 			threshold, _ = strconv.ParseInt(config.matchThresholdValue, 10, 64)
 		} else {
 			total := getRecordProcessed(db, ctx)
-			threshold = int64(getThreshold(total))
+			threshold = int64(getThreshold(total, thresholdType, thresholdValue))
 		}
 		patterns, err = models.Patterns(models.PatternWhere.CumulativeMatchCount.GTE(threshold), qm.And(models.PatternColumns.IgnorePattern+" =?", false), qm.And(models.PatternColumns.ComplexityScore+" <=? ", complexityLevel), qm.OrderBy(models.PatternColumns.CumulativeMatchCount+" DESC")).All(ctx, db)
 		if err != nil {

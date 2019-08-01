@@ -195,6 +195,16 @@ func GetUseDatabase() bool {
 	return config.useDatabase
 }
 
+//Returns the type of threshold to be calculated
+func GetThresholdType() string {
+	return config.matchThresholdType
+}
+
+//Returns the value of threshold to be calculated
+func GetThresholdValue() string {
+	return config.matchThresholdValue
+}
+
 func predefineAnalyzerTags(f string, t TagType) {
 	switch f {
 	case "regextime":

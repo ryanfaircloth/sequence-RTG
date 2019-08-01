@@ -55,7 +55,7 @@ func readConfig(file string) error {
 //This function takes patterns created by the sequence module and outputs them in a grok format.
 //This translation is only lighly tested and as with any translation is not always perfect.
 //Transformed patterns need to be reviewed before use in production.
-func OutputToFiles(outfile string, config string, complexitylevel float64, cmap map[string]sequence.AnalyzerResult) (int, string, error) {
+func OutputToFiles(outfile string, config string, complexitylevel float64, cmap map[string]sequence.AnalyzerResult, thresholdType string, thresholdValue string) (int, string, error) {
 	var (
 		err   error
 		count int
@@ -73,7 +73,12 @@ func OutputToFiles(outfile string, config string, complexitylevel float64, cmap 
 	if sequence.GetUseDatabase() {
 		db, ctx := sequence.OpenDbandSetContext()
 		defer db.Close()
-		patmap, top5 = sequence.GetPatternsWithExamplesFromDatabase(db, ctx, complexitylevel)
+		//get from the config instead
+		if thresholdType == ""{
+			thresholdType = sequence.GetThresholdType()
+			thresholdValue = sequence.GetThresholdValue()
+		}
+		patmap, top5 = sequence.GetPatternsWithExamplesFromDatabase(db, ctx, complexitylevel, thresholdType, thresholdValue)
 	} else {
 		patmap = cmap
 	}

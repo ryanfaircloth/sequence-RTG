@@ -239,7 +239,7 @@ func getTimeRegex(p string) (string, string) {
 //This is the function that drives the output to file.
 //The user can pass the pattern map if no database is used or
 //pass the map created during the analysis
-func OutputToFiles(outformat string, outfile string, config string, complexitylevel float64, cmap map[string]sequence.AnalyzerResult) (int, string, error) {
+func OutputToFiles(outformat string, outfile string, config string, complexitylevel float64, cmap map[string]sequence.AnalyzerResult, thresholdType string, thresholdValue string) (int, string, error) {
 
 	var (
 		txtFile  *os.File
@@ -263,7 +263,12 @@ func OutputToFiles(outformat string, outfile string, config string, complexityle
 	if sequence.GetUseDatabase() && cmap == nil {
 		db, ctx := sequence.OpenDbandSetContext()
 		defer db.Close()
-		patmap, top5 = sequence.GetPatternsWithExamplesFromDatabase(db, ctx, complexitylevel)
+		//get from the config instead
+		if thresholdType == ""{
+			thresholdType = sequence.GetThresholdType()
+			thresholdValue = sequence.GetThresholdValue()
+		}
+		patmap, top5 = sequence.GetPatternsWithExamplesFromDatabase(db, ctx, complexitylevel, thresholdType, thresholdValue)
 	} else {
 		patmap = cmap
 	}

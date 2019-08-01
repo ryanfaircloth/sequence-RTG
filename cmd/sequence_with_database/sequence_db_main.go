@@ -32,7 +32,9 @@ var (
 	workers        int
 	format         string
 	batchsize      int
-	threshold      int
+	purgeThreshold int
+	thresholdType  string
+	thresholdValue string
 	complimit	   float64
 	allinone	   bool
 	standardLogger *sequence.StandardLogger
@@ -221,7 +223,7 @@ func updatedatabase(cmd *cobra.Command, args []string) {
 
 func purgepatterns(cmd *cobra.Command, args []string) {
 	start("purgepatterns")
-	rf := sequence.PurgePatternsfromDatabase(int64(threshold))
+	rf := sequence.PurgePatternsfromDatabase(int64(purgeThreshold))
 	standardLogger.HandleInfo(fmt.Sprintf("%d patterns and their examples removed from the database.", rf))
 }
 
@@ -258,7 +260,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 			break
 		}
 		standardLogger.HandleInfo(fmt.Sprintf("Read in %d records successfully, starting analysis..", total))
-		standardLogger.HandleDebug(fmt.Sprintf("Threshhold equals %d ", threshold))
+		standardLogger.HandleDebug(fmt.Sprintf("Threshhold equals %d ", purgeThreshold))
 		//Here we group by service and process
 		//We lose the cross service patterns but we get better
 		//within service patterns
@@ -372,14 +374,14 @@ func exportPatterns(cmd *cobra.Command, args []string) {
 func export(cmap map[string]sequence.AnalyzerResult){
 	startTime := time.Now()
 	if outsystem == "patterndb" {
-		processed, top5, err := syslog_ng_pattern_db.OutputToFiles(outformat, outfile, cfgfile, complimit, cmap)
+		processed, top5, err := syslog_ng_pattern_db.OutputToFiles(outformat, outfile, cfgfile, complimit, cmap, thresholdType, thresholdValue)
 		if err != nil {
 			standardLogger.HandleError(err.Error())
 		} else {
 			standardLogger.ExportPatternsInfo(processed, top5, time.Since(startTime))
 		}
 	} else if outsystem == "grok" {
-		processed, top5, err := logstash_grok.OutputToFiles(outfile, cfgfile, complimit, cmap)
+		processed, top5, err := logstash_grok.OutputToFiles(outfile, cfgfile, complimit, cmap, thresholdType, thresholdValue)
 		if err != nil {
 			standardLogger.HandleError(err.Error())
 		} else {
@@ -459,7 +461,7 @@ func validateInputs(commandType string) {
 
 
 	case "purgepatterns":
-		if threshold <= 0 {
+		if purgeThreshold <= 0 {
 			errors = "Threshold must be greater than zero or no records will be deleted."
 		}
 	}
@@ -554,7 +556,9 @@ func main() {
 	sequenceCmd.PersistentFlags().IntVarP(&batchsize, "batch-size", "b", 0, "if using a large file or stdin, the batch size sets the limit of how many to process at one time")
 	sequenceCmd.PersistentFlags().StringVarP(&logfile, "log-file", "l", "", "location of log file if different from the exe directory")
 	sequenceCmd.PersistentFlags().StringVarP(&loglevel, "log-level", "n", "", "defaults to info level, can be 'trace' 'debug', 'info', 'error', 'fatal'")
-	sequenceCmd.PersistentFlags().IntVarP(&threshold, "below-threshold", "t", 0, "this is used with the purge patterns command, any patterns with cumulative match count less than the threshold will be deleted")
+	sequenceCmd.PersistentFlags().IntVarP(&purgeThreshold, "purge-threshold", "t", 0, "this is used with the purge patterns command and exportpatterns, for purge patterns is represents a number below which patterns are deleted, for exported patterns exported patterns to override the config value in matchThresholdValue.")
+	sequenceCmd.PersistentFlags().StringVarP(&thresholdType, "match-threshold-type", "y", "", "this can be used with exported patterns to override the config value in matchThresholdType")
+	sequenceCmd.PersistentFlags().StringVarP(&thresholdValue, "match-threshold-value", "v", "0", "this can be used with exported patterns to override the config value in matchThresholdValue")
 	sequenceCmd.PersistentFlags().Float64VarP(&complimit, "complexity-limit", "c", 1, "the complexity of a pattern is between 0 and 1, higher numbers represent more tags. 0.5 is a good level to limit exporting over-tagged patterns.")
 	sequenceCmd.PersistentFlags().BoolVarP(&allinone, "all", "", false, "if passed to analyzebyservice it by passes saving to the database and directly out puts the patterns.")
 	sequenceCmd.PersistentFlags().StringVarP(&dbtype,"type", "", "", "type of the database when creating it, can mssql, postgres, sqlite3 or mysql")
