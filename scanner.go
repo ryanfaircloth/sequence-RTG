@@ -558,7 +558,7 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 				// Only reason this could happen is if we encountered an array of
 				// objects like [{"a":1}, {"b":2}]
 				arrs[len(arrs)-1]++
-				keys[len(keys)-1] = keys[len(keys)-2] + "." + strconv.FormatInt(arrs[len(arrs)-1], 10)
+				//keys[len(keys)-1] = keys[len(keys)-2] + "." + strconv.FormatInt(arrs[len(arrs)-1], 10)
 				keys = append(keys, "")
 
 			case "\"":
@@ -585,11 +585,8 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 					case 0:
 						return nil, fmt.Errorf("Invalid message. Expecting inside object, not so.")
 
-					case 1:
-						keys[0] = tok.Value
-
 					default:
-						keys[len(keys)-1] = keys[len(keys)-2] + "." + tok.Value
+						keys[len(keys)-1] = tok.Value
 					}
 
 					tok.Value = keys[len(keys)-1]
@@ -633,11 +630,6 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 					// if vquote is already true, that means we encountered something like ""
 					vquote = false
 
-					// let's remove the key and "="
-					if len(this.seq) >= 2 {
-						this.seq = this.seq[:len(this.seq)-2]
-					}
-
 					state = jsonObjectValue
 				} else {
 					// start quote, ignore, move on
@@ -648,24 +640,19 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 				// Start of an array
 				state = jsonArrayStart
 				arrs = append(arrs, 0)
-				keys = append(keys, keys[len(keys)-1]+"."+strconv.FormatInt(arrs[len(arrs)-1], 10))
-
-				// let's remove the key and "="
-				if len(this.seq) >= 2 {
-					this.seq = this.seq[:len(this.seq)-2]
-				}
+				this.insertToken(tok)
 
 			case "{":
 				state = jsonObjectStart
 				keys = append(keys, "")
-
-				if len(this.seq) >= 2 {
-					this.seq = this.seq[:len(this.seq)-2]
-				}
+				this.insertToken(tok)
 
 			default:
 				state = jsonObjectValue
 				tok.isValue = true
+				if tok.Type == TokenLiteral{
+					tok.Type = TokenString
+				}
 				this.insertToken(tok)
 			}
 
@@ -713,12 +700,14 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 					return nil, fmt.Errorf("Invalid message. Mismatched ']' or '}' characters.")
 				}
 
-				keys = keys[:len(keys)-1]
+				//keys = keys[:len(keys)-1]
 				arrs = arrs[:len(arrs)-1]
 				state = jsonArrayEnd
+				this.insertToken(tok)
 
 			case ",":
 				state = jsonObjectStart
+				this.insertToken(tok)
 
 			default:
 				return nil, fmt.Errorf("Invalid message. Expecting '}' or ',', got %q.", tok.Value)
@@ -737,43 +726,29 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 		case jsonArrayStart:
 			switch tok.Value {
 			case "\"":
-				// start quote, ignore, move on
-				//state = jsonArrayStart
-				if kquote = !kquote; !kquote {
-					return nil, fmt.Errorf("Invalid message. Expecting start quote for value, got end quote.")
+				this.insertToken(tok)
+				if vquote {
+					// if vquote is already true, that means we encountered something like ""
+					vquote = false
+
+					state = jsonArrayValue
+				} else {
+					// start quote, ignore, move on
+					vquote = true
 				}
 
 			case "{":
 				state = jsonObjectStart
 				keys = append(keys, "")
+				this.insertToken(tok)
 
 			default:
-				if tok.Type == TokenLiteral {
-					//glog.Debugf("depth=%d, keys=%v", depth, keys)
-					this.insertToken(Token{
-						Tag:     TagUnknown,
-						Type:    TokenLiteral,
-						Value:   keys[len(keys)-1],
-						isKey:   true,
-						isValue: false,
-					})
-
-					this.insertToken(Token{
-						Tag:     TagUnknown,
-						Type:    TokenLiteral,
-						Value:   "=",
-						isKey:   false,
-						isValue: false,
-					})
-
-					tok.Value = keys[len(keys)-1]
-					tok.isValue = true
-					this.insertToken(tok)
-					state = jsonArrayValue
-
-				} else {
-					return nil, fmt.Errorf("Invalid message. Expecting string key, got %q.", tok.Value)
+				state = jsonArrayValue
+				tok.isValue = true
+				if tok.Type == TokenLiteral{
+					tok.Type = TokenString
 				}
+				this.insertToken(tok)
 			}
 
 		case jsonArrayValue:
@@ -781,6 +756,7 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 			case "\"":
 				// end quote, ignore, move on
 				//state = jsonObjectKey
+				this.insertToken(tok)
 				if vquote = !vquote; vquote {
 					return nil, fmt.Errorf("Invalid message. Expecting end quote for value, got start quote.")
 				}
@@ -791,14 +767,15 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 					return nil, fmt.Errorf("Invalid message. Mismatched ']' or '}' characters.")
 				}
 
-				keys = keys[:len(keys)-1]
+				//keys = keys[:len(keys)-1]
 				arrs = arrs[:len(arrs)-1]
 				state = jsonArrayEnd
+				this.insertToken(tok)
 
 			case ",":
 				state = jsonArrayStart
+				this.insertToken(tok)
 				arrs[len(arrs)-1]++
-				keys[len(keys)-1] = keys[len(keys)-2] + "." + strconv.FormatInt(arrs[len(arrs)-1], 10)
 
 			default:
 				return nil, fmt.Errorf("Invalid message. Expecting ']', ',' or '\"', got %q.", tok.Value)
