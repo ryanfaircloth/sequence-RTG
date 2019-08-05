@@ -95,6 +95,7 @@ func start(commandType string) {
 	standardLogger.HandleInfo(fmt.Sprintf("Starting up: method called %s", commandType))
 	readConfig()
 	validateInputs(commandType)
+	warnExtraInputs(commandType, allinone)
 	profile()
 }
 
@@ -123,90 +124,6 @@ func scan(cmd *cobra.Command, args []string) {
 	} else {
 		standardLogger.HandleFatal("Invalid input file or string specified")
 	}
-}
-
-func analyze(cmd *cobra.Command, args []string) {
-	start("analyze")
-	parser := sequence.BuildParser(patfile)
-	analyzer := sequence.NewAnalyzer()
-	scanner := sequence.NewScanner()
-
-	startTime := time.Now()
-
-	//We load the file completely
-	var lr []sequence.LogRecord
-	lr = sequence.ReadLogRecord(infile, informat, lr, batchsize)
-
-	// For all the log messages, if we can't parse it, then let's add it to the
-	// analyzer for pattern analysis, this requires the previous pattern file/folder
-	//	to be passed in
-	for _, r := range lr {
-		seq, _ := sequence.ScanMessage(scanner, r.Message, format)
-		if _, err := parser.Parse(seq); err != nil {
-			analyzer.Add(seq)
-		}
-	}
-	analyzer.Finalize()
-
-	//Uncomment this to sort the slice by the service
-	//Useful for debugging
-	//syslog_ng_pattern_db.SortLogMessages(lr)
-
-	//these are existing patterns
-	pmap := make(map[string]struct {
-		ex  string
-		cnt int
-		svc string
-	})
-	//these are the newly discovered patterns
-	amap := make(map[string]sequence.AnalyzerResult)
-
-	// Now that we have built the analyzer, let's go through each log message again
-	// to determine the unique patterns
-	err_count := 0
-	processed := 0
-
-	for _, l := range lr {
-		seq, err := sequence.ScanMessage(scanner, l.Message, format)
-
-		pseq, err := parser.Parse(seq)
-		if err == nil {
-			pat, _ := pseq.String()
-			stat, ok := pmap[pat]
-			if !ok {
-				stat = struct {
-					ex  string
-					cnt int
-					svc string
-				}{}
-			}
-			stat.ex = l.Message
-			stat.cnt++
-			stat.svc = l.Service
-			pmap[pat] = stat
-		} else {
-			aseq, err := analyzer.Analyze(seq)
-			if err != nil {
-				standardLogger.LogAnalysisFailed(l)
-				err_count++
-			} else {
-				pat, pos := aseq.String()
-				stat, ok := amap[pat]
-				if !ok {
-					stat = sequence.AnalyzerResult{}
-				}
-				sequence.AddExampleToAnalyzerResult(&stat, l)
-				stat.PatternId = sequence.GenerateIDFromString(pat, l.Service)
-				stat.TagPositions = sequence.SplitToString(pos, ",")
-				stat.ExampleCount++
-				amap[pat] = stat
-			}
-		}
-		processed++
-	}
-
-	new, saved := sequence.SaveToDatabase(amap)
-	standardLogger.AnalyzeInfo(processed, len(amap)+len(pmap), new, saved, err_count, time.Since(startTime), time.Since(startTime))
 }
 
 func createdatabase(cmd *cobra.Command, args []string) {
@@ -367,7 +284,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 }
 
 func exportPatterns(cmd *cobra.Command, args []string) {
-	start("exportPatterns")
+	start("exportpatterns")
 	export(nil)
 }
 
@@ -394,7 +311,6 @@ func export(cmap map[string]sequence.AnalyzerResult){
 
 func validateInputs(commandType string) {
 	var errors string
-	//var warnings string
 	errors = sequence.ValidateLogLevel(loglevel)
 	switch commandType {
 	case "analyze":
@@ -446,9 +362,15 @@ func validateInputs(commandType string) {
 			}
 		}
 	case "exportpatterns":
-		//set the formats to lower before we start
+		//this requires outfile, outformat, outsystem
+		//optional are thresholdtype and thresholdvalue and complexity score
+		// set the formats to lower before we start
 		outformat = strings.ToLower(outformat)
 		err := sequence.ValidateOutformat(outformat)
+		if err != "" {
+			errors = errors + ", " + err
+		}
+		err = sequence.ValidateOutsystem(outsystem)
 		if err != "" {
 			errors = errors + ", " + err
 		}
@@ -456,9 +378,26 @@ func validateInputs(commandType string) {
 		if err != "" {
 			errors = errors + ", " + err
 		}
+		//threshold type is optional
+		if thresholdType != "" {
+			err = sequence.ValidateThresholdType(thresholdType)
+			if err != "" {
+				errors = errors + ", " + err
+			}
+			err = sequence.ValidateThresholdValue(thresholdType, thresholdValue)
+			if err != "" {
+				errors = errors + ", " + err
+			}
+		}
+		//it is 1 by default
+		if complimit != 1 {
+			if complimit < 0 || complimit > 1{
+				errors = errors + ", The value for the complexity score limit must be between 0 and 1."
+			}
+		}
 	case "createdatabase":
 		//create database only works with Sqlite3 at the moment.
-
+		errors = sequence.ValidateType(dbtype)
 
 	case "purgepatterns":
 		if purgeThreshold <= 0 {
@@ -468,6 +407,168 @@ func validateInputs(commandType string) {
 
 	if errors != "" {
 		standardLogger.HandleFatal(errors)
+	}
+}
+
+func warnExtraInputs(commandType string, all bool)  {
+	var warnings string
+	var extras []string
+	switch commandType {
+	case "analyzebyservice":
+		if purgeThreshold != 0{
+			extras = append(extras, "purge threshold (-t)")
+		}
+		if dbconn != ""{
+			extras = append(extras, "connection string (--conn)")
+		}
+		if dbtype != ""{
+			extras = append(extras, "database type (--type)")
+		}
+		if !all{
+			if outfile != ""{
+				extras = append(extras, "output file (-o)")
+			}
+			if outformat != ""{
+				extras = append(extras, "output format (-f)")
+			}
+			if outsystem != ""{
+				extras = append(extras, "output system (-s)")
+			}
+			if complimit != 1{
+				extras = append(extras, "complexity score limit (-c)")
+			}
+			if thresholdValue != ""{
+				extras = append(extras, "threshold value (-v)")
+			}
+			if thresholdType != ""{
+				extras = append(extras, "threshold type (-y)")
+			}
+		}
+
+	case "exportpatterns":
+		if purgeThreshold != 0{
+			extras = append(extras, "purge threshold (-t)")
+		}
+		if infile != ""{
+			extras = append(extras, "input file (-i)")
+		}
+		if informat != ""{
+			extras = append(extras, "input format (-k)")
+		}
+		if batchsize != 0{
+			extras = append(extras, "batch size (-b)")
+		}
+		if dbconn != ""{
+			extras = append(extras, "connection string (--conn)")
+		}
+		if dbtype != ""{
+			extras = append(extras, "database type (--type)")
+		}
+	case "scan":
+		if purgeThreshold != 0{
+			extras = append(extras, "purge threshold (-t)")
+		}
+		if batchsize != 0{
+			extras = append(extras, "batch size (-b)")
+		}
+		if dbconn != ""{
+			extras = append(extras, "connection string (--conn)")
+		}
+		if dbtype != ""{
+			extras = append(extras, "database type (--type)")
+		}
+		if outformat != ""{
+			extras = append(extras, "output format (-f)")
+		}
+		if outsystem != ""{
+			extras = append(extras, "output system (-s)")
+		}
+		if complimit != 1{
+			extras = append(extras, "complexity score limit (-c)")
+		}
+		if thresholdValue != ""{
+			extras = append(extras, "threshold value (-v)")
+		}
+		if thresholdType != ""{
+			extras = append(extras, "threshold type (-y)")
+		}
+	case "createdatabase":
+		//create database only works with Sqlite3 at the moment.
+		if purgeThreshold != 0{
+			extras = append(extras, "purge threshold (-t)")
+		}
+		if infile != ""{
+			extras = append(extras, "input file (-i)")
+		}
+		if informat != ""{
+			extras = append(extras, "input format (-k)")
+		}
+		if batchsize != 0{
+			extras = append(extras, "batch size (-b)")
+		}
+		if outfile != ""{
+			extras = append(extras, "output file (-o)")
+		}
+		if outformat != ""{
+			extras = append(extras, "output format (-f)")
+		}
+		if outsystem != ""{
+			extras = append(extras, "output system (-s)")
+		}
+		if complimit != 1{
+			extras = append(extras, "complexity score limit (-c)")
+		}
+		if thresholdValue != ""{
+			extras = append(extras, "threshold value (-v)")
+		}
+		if thresholdType != ""{
+			extras = append(extras, "threshold type (-y)")
+		}
+
+	case "purgepatterns":
+		if infile != ""{
+			extras = append(extras, "input file (-i)")
+		}
+		if informat != ""{
+			extras = append(extras, "input format (-k)")
+		}
+		if batchsize != 0{
+			extras = append(extras, "batch size (-b)")
+		}
+		if outfile != ""{
+			extras = append(extras, "output file (-o)")
+		}
+		if outformat != ""{
+			extras = append(extras, "output format (-f)")
+		}
+		if outsystem != ""{
+			extras = append(extras, "output system (-s)")
+		}
+		if complimit != 1{
+			extras = append(extras, "complexity score limit (-c)")
+		}
+		if thresholdValue != ""{
+			extras = append(extras, "threshold value (-v)")
+		}
+		if thresholdType != ""{
+			extras = append(extras, "threshold type (-y)")
+		}
+		if dbconn != ""{
+			extras = append(extras, "connection string (--conn)")
+		}
+		if dbtype != ""{
+			extras = append(extras, "database type (--type)")
+		}
+	}
+	// Build message
+	for _, w := range extras{
+		warnings += w + ", "
+	}
+
+	if warnings != "" {
+		warnings = fmt.Sprintf("Warning: The following flags are assigned values but are not used by the %s function: %s", commandType, warnings)
+		standardLogger.HandleInfo(warnings)
+		println(warnings)
 	}
 }
 
@@ -525,11 +626,6 @@ func main() {
 			Short: "deletes patterns and their examples under a threshold",
 		}
 
-		analyzeCmd = &cobra.Command{
-			Use:   "analyze",
-			Short: "analyzes a log file and output a list of patterns that will match all the log messages",
-		}
-
 		analyzeByServiceCmd = &cobra.Command{
 			Use:   "analyzebyservice",
 			Short: "analyzes a log file and output a list of patterns that will match all the log messages",
@@ -562,15 +658,12 @@ func main() {
 	sequenceCmd.PersistentFlags().Float64VarP(&complimit, "complexity-limit", "c", 1, "the complexity of a pattern is between 0 and 1, higher numbers represent more tags. 0.5 is a good level to limit exporting over-tagged patterns.")
 	sequenceCmd.PersistentFlags().BoolVarP(&allinone, "all", "", false, "if passed to analyzebyservice it by passes saving to the database and directly out puts the patterns.")
 	sequenceCmd.PersistentFlags().StringVarP(&dbtype,"type", "", "", "type of the database when creating it, can mssql, postgres, sqlite3 or mysql")
-	sequenceCmd.PersistentFlags().StringVarP(&dbpath, "dbpath", "d", "", "filepath for the database for mssql")
 	sequenceCmd.PersistentFlags().StringVarP(&dbconn, "conn", "", "", "connection details for the server")
-	sequenceCmd.PersistentFlags().StringVarP(&dbname, "name", "", "", "name of the database for mssql")
 
 	scanCmd.Run = scan
 	createDatabaseCmd.Run = createdatabase
 	updateDatabaseCmd.Run = updatedatabase
 	purgePatternsCmd.Run = purgepatterns
-	analyzeCmd.Run = analyze
 	analyzeByServiceCmd.Run = analyzebyservice
 	exportPatternsCmd.Run = exportPatterns
 	updateIgnoreCmd.Run = updateignorepatterns
@@ -579,7 +672,6 @@ func main() {
 	sequenceCmd.AddCommand(createDatabaseCmd)
 	sequenceCmd.AddCommand(updateDatabaseCmd)
 	sequenceCmd.AddCommand(purgePatternsCmd)
-	sequenceCmd.AddCommand(analyzeCmd)
 	sequenceCmd.AddCommand(analyzeByServiceCmd)
 	sequenceCmd.AddCommand(exportPatternsCmd)
 	sequenceCmd.AddCommand(updateIgnoreCmd)

@@ -1,6 +1,9 @@
 package sequence
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
 //this file is for various validation that may be called from more than one method
 
@@ -87,6 +90,46 @@ func ValidateType(dbtype string) string{
 		//valid - do nothing
 		return ""
 	default:
-		return "Valid values for database type are: sqlite3, postgres, mssql or mysql. Please pass one of these values."
+		return "Valid values for database type are: sqlite3, postgres, mssql or mysql. Please use one of these values."
 	}
+}
+
+func ValidateThresholdType(thresholdType string) string{
+	switch thresholdType{
+	case "count", "percent":
+		//valid - do nothing
+		return ""
+	default:
+		return "Valid values for threshold type are: count or percent. Please pass use of these values."
+	}
+}
+
+//if type is count it just needs to be 0 or greater
+//if type is percent it needs to be a float between 0 and 1.
+func ValidateThresholdValue(thresholdType string, thresholdValue string) string{
+	switch thresholdType {
+	case "count":
+		//test conversion to int64
+		tr, err := strconv.Atoi(thresholdValue)
+		if err != nil {
+			return "Valid values for threshold value used with count type are non-negative integer values. Please adjust the input."
+		} else {
+			//test 0 or greater
+			if tr < 0 {
+				return "Valid values for threshold value used with count type are non-negative integer values. Please adjust the input."
+			}
+		}
+	case "percent":
+		//test conversion to float
+		f, err := strconv.ParseFloat(thresholdValue, 64)
+		if err != nil {
+			return "Valid values for threshold value used with percent type are non-negative decimal values. Please adjust the input."
+		} else {
+			//test 0 or greater
+			if f < 0 {
+				return "Valid values for threshold value used with percent type are non-negative decimal values. Please adjust the input."
+			}
+		}
+	}
+	return ""
 }
