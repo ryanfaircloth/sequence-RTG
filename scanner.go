@@ -558,7 +558,6 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 				// Only reason this could happen is if we encountered an array of
 				// objects like [{"a":1}, {"b":2}]
 				arrs[len(arrs)-1]++
-				//keys[len(keys)-1] = keys[len(keys)-2] + "." + strconv.FormatInt(arrs[len(arrs)-1], 10)
 				keys = append(keys, "")
 
 			case "\"":
@@ -625,11 +624,9 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 		case jsonObjectColon:
 			switch tok.Value {
 			case "\"":
-				this.insertToken(tok)
 				if vquote {
 					// if vquote is already true, that means we encountered something like ""
 					vquote = false
-
 					state = jsonObjectValue
 				} else {
 					// start quote, ignore, move on
@@ -640,12 +637,10 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 				// Start of an array
 				state = jsonArrayStart
 				arrs = append(arrs, 0)
-				this.insertToken(tok)
 
 			case "{":
 				state = jsonObjectStart
 				keys = append(keys, "")
-				this.insertToken(tok)
 
 			default:
 				state = jsonObjectValue
@@ -653,8 +648,8 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 				if tok.Type == TokenLiteral{
 					tok.Type = TokenString
 				}
-				this.insertToken(tok)
 			}
+			this.insertToken(tok)
 
 		case jsonObjectValue:
 			switch tok.Value {
