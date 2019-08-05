@@ -304,55 +304,61 @@ func export(cmap map[string]sequence.AnalyzerResult){
 }
 
 func validateInputs(commandType string) {
-	var errors string
-	errors = sequence.ValidateLogLevel(loglevel)
+	var errors []string
+	err := sequence.ValidateLogLevel(loglevel)
+	if err != "" {
+		errors = append(errors, err)
+	}
 	switch commandType {
-	case "analyze":
-		//set the formats to lower before we start
-		informat = strings.ToLower(informat)
-		outformat = strings.ToLower(outformat)
-
-		//validate input file
-		if infile == "" {
-			errors = errors + "Invalid input file specified"
-		}
-		err := sequence.ValidateInformat(informat)
-		if err != "" {
-			errors = errors + ", " + err
-		}
-		err = sequence.ValidateOutformat(outformat)
-		if err != "" {
-			errors = errors + ", " + err
-		}
-		err = sequence.ValidateOutFormatWithFile(outfile, outformat)
-		if err != "" {
-			errors = errors + ", " + err
-		}
-		err = sequence.ValidateBatchSize(batchsize)
-		if err != "" {
-			errors = errors + ", " + err
-		}
 	case "analyzebyservice":
 		//set the formats to lower before we start
 		informat = strings.ToLower(informat)
 		outformat = strings.ToLower(outformat)
-
 		//validate input file
 		if infile == "" {
-			errors = errors + "Invalid input file specified"
+			errors = append(errors, "Invalid input file specified")
 		}
 		err := sequence.ValidateInformat(informat)
 		if err != "" {
-			errors = errors + ", " + err
+			errors = append(errors, err)
 		}
 		err = sequence.ValidateBatchSize(batchsize)
 		if err != "" {
-			errors = errors + ", " + err
+			errors = append(errors, err)
 		}
 		if allinone{
-			err = sequence.ValidateAllInOne(outfile, outformat, outsystem)
+			err = sequence.ValidateOutFile(outfile)
 			if err != "" {
-				errors = errors + ", " + err
+				errors = append(errors, err)
+			}
+			err = sequence.ValidateOutFormatWithFile(outfile, outformat)
+			if err != "" {
+				errors = append(errors, err)
+			}
+			err = sequence.ValidateOutsystem(outsystem)
+			if err != "" {
+				errors = append(errors, err)
+			}
+			err = sequence.ValidateOutformat(outformat)
+			if err != "" {
+				errors = append(errors, err)
+			}
+			//threshold type is optional
+			if thresholdType != "" || thresholdValue != "0" {
+				err = sequence.ValidateThresholdType(thresholdType)
+				if err != "" {
+					errors = append(errors, err)
+				}
+				err = sequence.ValidateThresholdValue(thresholdType, thresholdValue)
+				if err != "" {
+					errors = append(errors, err)
+				}
+			}
+			//it is 1 by default
+			if complimit != 1 {
+				if complimit < 0 || complimit > 1{
+					errors = append(errors, "The value for the complexity score limit must be between 0 and 1.")
+				}
 			}
 		}
 	case "exportpatterns":
@@ -362,45 +368,75 @@ func validateInputs(commandType string) {
 		outformat = strings.ToLower(outformat)
 		err := sequence.ValidateOutformat(outformat)
 		if err != "" {
-			errors = errors + ", " + err
+			errors = append(errors, err)
 		}
 		err = sequence.ValidateOutsystem(outsystem)
 		if err != "" {
-			errors = errors + ", " + err
+			errors = append(errors, err)
 		}
 		err = sequence.ValidateOutFormatWithFile(outfile, outformat)
 		if err != "" {
-			errors = errors + ", " + err
+			errors = append(errors, err)
 		}
 		//threshold type is optional
-		if thresholdType != "" {
+		if thresholdType != "" || thresholdValue != "0"{
 			err = sequence.ValidateThresholdType(thresholdType)
 			if err != "" {
-				errors = errors + ", " + err
+				errors = append(errors, err)
 			}
 			err = sequence.ValidateThresholdValue(thresholdType, thresholdValue)
 			if err != "" {
-				errors = errors + ", " + err
+				errors = append(errors, err)
 			}
 		}
 		//it is 1 by default
 		if complimit != 1 {
 			if complimit < 0 || complimit > 1{
-				errors = errors + ", The value for the complexity score limit must be between 0 and 1."
+				errors = append(errors, "The value for the complexity score limit must be between 0 and 1.")
 			}
 		}
 	case "createdatabase":
 		//create database only works with Sqlite3 at the moment.
-		errors = sequence.ValidateType(dbtype)
+		err = sequence.ValidateType(dbtype)
+		if err != "" {
+			errors = append(errors, err)
+		}
+		//validate input file
+		if dbconn == "" {
+			errors = append(errors, "Invalid database connection details specified")
+		}
 
 	case "purgepatterns":
 		if purgeThreshold <= 0 {
-			errors = "Threshold must be greater than zero or no records will be deleted."
+			errors = append(errors, "Threshold must be greater than zero or no records will be deleted.")
+		}
+	case "scan":
+		//validate input file
+		if infile == "" {
+			errors = append(errors, "Invalid input file specified")
+		}
+		err := sequence.ValidateInformat(informat)
+		if err != "" {
+			errors = append(errors, err)
+		}
+		err = sequence.ValidateOutFile(outfile)
+		if err != "" {
+			errors = append(errors, err)
+		}
+
+	case "updateignorepatterns":
+		//validate input file
+		if infile == "" {
+			errors = append(errors, "Invalid input file specified")
 		}
 	}
+	exs := ""
+	for i, ex := range errors{
+		exs += fmt.Sprintf("(%d) %s. ", i+1, ex)
+	}
 
-	if errors != "" {
-		standardLogger.HandleFatal(errors)
+	if exs != "" {
+		standardLogger.HandleFatal(exs)
 	}
 }
 
@@ -431,7 +467,7 @@ func warnExtraInputs(commandType string, all bool)  {
 			if complimit != 1{
 				extras = append(extras, "complexity score limit (-c)")
 			}
-			if thresholdValue != ""{
+			if thresholdValue != "0"{
 				extras = append(extras, "threshold value (-v)")
 			}
 			if thresholdType != ""{
@@ -458,6 +494,9 @@ func warnExtraInputs(commandType string, all bool)  {
 		if dbtype != ""{
 			extras = append(extras, "database type (--type)")
 		}
+		if all {
+			extras = append(extras, "all in one (--all)")
+		}
 	case "scan":
 		if purgeThreshold != 0{
 			extras = append(extras, "purge threshold (-t)")
@@ -480,11 +519,14 @@ func warnExtraInputs(commandType string, all bool)  {
 		if complimit != 1{
 			extras = append(extras, "complexity score limit (-c)")
 		}
-		if thresholdValue != ""{
+		if thresholdValue != "0"{
 			extras = append(extras, "threshold value (-v)")
 		}
 		if thresholdType != ""{
 			extras = append(extras, "threshold type (-y)")
+		}
+		if all {
+			extras = append(extras, "all in one (--all)")
 		}
 	case "createdatabase":
 		//create database only works with Sqlite3 at the moment.
@@ -517,6 +559,9 @@ func warnExtraInputs(commandType string, all bool)  {
 		}
 		if thresholdType != ""{
 			extras = append(extras, "threshold type (-y)")
+		}
+		if all {
+			extras = append(extras, "all in one (--all)")
 		}
 
 	case "purgepatterns":
@@ -552,6 +597,9 @@ func warnExtraInputs(commandType string, all bool)  {
 		}
 		if dbtype != ""{
 			extras = append(extras, "database type (--type)")
+		}
+		if all {
+			extras = append(extras, "all in one (--all)")
 		}
 	case "updateignorepatterns":
 		if purgeThreshold != 0{
@@ -586,6 +634,9 @@ func warnExtraInputs(commandType string, all bool)  {
 		}
 		if dbtype != ""{
 			extras = append(extras, "database type (--type)")
+		}
+		if all {
+			extras = append(extras, "all in one (--all)")
 		}
 	}
 	// Build message
