@@ -38,8 +38,6 @@ var (
 		connectionInfo       string
 		databaseType         string
 		useDatabase          bool
-		createDbCommands     []string
-		updateDbCommands     []string
 	}
 
 	timesettings struct {
@@ -72,8 +70,6 @@ func ReadConfig(file string) error {
 		UseDatabase         bool
 		ConnectionInfo      string
 		DatabaseType        string
-		CreateDBCommands    []string
-		UpdateDBCommands    []string
 
 		Timesettings struct {
 			Formats map[string][]string
@@ -102,9 +98,6 @@ func ReadConfig(file string) error {
 	config.connectionInfo = configInfo.ConnectionInfo
 	config.databaseType = configInfo.DatabaseType
 
-
-	config.createDbCommands = configInfo.CreateDBCommands
-	config.updateDbCommands = configInfo.UpdateDBCommands
 
 	timesettings.formats = make(map[int][]string, len(configInfo.Timesettings.Formats))
 	for i, f := range configInfo.Timesettings.Formats {

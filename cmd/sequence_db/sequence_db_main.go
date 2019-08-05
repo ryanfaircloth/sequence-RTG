@@ -132,12 +132,6 @@ func createdatabase(cmd *cobra.Command, args []string) {
 	standardLogger.HandleInfo(fmt.Sprintf("Database created successfully"))
 }
 
-func updatedatabase(cmd *cobra.Command, args []string) {
-	start("updatedatabase")
-	sequence.UpdateDatabase()
-	standardLogger.HandleInfo(fmt.Sprintf("Database updated successfully"))
-}
-
 func purgepatterns(cmd *cobra.Command, args []string) {
 	start("purgepatterns")
 	rf := sequence.PurgePatternsfromDatabase(int64(purgeThreshold))
@@ -559,6 +553,40 @@ func warnExtraInputs(commandType string, all bool)  {
 		if dbtype != ""{
 			extras = append(extras, "database type (--type)")
 		}
+	case "updateignorepatterns":
+		if purgeThreshold != 0{
+			extras = append(extras, "purge threshold (-t)")
+		}
+		if informat != ""{
+			extras = append(extras, "input format (-k)")
+		}
+		if batchsize != 0{
+			extras = append(extras, "batch size (-b)")
+		}
+		if outfile != ""{
+			extras = append(extras, "output file (-o)")
+		}
+		if outformat != ""{
+			extras = append(extras, "output format (-f)")
+		}
+		if outsystem != ""{
+			extras = append(extras, "output system (-s)")
+		}
+		if complimit != 1{
+			extras = append(extras, "complexity score limit (-c)")
+		}
+		if thresholdValue != ""{
+			extras = append(extras, "threshold value (-v)")
+		}
+		if thresholdType != ""{
+			extras = append(extras, "threshold type (-y)")
+		}
+		if dbconn != ""{
+			extras = append(extras, "connection string (--conn)")
+		}
+		if dbtype != ""{
+			extras = append(extras, "database type (--type)")
+		}
 	}
 	// Build message
 	for _, w := range extras{
@@ -616,11 +644,6 @@ func main() {
 			Short: "creates a new sequence database to the location in the config file",
 		}
 
-		updateDatabaseCmd = &cobra.Command{
-			Use:   "updatedatabase",
-			Short: "runs the updates in the config file on the database",
-		}
-
 		purgePatternsCmd = &cobra.Command{
 			Use:   "purgepatterns",
 			Short: "deletes patterns and their examples under a threshold",
@@ -662,7 +685,6 @@ func main() {
 
 	scanCmd.Run = scan
 	createDatabaseCmd.Run = createdatabase
-	updateDatabaseCmd.Run = updatedatabase
 	purgePatternsCmd.Run = purgepatterns
 	analyzeByServiceCmd.Run = analyzebyservice
 	exportPatternsCmd.Run = exportPatterns
@@ -670,7 +692,6 @@ func main() {
 
 	sequenceCmd.AddCommand(scanCmd)
 	sequenceCmd.AddCommand(createDatabaseCmd)
-	sequenceCmd.AddCommand(updateDatabaseCmd)
 	sequenceCmd.AddCommand(purgePatternsCmd)
 	sequenceCmd.AddCommand(analyzeByServiceCmd)
 	sequenceCmd.AddCommand(exportPatternsCmd)

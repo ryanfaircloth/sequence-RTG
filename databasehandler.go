@@ -62,26 +62,6 @@ func CreateDatabase(cinfo string, driver string, path string, dbname string) {
 
 }
 
-//This runs the update scripts in the toml file to change the database when required.
-func UpdateDatabase() {
-	database, err := sql.Open(config.databaseType, config.connectionInfo)
-	if err != nil {
-		logger.HandleFatal(err.Error())
-	}
-	tx, err := database.Begin()
-	if err != nil {
-		logger.HandleFatal(err.Error())
-	}
-	query := config.updateDbCommands
-	for _, q := range query {
-		_, err = database.Exec(q)
-		if err != nil {
-			logger.HandleFatal(err.Error())
-		}
-	}
-	tx.Commit()
-}
-
 //This deletes all the patterns and related data from the database
 //which have a cumulative match count below the passed threshold.
 func PurgePatternsfromDatabase(threshold int64) int64 {
