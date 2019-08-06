@@ -10,7 +10,7 @@ build:
     LDFLAGS: -linkmode external -extldflags -static
   script:
     - apt update
-    - sed -i '/^database =/c\database = "/var/lib/sequence/sequence.sdb"' sequence.toml
+    - sed -i '/^connectioninfo =/c\connectioninfo = "/var/lib/sequence/sequence.sdb"' sequence.toml
     - go get -d -v
     - go build --ldflags "-X gitlab.in2p3.fr/cc-in2p3-system/sequence.Version=$(git describe --always --tags HEAD) $LDFLAGS"
     - 'go test || :'
