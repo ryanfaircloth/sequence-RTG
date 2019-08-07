@@ -127,8 +127,8 @@ func (this *Scanner) Scan(s string, isParse bool, pos []int) (Sequence, bool, er
 	this.seq = this.seq[:0]
 
 	var (
-		err error
-		tok Token
+		err    error
+		tok    Token
 		isJson = false
 	)
 
@@ -262,13 +262,13 @@ func (this *Scanner) ScanJson(s string) (Sequence, bool, error) {
 				// start quote, ignore, move on
 				//state = jsonObjectStart
 				if kquote = !kquote; !kquote {
-					return nil,isJson, fmt.Errorf("Invalid message. Expecting start quote for key, got end quote.")
+					return nil, isJson, fmt.Errorf("Invalid message. Expecting start quote for key, got end quote.")
 				}
 
 			case "}":
 				// got something like {}, ignore this key
 				if len(keys)-1 < 0 {
-					return nil,isJson, fmt.Errorf("Invalid message. Too many } characters.")
+					return nil, isJson, fmt.Errorf("Invalid message. Too many } characters.")
 				}
 
 				keys = keys[:len(keys)-1]
@@ -279,7 +279,7 @@ func (this *Scanner) ScanJson(s string) (Sequence, bool, error) {
 					//glog.Debugf("depth=%d, keys=%v", len(keys), keys)
 					switch len(keys) {
 					case 0:
-						return nil,isJson, fmt.Errorf("Invalid message. Expecting inside object, not so.")
+						return nil, isJson, fmt.Errorf("Invalid message. Expecting inside object, not so.")
 
 					case 1:
 						keys[0] = tok.Value
@@ -504,10 +504,10 @@ func (this *Scanner) ScanJson(s string) (Sequence, bool, error) {
 	}
 
 	if err != nil && err != io.EOF {
-		return nil, isJson,  err
+		return nil, isJson, err
 	}
 
-	return this.seq, isJson,  nil
+	return this.seq, isJson, nil
 }
 
 //This is essentially the same function as Scan Json about but it preserves the structure of the message for text matching.
@@ -650,7 +650,7 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, bool, error) {
 			default:
 				state = jsonObjectValue
 				tok.isValue = true
-				if tok.Type == TokenLiteral{
+				if tok.Type == TokenLiteral {
 					tok.Type = TokenString
 				}
 			}
@@ -745,7 +745,7 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, bool, error) {
 			default:
 				state = jsonArrayValue
 				tok.isValue = true
-				if tok.Type == TokenLiteral{
+				if tok.Type == TokenLiteral {
 					tok.Type = TokenString
 				}
 				this.insertToken(tok)

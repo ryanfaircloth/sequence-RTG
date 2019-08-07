@@ -276,10 +276,10 @@ func (this *Message) scanToken(data string, nt int) (int, Token, error) {
 			} else if hexLen > 0 && this.state.hexColons > 1 {
 				if this.state.hexColons == 5 && this.state.hexMaxSuccColons == 1 {
 					//if the end of the message there won't be an extra space
-					if i == l-1{
+					if i == l-1 {
 						return hexLen, Token{Type: TokenMac, Tag: tagType}, nil
 					} else {
-						return hexLen-1, Token{Type: TokenMac, Tag: tagType}, nil
+						return hexLen - 1, Token{Type: TokenMac, Tag: tagType}, nil
 					}
 
 				} else if this.state.hexSuccColonsSeries == 1 ||
@@ -316,7 +316,7 @@ func (this *Message) scanToken(data string, nt int) (int, Token, error) {
 					}
 				//if the sentence finishes with a . it is likely to be punctuation remove it so it makes its own token.
 				case TokenLiteral:
-					if r == '.' && i == l-1 && tokenLen > 1{
+					if r == '.' && i == l-1 && tokenLen > 1 {
 						tokenLen--
 					}
 				}
@@ -535,7 +535,7 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 
 	//glog.Debugf("2. i=%d, r=%c, tokenStop=%t, tokenType=%s", i, r, this.state.tokenStop, this.state.tokenType)
 	//this sets the backslash for escaping values in the next round
-	this.state.backslash =  r == '\\'
+	this.state.backslash = r == '\\'
 	return this.state.tokenStop
 }
 

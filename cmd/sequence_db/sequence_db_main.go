@@ -117,7 +117,7 @@ func scan(cmd *cobra.Command, args []string) {
 		_, lrMap, _ = sequence.ReadLogRecordAsMap(iscan, informat, lrMap, batchsize)
 		for _, lrc := range lrMap {
 			for _, l := range lrc.Records {
-				seq, _, _:= sequence.ScanMessage(scanner, l.Message, format)
+				seq, _, _ := sequence.ScanMessage(scanner, l.Message, format)
 				fmt.Fprintf(ofile, "%s\n\n", seq.PrintTokens())
 			}
 		}
@@ -157,9 +157,9 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 	start("analyzebyservice")
 	scanner := sequence.NewScanner()
 	var (
-		err      error
-		aseq     sequence.Sequence
-		mtype    string
+		err   error
+		aseq  sequence.Sequence
+		mtype string
 	)
 	iscan, ifile, err := sequence.OpenInputFile(infile)
 	if err != nil {

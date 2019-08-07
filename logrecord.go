@@ -70,7 +70,6 @@ func ReadLogRecord(fname string, format string, lr []LogRecord, batchLimit int) 
 	return lr
 }
 
-
 //This method expects records in the format {"service": "service-name", message: "log message"}
 //eg {"service":"remctld","message":"error receiving initial token: unexpected end of file"} if json or for text
 //service [space] message, eg: remctld error receiving initial token: unexpected end of file.

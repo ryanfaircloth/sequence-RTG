@@ -83,7 +83,7 @@ type Analyzer struct {
 //pattern to be used as the starting block for
 //all conversions
 type AnalyzerResult struct {
-	Service		    models.Service
+	Service         models.Service
 	PatternId       string
 	Pattern         string
 	TagPositions    string
@@ -91,7 +91,7 @@ type AnalyzerResult struct {
 	Examples        []LogRecord
 	DateCreated     time.Time
 	DateLastMatched time.Time
-	ComplexityScore	float64
+	ComplexityScore float64
 }
 
 type analyzerNode struct {
@@ -166,15 +166,15 @@ func AddExampleToAnalyzerResult(this *AnalyzerResult, lr LogRecord) {
 //This ensures that the same pattern will always have the same id, returns a sha1 hash of the pattern + service name.
 func GenerateIDFromString(pattern string, service string) string {
 	h := sha1.New()
-	h.Write([]byte(pattern+service))
-	sha := h.Sum(nil)              // "sha" is uint8 type, encoded in base16
+	h.Write([]byte(pattern + service))
+	sha := h.Sum(nil)                 // "sha" is uint8 type, encoded in base16
 	shaStr := hex.EncodeToString(sha) // String representation
 	return shaStr
 }
 
 //This calculates the complexity of the pattern, looking at the ratio if non-string tokens to string tokens.
 //This value helps the reviewer of the pattern  filter out the patterns that may be over tokenized.
-func CalculatePatternComplexity(seq Sequence, lgt int) float64{
+func CalculatePatternComplexity(seq Sequence, lgt int) float64 {
 
 	var (
 		strct float64
@@ -185,28 +185,28 @@ func CalculatePatternComplexity(seq Sequence, lgt int) float64{
 	//length of the sequence
 	lt := float64(len(seq))
 
-	for _, tok := range seq{
-		if tok.Type == TokenString{
+	for _, tok := range seq {
+		if tok.Type == TokenString {
 			strct += 1
-		} else if tok.Type == TokenLiteral{
-			if len(tok.Value) > 1{
+		} else if tok.Type == TokenLiteral {
+			if len(tok.Value) > 1 {
 				litct += 1
-			}else if tok.Value != "="{
+			} else if tok.Value != "=" {
 				lt -= 1
 			}
-		} else if tok.Type == TokenInteger{
+		} else if tok.Type == TokenInteger {
 			intct += 1
-		} else{
+		} else {
 			othct += 1
 		}
 	}
 
 	//Complexity score
 	//all literal tokens
-	if lt == litct{
+	if lt == litct {
 		return 0.0
-	}else if strct > 0{
-		return float64(strct/lt)
+	} else if strct > 0 {
+		return float64(strct / lt)
 	}
 
 	return 0.05

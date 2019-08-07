@@ -56,7 +56,7 @@ func readConfig(file string) error {
 //first we replace the easy ones that are surrounded by spaces
 //then we deal with the compound ones
 func replaceTags(pattern string) string {
-	if len(pattern) < 1{
+	if len(pattern) < 1 {
 		return pattern
 	}
 	//make sure @ are escaped @@ before we start
@@ -235,7 +235,6 @@ func getTimeRegex(p string) (string, string) {
 	return p, rg
 }
 
-
 //This is the function that drives the output to file.
 //The user can pass the pattern map if no database is used or
 //pass the map created during the analysis
@@ -264,7 +263,7 @@ func OutputToFiles(outformat string, outfile string, config string, complexityle
 		db, ctx := sequence.OpenDbandSetContext()
 		defer db.Close()
 		//get from the config instead
-		if thresholdType == ""{
+		if thresholdType == "" {
 			thresholdType = sequence.GetThresholdType()
 			thresholdValue = sequence.GetThresholdValue()
 		}

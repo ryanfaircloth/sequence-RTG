@@ -13,10 +13,10 @@ import (
 //Scans the message using the appropriate format
 func ScanMessage(scanner *Scanner, data string, format string) (Sequence, bool, error) {
 	var (
-		seq Sequence
+		seq    Sequence
 		isJson bool
-		err error
-		pos []int
+		err    error
+		pos    []int
 	)
 
 	if testJson(data) {

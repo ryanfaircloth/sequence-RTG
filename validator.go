@@ -16,7 +16,7 @@ func ValidateInformat(informat string) string {
 	if (informat == "json") || (informat == "txt") {
 		return ""
 	}
-	if informat == ""{
+	if informat == "" {
 		return "Input format is required for this method, please select either json or txt"
 	}
 	return informat + " is not a supported input format type, please select either json or txt"
@@ -38,7 +38,7 @@ func ValidateOutsystem(outsystem string) string {
 	if (outsystem == "patterndb") || (outsystem == "grok") {
 		return ""
 	}
-	if outsystem == ""{
+	if outsystem == "" {
 		return "Output system is required for this method, please select either patterndb or grok"
 	}
 	return outsystem + " is not a supported out system type, please select either patterndb or grok"
@@ -68,10 +68,10 @@ func ValidateBatchSize(batchsize int) string {
 	return ""
 }
 
-func ValidateLogLevel(lvl string) string{
+func ValidateLogLevel(lvl string) string {
 	if len(lvl) > 0 {
-		switch lvl{
-		case "debug", "trace", "info", "error", "fatal" :
+		switch lvl {
+		case "debug", "trace", "info", "error", "fatal":
 			//valid - do nothing
 			return ""
 		default:
@@ -81,8 +81,8 @@ func ValidateLogLevel(lvl string) string{
 	return ""
 }
 
-func ValidateType(dbtype string) string{
-	switch dbtype{
+func ValidateType(dbtype string) string {
+	switch dbtype {
 	case "sqlite3", "postgres", "mssql", "mysql":
 		//valid - do nothing
 		return ""
@@ -91,8 +91,8 @@ func ValidateType(dbtype string) string{
 	}
 }
 
-func ValidateThresholdType(thresholdType string) string{
-	switch thresholdType{
+func ValidateThresholdType(thresholdType string) string {
+	switch thresholdType {
 	case "count", "percent":
 		//valid - do nothing
 		return ""
@@ -103,7 +103,7 @@ func ValidateThresholdType(thresholdType string) string{
 
 //if type is count it just needs to be 0 or greater
 //if type is percent it needs to be a float between 0 and 1.
-func ValidateThresholdValue(thresholdType string, thresholdValue string) string{
+func ValidateThresholdValue(thresholdType string, thresholdValue string) string {
 	switch thresholdType {
 	case "count":
 		//test conversion to int64

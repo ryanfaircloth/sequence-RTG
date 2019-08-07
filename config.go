@@ -98,7 +98,6 @@ func ReadConfig(file string) error {
 	config.connectionInfo = configInfo.ConnectionInfo
 	config.databaseType = configInfo.DatabaseType
 
-
 	timesettings.formats = make(map[int][]string, len(configInfo.Timesettings.Formats))
 	for i, f := range configInfo.Timesettings.Formats {
 		x, err := strconv.Atoi(i)

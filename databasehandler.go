@@ -27,7 +27,7 @@ func CreateDatabase(cinfo string, driver string, path string, dbname string) {
 	if err != nil {
 		logger.HandleFatal(err.Error())
 	}
-    if driver == "sqlite3" {
+	if driver == "sqlite3" {
 		s, file, err := OpenInputFile("database_scripts/sqlite3.txt")
 		defer file.Close()
 		for s.Scan() {
@@ -242,7 +242,7 @@ func addPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, tr int) 
 	}
 	tp := null.String{String: result.TagPositions, Valid: true}
 	p := models.Pattern{ID: result.PatternId, ServiceID: result.Service.ID, SequencePattern: result.Pattern, DateCreated: time.Now(),
-		CumulativeMatchCount: int64(result.ExampleCount), OriginalMatchCount: int64(result.ExampleCount), DateLastMatched: time.Now(), IgnorePattern: false, TagPositions: tp, ComplexityScore:result.ComplexityScore}
+		CumulativeMatchCount: int64(result.ExampleCount), OriginalMatchCount: int64(result.ExampleCount), DateLastMatched: time.Now(), IgnorePattern: false, TagPositions: tp, ComplexityScore: result.ComplexityScore}
 	err := p.Insert(ctx, tx, boil.Whitelist("id", "service_id", "sequence_pattern", "date_created", "date_last_matched", "original_match_count", "cumulative_match_count", "ignore_pattern", "tag_positions", "complexity_score"))
 	if err != nil {
 		logger.DatabaseInsertFailed("pattern", result.PatternId, err.Error())
@@ -254,10 +254,10 @@ func addPattern(ctx context.Context, tx *sql.Tx, result AnalyzerResult, tr int) 
 	return true
 }
 
-func SaveIgnoredPatterns(pattids []string){
+func SaveIgnoredPatterns(pattids []string) {
 	db, ctx := OpenDbandSetContext()
 	defer db.Close()
-	for _, p := range pattids{
+	for _, p := range pattids {
 		ignorePattern(ctx, db, p)
 	}
 }

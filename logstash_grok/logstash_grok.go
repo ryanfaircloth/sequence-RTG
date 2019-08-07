@@ -9,8 +9,8 @@ package logstash_grok
 import (
 	"fmt"
 	"github.com/BurntSushi/toml"
-	"index/suffixarray"
 	"gitlab.in2p3.fr/cc-in2p3-system/sequence"
+	"index/suffixarray"
 	"sort"
 	"strconv"
 	"strings"
@@ -24,7 +24,6 @@ var (
 	}
 	logger *sequence.StandardLogger
 )
-
 
 func SetLogger(log *sequence.StandardLogger) {
 	logger = log
@@ -57,10 +56,10 @@ func readConfig(file string) error {
 //Transformed patterns need to be reviewed before use in production.
 func OutputToFiles(outfile string, config string, complexitylevel float64, cmap map[string]sequence.AnalyzerResult, thresholdType string, thresholdValue string) (int, string, error) {
 	var (
-		err   error
-		count int
-		top5     string
-		patmap   map[string]sequence.AnalyzerResult
+		err    error
+		count  int
+		top5   string
+		patmap map[string]sequence.AnalyzerResult
 	)
 
 	if config == "" {
@@ -74,7 +73,7 @@ func OutputToFiles(outfile string, config string, complexitylevel float64, cmap 
 		db, ctx := sequence.OpenDbandSetContext()
 		defer db.Close()
 		//get from the config instead
-		if thresholdType == ""{
+		if thresholdType == "" {
 			thresholdType = sequence.GetThresholdType()
 			thresholdValue = sequence.GetThresholdValue()
 		}
