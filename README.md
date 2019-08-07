@@ -10,29 +10,32 @@ The goal of the extension was to be able to use the Sequence module to find the 
 
 For our purposes we focused mostly on Syslog-ng patternDB but have added the Grok filer for Logstash as we believe it will be applicable to a wider audience.
 With that in mind, the Syslog-ng patternDB format has had a greater level of testing than the Grok patterns, so there is a possibility
-that it may need a little bit of extra attention to be more precise.
+that it may need a little bit of extra attention to be its best.
 
 We also tried to preserve as much flexibility as possible with the ability to turn on and off the new features where sensible with command line flags or config settings.
 
 One of the first additions was the ability to run the solution continuously with the addition of the database for storing the patterns and
 keeping track of the match counts of each pattern. This allows the pattern reviewer to review patterns when convenient and 
-also informs them of the most frequently matched pattern to help prioritise their review and promotion. Sequence can handle message input via either the standard input or a file. Using standard input with the batch size flag you can have
+also informs them of how frequently a pattern is matched to help prioritise their review and promotion. 
+
+The database type that we have used is SQLite3 but we have tested the code with Microsoft SQL Server 2014, PostgresSQL,
+MySql also. SQLite3 is supported by a `createdatabase` method from the commandline, for the other three, there is a 
+script in the database_scripts folder. The ORM we have used in SQLBoiler and a README for changing the database type and regenerating the models
+can be also found in the database_scripts folder.
+
+Sequence can handle message input via either the standard input or a file. Using standard input with the batch size flag you can have
 the solution running and reading in the data in real time, but waiting until the batch limit is reached to process the 
 messages. Sequence needs a group of messages to find the patterns, it cannot work in an online mode where it can process messages
-individually.
+one by one. The batch limit only works with standard input currently, not with input from file.
 
 Alternatively if you don't want to send the live stream of the data to the solution or process all of your log messages, you can select a subset of messages and 
-send them through sequence via a file to output directly to a file to discover the patterns for that set. These can immediately be reviewed and 
+send them through sequence via a file to output directly to another file to discover the patterns for that set. These can immediately be reviewed and 
 promoted.  In this sense, it can be used to save you creating patterns by hand from a few examples. This is done by passing the --all flag with the analyzebyservice
-method and the flags for exportpatterns along with the expected analyzebyservice flags. See the READ ME in the cmd/sequence_db folder for more information.
+method and the flags for exportpatterns along with the expected analyzebyservice flags. See the READ ME in the cmd/sequence_db folder for more information on the flags and their uses.
 
 The original sequence did not handle multiline messages and we have added the functionality to make a pattern from the first line only and absorb the 
 remainder of the message as one token. This seems to be enough for our purposes, but may not work for everyone.
 
-The database type that we have used is SQLite3 but we have tested the code with Microsoft SQL Server 2014, PostgresSQL,
-MySql also. SQLite3 is supported by a createdatabase method from the commandline, for the other three, there is a 
-script in the database_scripts folder. The ORM we have used in SQLBoiler and a README for changing the database type and regenerating the models
-can be found in the database_scripts folder.
 
 For handling larger volumes of messages, we created an analyzebyservice method to do closely what the original analyze method does in the original sequence project,
 but splits and analyses the messages by their source system. This allows processing of a wider range of patterns and prevents messages from
