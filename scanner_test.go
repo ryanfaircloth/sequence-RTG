@@ -87,7 +87,7 @@ func TestScannerSignature(t *testing.T) {
 	scanner := NewScanner()
 	var pos []int
 	for _, tc := range sigtests {
-		seq, err := scanner.Scan(tc.data, false, pos)
+		seq, _, err := scanner.Scan(tc.data, false, pos)
 		require.NoError(t, err, tc.data)
 		require.Equal(t, tc.sig, seq.Signature(), tc.data+"\n"+seq.PrintTokens())
 	}
@@ -118,7 +118,7 @@ func benchmarkScanner(b *testing.B, data string, stype string) {
 	scanner := NewScanner()
 	l := int64(len(data))
 
-	var benchFunc func(string, bool, []int) (Sequence, error)
+	var benchFunc func(string, bool, []int) (Sequence, bool, error)
 
 	switch stype {
 	case "json":
@@ -149,12 +149,12 @@ func runTestCases(t *testing.T, tests []testCase) {
 
 		switch tc.format {
 		case "json":
-			seq, err = scanner.ScanJson(tc.data)
+			seq, _, err = scanner.ScanJson(tc.data)
 		case "json_preserve":
-			seq, err = scanner.ScanJson_Preserve(tc.data)
+			seq, _, err = scanner.ScanJson_Preserve(tc.data)
 
 		default:
-			seq, err = scanner.Scan(tc.data, false, pos)
+			seq, _, err = scanner.Scan(tc.data, false, pos)
 		}
 
 		require.NoError(t, err, tc.data)

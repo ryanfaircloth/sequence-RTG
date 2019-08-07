@@ -492,7 +492,7 @@ func TestParserMatchPatterns(t *testing.T) {
 	}
 
 	for _, tc := range testset {
-		seq, err := scanner.Scan(tc.rule, true, tc.pos)
+		seq, _, err := scanner.Scan(tc.rule, true, tc.pos)
 		require.NoError(t, err, tc.rule)
 		err = parser.Add(seq)
 		require.NoError(t, err, tc.rule)
@@ -501,10 +501,10 @@ func TestParserMatchPatterns(t *testing.T) {
 	for _, tc := range testset {
 		switch tc.format {
 		case "json":
-			seq, err = scanner.ScanJson(tc.msg)
+			seq, _, err = scanner.ScanJson(tc.msg)
 
 		default:
-			seq, err = scanner.Scan(tc.msg, false, tc.pos)
+			seq, _, err = scanner.Scan(tc.msg, false, tc.pos)
 		}
 
 		require.NoError(t, err, tc.msg)
@@ -530,7 +530,7 @@ func TestParserParseMessages(t *testing.T) {
 	}
 
 	for _, tc := range testset {
-		seq, err := scanner.Scan(tc.rule, true, tc.pos)
+		seq, _, err := scanner.Scan(tc.rule, true, tc.pos)
 		require.NoError(t, err, tc.rule)
 		err = parser.Add(seq)
 		require.NoError(t, err, tc.rule)
@@ -539,10 +539,10 @@ func TestParserParseMessages(t *testing.T) {
 	for _, tc := range testset {
 		switch tc.format {
 		case "json":
-			seq, err = scanner.ScanJson(tc.msg)
+			seq, _, err = scanner.ScanJson(tc.msg)
 
 		default:
-			seq, err = scanner.Scan(tc.msg, false, pos)
+			seq, _, err = scanner.Scan(tc.msg, false, pos)
 		}
 
 		require.NoError(t, err, tc.msg)
@@ -566,10 +566,10 @@ func benchmarkRunParser(b *testing.B, tc struct {
 	parser := NewParser()
 	scanner := NewScanner()
 	var pos []int
-	seq, _ := scanner.Scan(tc.rule, true, pos)
+	seq, _, _ := scanner.Scan(tc.rule, true, pos)
 	parser.Add(seq)
 
-	seq, _ = scanner.Scan(tc.msg, false, pos)
+	seq, _, _ = scanner.Scan(tc.msg, false, pos)
 
 	b.ReportAllocs()
 	b.ResetTimer()

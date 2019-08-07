@@ -17,18 +17,18 @@ var (
 		{"%object%:%string% ", "%{DATA:object}:%{DATA:string}"},
 		{"%srcip%,", "%{IP:srcip},"},
 		{"%srcip%", "%{IP:srcip}"},
-		{"%ipv6%:", "%{IP:ipv6}"},
+		{"%ipv6%:", "%{IP:ipv6}:"},
 		{"%integer% ", "%{INT:integer}"},
 		{"%string%,%string%", "%{DATA:string},%{DATA:string1}"},
 		{"%srcmac%", "%{MAC:srcmac}"},
 		{"%srchost% ", "%{HOSTNAME:srchost}"},
-		{"<%string%>,", "<%{DATA:string}>"},
-		{"%multiline%", "%{GREEDYDATA:[multiline}"},
+		{"<%string%>,", "<%{DATA:string}>,"},
+		{"%multiline%", "%{GREEDYDATA:multiline}"},
 	}
 )
 
 func loadConfigs() {
-	file := "./sequence.toml"
+	file := "../sequence.toml"
 	readConfig(file)
 	sequence.ReadConfig(file)
 }

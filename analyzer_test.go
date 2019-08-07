@@ -84,7 +84,7 @@ func TestAnalyzerMergeNodes(t *testing.T) {
 	scanner := NewScanner()
 	var pos []int
 	for _, data := range analyzerSshdSamples {
-		seq, err := scanner.Scan(data, false, pos)
+		seq, _, err := scanner.Scan(data, false, pos)
 		require.NoError(t, err)
 		err = atree.Add(seq)
 		require.NoError(t, err)
@@ -210,14 +210,14 @@ func TestAnalyzerMatchPatterns(t *testing.T) {
 	var pos []int
 
 	for _, tc := range analyzerSshTests {
-		seq, err := scanner.Scan(tc.msg, false, pos)
+		seq, _, err := scanner.Scan(tc.msg, false, pos)
 		require.NoError(t, err)
 		err = atree.Add(seq)
 		require.NoError(t, err, tc.msg)
 	}
 
 	for _, tc := range analyzerKVTests {
-		seq, err := scanner.Scan(tc.msg, false, pos)
+		seq, _, err := scanner.Scan(tc.msg, false, pos)
 		require.NoError(t, err)
 		err = atree.Add(seq)
 		require.NoError(t, err, tc.msg)
@@ -226,7 +226,7 @@ func TestAnalyzerMatchPatterns(t *testing.T) {
 	atree.Finalize()
 
 	for _, tc := range analyzerSshTests {
-		seq, err := scanner.Scan(tc.msg, false, pos)
+		seq, _, err := scanner.Scan(tc.msg, false, pos)
 		require.NoError(t, err)
 		seq, err = atree.Analyze(seq)
 		require.NoError(t, err, tc.msg)
@@ -240,7 +240,7 @@ func TestAnalyzerMatchPatterns(t *testing.T) {
 	}
 
 	for _, tc := range analyzerKVTests {
-		seq, err := scanner.Scan(tc.msg, false, pos)
+		seq, _, err := scanner.Scan(tc.msg, false, pos)
 		require.NoError(t, err)
 		seq, err = atree.Analyze(seq)
 		require.NoError(t, err, tc.msg)

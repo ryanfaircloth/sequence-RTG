@@ -29,7 +29,7 @@ var (
 )
 
 func loadConfigs() {
-	file := "./sequence.toml"
+	file := "../sequence.toml"
 	readConfig(file)
 	sequence.ReadConfig(file)
 }

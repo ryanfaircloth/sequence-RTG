@@ -1,9 +1,10 @@
 sequence - Extensions built in this fork
 ========
 
-**`sequence` was iced by the previous author but we have picked it up and added some extra functionality in and around the module. The original Read me notes are still listed at the bottom of this page.**
-The original notes are still valid for this module as is the information on his website. Here we will detail the extensions made to Sequence so it can generate patterns in the format used by two
-of the leading log management systems log file parsers - Syslog-ng's patternDB and Logstash's Grok filter.
+**`sequence` was iced by the previous author but we have picked it up and added some extra functionality in and around the module. The original READ ME notes are still listed at the bottom of this page.
+The original notes are still valid for this module as is the information on his website.**
+
+Here we will detail the extensions made to Sequence so it can generate patterns in the format used by two of the leading log management systems log file parsers - Syslog-ng's patternDB and Logstash's Grok filter.
 
 The goal of the extension was to be able to use the Sequence module to find the patterns but to be able to export the patterns in a format for the parsing functionality of other log management systems. 
 
@@ -22,7 +23,8 @@ individually.
 
 Alternatively if you don't want to send the live stream of the data to the solution or process all of your log messages, you can select a subset of messages and 
 send them through sequence via a file to output directly to a file to discover the patterns for that set. These can immediately be reviewed and 
-promoted.  In this sense, it can be used to save you creating patterns by hand from a few examples.
+promoted.  In this sense, it can be used to save you creating patterns by hand from a few examples. This is done by passing the --all flag with the analyzebyservice
+method and the flags for exportpatterns along with the expected analyzebyservice flags. See the READ ME in the cmd/sequence_db folder for more information.
 
 The original sequence did not handle multiline messages and we have added the functionality to make a pattern from the first line only and absorb the 
 remainder of the message as one token. This seems to be enough for our purposes, but may not work for everyone.
@@ -32,7 +34,7 @@ MySql also. SQLite3 is supported by a createdatabase method from the commandline
 script in the database_scripts folder. The ORM we have used in SQLBoiler and a README for changing the database type and regenerating the models
 can be found in the database_scripts folder.
 
-For handling larger volumes of messages, we created an analyzebyservice method to do closely what the original analyze method does,
+For handling larger volumes of messages, we created an analyzebyservice method to do closely what the original analyze method does in the original sequence project,
 but splits and analyses the messages by their source system. This allows processing of a wider range of patterns and prevents messages from
 other services impacting the patterns.  
 
@@ -69,8 +71,6 @@ sequence - Read me from original author
 
 
 `sequence` is a _high performance sequential log scanner, analyzer and parser_. It _sequentially_ goes through a log message, _parses_ out the meaningful parts, without the use regular expressions. It can achieve _high performance_ parsing of **100,000 - 200,000 messages per second (MPS)** without the need to separate parsing rules by log source type.
-
-**If you have a set of logs you would like me to test out, please feel free to [open an issue](https://github.com/surge/sequence/issues) and we can arrange a way for me to download and test your logs.**
 
 ### Motivation
 
