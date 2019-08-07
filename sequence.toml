@@ -248,7 +248,7 @@ tags = [
     21 = ["2006-01-02 15:04:05.000", "3"]
     22 = ["2006-01-02 15:04:05", "3"]
     23 = ["2006-01-02 15:04:05.000 -0700", "99"]
-    24 = ["2006/01/02 15:04:05", "6"]
+    24 = ["2006/01/02 15:04:05", "3"]
     25 = ["06-01-02 15:04:05,000", "99"]
     26 = ["06-01-02 15:04:05", "99"]
     27 = ["06/01/02 15:04:05", "99"]
@@ -291,7 +291,11 @@ tags = [
     [timesettings.grok]
     "0" = "%{DATESTAMP_OTHER:timestamp}"
     "1" = "%{SYSLOGTIMESTAMP:timestamp}"
-    "6" = "%{YEAR}[./-]%{MONTHNUM}[./-]%{MONTHDAY} %{TIME}"
+    "2" = "%{MONTH} %{MONTHDAY}, %{YEAR} %{TIME} [A|P]M"
+    "3" = "%{YEAR}[-|.|\/]%{MONTHNUM}[-|.|\/]%{MONTHDAY} %{TIME}"
+    "4" = "%(DAY} %{MONTH} %{MONTHDAY} %{TIME} %{YEAR}"
+    "5" = ""
+    "99" = ""
 
 [patterndb]
     [patterndb.tags]
