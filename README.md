@@ -1,4 +1,62 @@
-sequence
+sequence - Extensions built in this fork
+========
+
+**`sequence` was iced by the previous author but we have picked it up and added some extra functionality in and around the module. The original Read me notes are still listed at the bottom of this page.**
+The original notes are still valid for this module as is the information on his website. Here we will detail the extensions made to Sequence so it can generate patterns in the format used by two
+of the leading log management systems log file parsers - Syslog-ng's patternDB and Logstash's Grok filter.
+
+The goal of the extension was to be able to use the Sequence module to find the patterns but to be able to export the patterns in a format for the parsing functionality of other log management systems. 
+
+For our purposes we focused mostly on Syslog-ng patternDB but have added the Grok filer for Logstash as we believe it will be applicable to a wider audience.
+With that in mind, the Syslog-ng patternDB format has had a greater level of testing than the Grok patterns, so there is a possibility
+that it may need a little bit of extra attention to be more precise.
+
+We also tried to preserve as much flexibility as possible with the ability to turn on and off the new features where sensible with command line flags or config settings.
+
+One of the first additions was the ability to run the solution continuously with the addition of the database for storing the patterns and
+keeping track of the match counts of each pattern. This allows the pattern reviewer to review patterns when convenient and 
+also informs them of the most frequently matched pattern to help prioritise their review and promotion. Sequence can handle message input via either the standard input or a file. Using standard input with the batch size flag you can have
+the solution running and reading in the data in real time, but waiting until the batch limit is reached to process the 
+messages. Sequence needs a group of messages to find the patterns, it cannot work in an online mode where it can process messages
+individually.
+
+Alternatively if you don't want to send the live stream of the data to the solution or process all of your log messages, you can select a subset of messages and 
+send them through sequence via a file to output directly to a file to discover the patterns for that set. These can immediately be reviewed and 
+promoted.  In this sense, it can be used to save you creating patterns by hand from a few examples.
+
+The original sequence did not handle multiline messages and we have added the functionality to make a pattern from the first line only and absorb the 
+remainder of the message as one token. This seems to be enough for our purposes, but may not work for everyone.
+
+The database type that we have used is SQLite3 but we have tested the code with Microsoft SQL Server 2014, PostgresSQL,
+MySql also. SQLite3 is supported by a createdatabase method from the commandline, for the other three, there is a 
+script in the database_scripts folder. The ORM we have used in SQLBoiler and a README for changing the database type and regenerating the models
+can be found in the database_scripts folder.
+
+For handling larger volumes of messages, we created an analyzebyservice method to do closely what the original analyze method does,
+but splits and analyses the messages by their source system. This allows processing of a wider range of patterns and prevents messages from
+other services impacting the patterns.  
+
+Every created pattern is given a patternID value that is combination of the pattern and the service name translated into
+a sha 1 value. This is so that it is repeatable, if the database is lost or wiped for maintenance the same pattern and service 
+will give the same id. Unfortunately however if the pattern changes due to a software update of either sequence or the 
+source system, then a new id will be created. 
+
+The patterns can be exported for either patterndb or grok format. PatternDB files have been tested in their entirety with patternDB,
+the grok patterns have been tested individually with a grok pattern tester. Patterndb uses the idea of a combination of service and message to define its patterns,
+but grok does not, so for grok you may find you get a duplication of patterns if two different services generate the same pattern.
+
+As with any effort at translation, there are a few situations where it can lead to a translation that is not quite right. For SEQUENCE a pattern such as `%string% %string1%` would only match a two word string,
+but with the patternDB translation `@ESTRING:string: @@ESTRING:string1:@` it would match any message with two words or more.
+To help avoid exporting these patterns we introduced the idea of a complexity score. The scores range from 0 to 1, 0 being a pattern with no tokens and 1 being a pattern with all
+string tokens. Around a complexity score of 0.5, most of the bad patterns are avoided. It is, however, not exact and there are a few with higher scores that are ok too.
+The idea is to give the review some control over what is exported, and the (hopefully) the ability to focus on the best patterns first.
+
+
+*NOTE: For the export to patterndb and grok, some of the regex values in the config file have not been completed, I have added them as I have needed them for the patterns
+that we have found. Any date/time format that has no spaces is just a string variable, but the others need a regex to be matched properly.*
+
+
+sequence - Read me from original author
 ========
 
 **`sequence` is currently iced since I don't have time to continue, and should be considered unstable until further notice. If anyone's interested in continue development of this, I would be happy to add you to the project.**
@@ -16,7 +74,7 @@ sequence
 
 ### Motivation
 
-Log messages are notoriusly difficult to parse because they all have different formats. Industries (see Splunk, ArcSight, Tibco LogLogic, Sumo Logic, Logentries, Loggly, LogRhythm, etc etc etc) have been built to solve the problems of parsing, understanding and analyzing log messages.
+Log messages are notoriously difficult to parse because they all have different formats. Industries (see Splunk, ArcSight, Tibco LogLogic, Sumo Logic, Logentries, Loggly, LogRhythm, etc etc etc) have been built to solve the problems of parsing, understanding and analyzing log messages.
 
 Let's say you have a bunch of log files you like to parse. The first problem you will typically run into is you have no way of telling how many DIFFERENT types of messages there are, so you have no idea how much work there will be to develop rules to parse all the messages. Not only that, you have hundreds of thousands, if not  millions of messages, in front of you, and you have no idea what messages are worth parsing, and what's not.
 

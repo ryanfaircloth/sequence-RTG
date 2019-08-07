@@ -495,7 +495,7 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 		}
 
 	case TokenLiteral:
-		if isLiteral(r) || (this.state.inquote && !matchQuote(this.state.chquote, r)) || (!this.state.inquote && r == '\'') {
+		if isLiteral(r) || this.state.backslash || (this.state.inquote && !matchQuote(this.state.chquote, r)) || (!this.state.inquote && r == '\'') {
 			//keep going
 		} else {
 			this.state.tokenStop = true
@@ -534,7 +534,8 @@ func (this *Message) tokenStep(i int, r rune, nr string) bool {
 	}
 
 	//glog.Debugf("2. i=%d, r=%c, tokenStop=%t, tokenType=%s", i, r, this.state.tokenStop, this.state.tokenType)
-
+	//this sets the backslash for escaping values in the next round
+	this.state.backslash =  r == '\\'
 	return this.state.tokenStop
 }
 

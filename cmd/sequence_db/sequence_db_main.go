@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"os"
-	"os/signal"
-	"runtime/pprof"
 	"gitlab.in2p3.fr/cc-in2p3-system/sequence"
 	"gitlab.in2p3.fr/cc-in2p3-system/sequence/logstash_grok"
 	"gitlab.in2p3.fr/cc-in2p3-system/sequence/syslog_ng_pattern_db"
+	"os"
+	"os/signal"
+	"runtime/pprof"
 	"strings"
 	"time"
 )
@@ -25,18 +25,18 @@ var (
 	informat       string
 	patfile        string
 	cpuprofile     string
-	dbtype	       string
-	dbconn	       string
-	dbpath	       string
-	dbname	       string
+	dbtype         string
+	dbconn         string
+	dbpath         string
+	dbname         string
 	workers        int
 	format         string
 	batchsize      int
 	purgeThreshold int
 	thresholdType  string
 	thresholdValue string
-	complimit	   float64
-	allinone	   bool
+	complimit      float64
+	allinone       bool
 	standardLogger *sequence.StandardLogger
 
 	quit chan struct{}
@@ -117,7 +117,7 @@ func scan(cmd *cobra.Command, args []string) {
 		_, lrMap, _ = sequence.ReadLogRecordAsMap(iscan, informat, lrMap, batchsize)
 		for _, lrc := range lrMap {
 			for _, l := range lrc.Records {
-				seq, _ := sequence.ScanMessage(scanner, l.Message, format)
+				seq, _, _:= sequence.ScanMessage(scanner, l.Message, format)
 				fmt.Fprintf(ofile, "%s\n\n", seq.PrintTokens())
 			}
 		}
@@ -138,7 +138,7 @@ func purgepatterns(cmd *cobra.Command, args []string) {
 	standardLogger.HandleInfo(fmt.Sprintf("%d patterns and their examples removed from the database.", rf))
 }
 
-func updateignorepatterns(cmd *cobra.Command, args []string){
+func updateignorepatterns(cmd *cobra.Command, args []string) {
 	start("ignorepatterns")
 	iscan, ifile, err := sequence.OpenInputFile(infile)
 	if err != nil {
@@ -146,7 +146,7 @@ func updateignorepatterns(cmd *cobra.Command, args []string){
 	}
 	defer ifile.Close()
 	var ids []string
-	for iscan.Scan(){
+	for iscan.Scan() {
 		ids = append(ids, iscan.Text())
 	}
 	sequence.SaveIgnoredPatterns(ids)
@@ -156,6 +156,11 @@ func updateignorepatterns(cmd *cobra.Command, args []string){
 func analyzebyservice(cmd *cobra.Command, args []string) {
 	start("analyzebyservice")
 	scanner := sequence.NewScanner()
+	var (
+		err      error
+		aseq     sequence.Sequence
+		mtype    string
+	)
 	iscan, ifile, err := sequence.OpenInputFile(infile)
 	if err != nil {
 		standardLogger.HandleFatal(err.Error())
@@ -186,22 +191,29 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 			// analyzer for pattern analysis, this requires the previous pattern file/folder
 			//	to be passed in
 			analyzer := sequence.NewAnalyzer()
+			jsonParser := sequence.NewParser()
 			sid := sequence.GenerateIDFromString("", svc)
 			standardLogger.HandleDebug("Started building parser using patterns from database")
 			parser := sequence.BuildParserFromDb(sid)
 			standardLogger.HandleDebug("Completed building parser and starting to check if matches existing patterns")
+			var seq sequence.Sequence
+			var isJson bool
 			for _, l := range lrc.Records {
-				//TODO Fix this so it doesn't scan twice or parse twice
-				seq, _ := sequence.ScanMessage(scanner, l.Message, format)
+				seq, isJson, _ = sequence.ScanMessage(scanner, l.Message, format)
 				_, err := parser.Parse(seq)
 				if err != nil {
-					analyzer.Add(seq)
+					if isJson {
+						jsonParser.Add(seq)
+					} else {
+						analyzer.Add(seq)
+					}
+
 				}
 			}
 			analyzer.Finalize()
 			standardLogger.HandleDebug("Added new patterns and finalised. Starting individual analysis")
 			for _, l := range lrc.Records {
-				seq, _ := sequence.ScanMessage(scanner, l.Message, format)
+				seq, isJson, _ := sequence.ScanMessage(scanner, l.Message, format)
 				pseq, err := parser.Parse(seq)
 				if err == nil {
 					//if the pattern is found we might still need to update the pattern/service relationship
@@ -219,9 +231,15 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 					ar.ExampleCount++
 					pmap[pat] = ar
 				} else {
-					aseq, err := analyzer.Analyze(seq)
+					if isJson {
+						aseq, err = jsonParser.Parse(seq)
+						mtype = "json"
+					} else {
+						aseq, err = analyzer.Analyze(seq)
+						mtype = "general"
+					}
 					if err != nil {
-						standardLogger.LogAnalysisFailed(l)
+						standardLogger.LogAnalysisFailed(l, mtype)
 						err_count++
 					} else {
 						pat, pos := aseq.String()
@@ -282,7 +300,7 @@ func exportPatterns(cmd *cobra.Command, args []string) {
 	export(nil)
 }
 
-func export(cmap map[string]sequence.AnalyzerResult){
+func export(cmap map[string]sequence.AnalyzerResult) {
 	startTime := time.Now()
 	if outsystem == "patterndb" {
 		processed, top5, err := syslog_ng_pattern_db.OutputToFiles(outformat, outfile, cfgfile, complimit, cmap, thresholdType, thresholdValue)
@@ -326,7 +344,7 @@ func validateInputs(commandType string) {
 		if err != "" {
 			errors = append(errors, err)
 		}
-		if allinone{
+		if allinone {
 			err = sequence.ValidateOutFile(outfile)
 			if err != "" {
 				errors = append(errors, err)
@@ -356,7 +374,7 @@ func validateInputs(commandType string) {
 			}
 			//it is 1 by default
 			if complimit != 1 {
-				if complimit < 0 || complimit > 1{
+				if complimit < 0 || complimit > 1 {
 					errors = append(errors, "The value for the complexity score limit must be between 0 and 1.")
 				}
 			}
@@ -379,7 +397,7 @@ func validateInputs(commandType string) {
 			errors = append(errors, err)
 		}
 		//threshold type is optional
-		if thresholdType != "" || thresholdValue != "0"{
+		if thresholdType != "" || thresholdValue != "0" {
 			err = sequence.ValidateThresholdType(thresholdType)
 			if err != "" {
 				errors = append(errors, err)
@@ -391,7 +409,7 @@ func validateInputs(commandType string) {
 		}
 		//it is 1 by default
 		if complimit != 1 {
-			if complimit < 0 || complimit > 1{
+			if complimit < 0 || complimit > 1 {
 				errors = append(errors, "The value for the complexity score limit must be between 0 and 1.")
 			}
 		}
@@ -431,7 +449,7 @@ func validateInputs(commandType string) {
 		}
 	}
 	exs := ""
-	for i, ex := range errors{
+	for i, ex := range errors {
 		exs += fmt.Sprintf("(%d) %s. ", i+1, ex)
 	}
 
@@ -440,89 +458,89 @@ func validateInputs(commandType string) {
 	}
 }
 
-func warnExtraInputs(commandType string, all bool)  {
+func warnExtraInputs(commandType string, all bool) {
 	var warnings string
 	var extras []string
 	switch commandType {
 	case "analyzebyservice":
-		if purgeThreshold != 0{
+		if purgeThreshold != 0 {
 			extras = append(extras, "purge threshold (-t)")
 		}
-		if dbconn != ""{
+		if dbconn != "" {
 			extras = append(extras, "connection string (--conn)")
 		}
-		if dbtype != ""{
+		if dbtype != "" {
 			extras = append(extras, "database type (--type)")
 		}
-		if !all{
-			if outfile != ""{
+		if !all {
+			if outfile != "" {
 				extras = append(extras, "output file (-o)")
 			}
-			if outformat != ""{
+			if outformat != "" {
 				extras = append(extras, "output format (-f)")
 			}
-			if outsystem != ""{
+			if outsystem != "" {
 				extras = append(extras, "output system (-s)")
 			}
-			if complimit != 1{
+			if complimit != 1 {
 				extras = append(extras, "complexity score limit (-c)")
 			}
-			if thresholdValue != "0"{
+			if thresholdValue != "0" {
 				extras = append(extras, "threshold value (-v)")
 			}
-			if thresholdType != ""{
+			if thresholdType != "" {
 				extras = append(extras, "threshold type (-y)")
 			}
 		}
 
 	case "exportpatterns":
-		if purgeThreshold != 0{
+		if purgeThreshold != 0 {
 			extras = append(extras, "purge threshold (-t)")
 		}
-		if infile != ""{
+		if infile != "" {
 			extras = append(extras, "input file (-i)")
 		}
-		if informat != ""{
+		if informat != "" {
 			extras = append(extras, "input format (-k)")
 		}
-		if batchsize != 0{
+		if batchsize != 0 {
 			extras = append(extras, "batch size (-b)")
 		}
-		if dbconn != ""{
+		if dbconn != "" {
 			extras = append(extras, "connection string (--conn)")
 		}
-		if dbtype != ""{
+		if dbtype != "" {
 			extras = append(extras, "database type (--type)")
 		}
 		if all {
 			extras = append(extras, "all in one (--all)")
 		}
 	case "scan":
-		if purgeThreshold != 0{
+		if purgeThreshold != 0 {
 			extras = append(extras, "purge threshold (-t)")
 		}
-		if batchsize != 0{
+		if batchsize != 0 {
 			extras = append(extras, "batch size (-b)")
 		}
-		if dbconn != ""{
+		if dbconn != "" {
 			extras = append(extras, "connection string (--conn)")
 		}
-		if dbtype != ""{
+		if dbtype != "" {
 			extras = append(extras, "database type (--type)")
 		}
-		if outformat != ""{
+		if outformat != "" {
 			extras = append(extras, "output format (-f)")
 		}
-		if outsystem != ""{
+		if outsystem != "" {
 			extras = append(extras, "output system (-s)")
 		}
-		if complimit != 1{
+		if complimit != 1 {
 			extras = append(extras, "complexity score limit (-c)")
 		}
-		if thresholdValue != "0"{
+		if thresholdValue != "0" {
 			extras = append(extras, "threshold value (-v)")
 		}
-		if thresholdType != ""{
+		if thresholdType != "" {
 			extras = append(extras, "threshold type (-y)")
 		}
 		if all {
@@ -530,34 +548,34 @@ func warnExtraInputs(commandType string, all bool)  {
 		}
 	case "createdatabase":
 		//create database only works with Sqlite3 at the moment.
-		if purgeThreshold != 0{
+		if purgeThreshold != 0 {
 			extras = append(extras, "purge threshold (-t)")
 		}
-		if infile != ""{
+		if infile != "" {
 			extras = append(extras, "input file (-i)")
 		}
-		if informat != ""{
+		if informat != "" {
 			extras = append(extras, "input format (-k)")
 		}
-		if batchsize != 0{
+		if batchsize != 0 {
 			extras = append(extras, "batch size (-b)")
 		}
-		if outfile != ""{
+		if outfile != "" {
 			extras = append(extras, "output file (-o)")
 		}
-		if outformat != ""{
+		if outformat != "" {
 			extras = append(extras, "output format (-f)")
 		}
-		if outsystem != ""{
+		if outsystem != "" {
 			extras = append(extras, "output system (-s)")
 		}
-		if complimit != 1{
+		if complimit != 1 {
 			extras = append(extras, "complexity score limit (-c)")
 		}
-		if thresholdValue != ""{
+		if thresholdValue != "" {
 			extras = append(extras, "threshold value (-v)")
 		}
-		if thresholdType != ""{
+		if thresholdType != "" {
 			extras = append(extras, "threshold type (-y)")
 		}
 		if all {
@@ -565,74 +583,74 @@ func warnExtraInputs(commandType string, all bool)  {
 		}
 
 	case "purgepatterns":
-		if infile != ""{
+		if infile != "" {
 			extras = append(extras, "input file (-i)")
 		}
-		if informat != ""{
+		if informat != "" {
 			extras = append(extras, "input format (-k)")
 		}
-		if batchsize != 0{
+		if batchsize != 0 {
 			extras = append(extras, "batch size (-b)")
 		}
-		if outfile != ""{
+		if outfile != "" {
 			extras = append(extras, "output file (-o)")
 		}
-		if outformat != ""{
+		if outformat != "" {
 			extras = append(extras, "output format (-f)")
 		}
-		if outsystem != ""{
+		if outsystem != "" {
 			extras = append(extras, "output system (-s)")
 		}
-		if complimit != 1{
+		if complimit != 1 {
 			extras = append(extras, "complexity score limit (-c)")
 		}
-		if thresholdValue != ""{
+		if thresholdValue != "" {
 			extras = append(extras, "threshold value (-v)")
 		}
-		if thresholdType != ""{
+		if thresholdType != "" {
 			extras = append(extras, "threshold type (-y)")
 		}
-		if dbconn != ""{
+		if dbconn != "" {
 			extras = append(extras, "connection string (--conn)")
 		}
-		if dbtype != ""{
+		if dbtype != "" {
 			extras = append(extras, "database type (--type)")
 		}
 		if all {
 			extras = append(extras, "all in one (--all)")
 		}
 	case "updateignorepatterns":
-		if purgeThreshold != 0{
+		if purgeThreshold != 0 {
 			extras = append(extras, "purge threshold (-t)")
 		}
-		if informat != ""{
+		if informat != "" {
 			extras = append(extras, "input format (-k)")
 		}
-		if batchsize != 0{
+		if batchsize != 0 {
 			extras = append(extras, "batch size (-b)")
 		}
-		if outfile != ""{
+		if outfile != "" {
 			extras = append(extras, "output file (-o)")
 		}
-		if outformat != ""{
+		if outformat != "" {
 			extras = append(extras, "output format (-f)")
 		}
-		if outsystem != ""{
+		if outsystem != "" {
 			extras = append(extras, "output system (-s)")
 		}
-		if complimit != 1{
+		if complimit != 1 {
 			extras = append(extras, "complexity score limit (-c)")
 		}
-		if thresholdValue != ""{
+		if thresholdValue != "" {
 			extras = append(extras, "threshold value (-v)")
 		}
-		if thresholdType != ""{
+		if thresholdType != "" {
 			extras = append(extras, "threshold type (-y)")
 		}
-		if dbconn != ""{
+		if dbconn != "" {
 			extras = append(extras, "connection string (--conn)")
 		}
-		if dbtype != ""{
+		if dbtype != "" {
 			extras = append(extras, "database type (--type)")
 		}
 		if all {
@@ -640,7 +658,7 @@ func warnExtraInputs(commandType string, all bool)  {
 		}
 	}
 	// Build message
-	for _, w := range extras{
+	for _, w := range extras {
 		warnings += w + ", "
 	}
 
@@ -731,7 +749,7 @@ func main() {
 	sequenceCmd.PersistentFlags().StringVarP(&thresholdValue, "match-threshold-value", "v", "0", "this can be used with exported patterns to override the config value in matchThresholdValue")
 	sequenceCmd.PersistentFlags().Float64VarP(&complimit, "complexity-limit", "c", 1, "the complexity of a pattern is between 0 and 1, higher numbers represent more tags. 0.5 is a good level to limit exporting over-tagged patterns.")
 	sequenceCmd.PersistentFlags().BoolVarP(&allinone, "all", "", false, "if passed to analyzebyservice it by passes saving to the database and directly out puts the patterns.")
-	sequenceCmd.PersistentFlags().StringVarP(&dbtype,"type", "", "", "type of the database when creating it, can mssql, postgres, sqlite3 or mysql")
+	sequenceCmd.PersistentFlags().StringVarP(&dbtype, "type", "", "", "type of the database when creating it, can mssql, postgres, sqlite3 or mysql")
 	sequenceCmd.PersistentFlags().StringVarP(&dbconn, "conn", "", "", "connection details for the server")
 
 	scanCmd.Run = scan

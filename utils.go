@@ -11,25 +11,26 @@ import (
 )
 
 //Scans the message using the appropriate format
-func ScanMessage(scanner *Scanner, data string, format string) (Sequence, error) {
+func ScanMessage(scanner *Scanner, data string, format string) (Sequence, bool, error) {
 	var (
 		seq Sequence
+		isJson bool
 		err error
 		pos []int
 	)
 
 	if testJson(data) {
-		seq, err = scanner.ScanJson_Preserve(data)
+		seq, isJson, err = scanner.ScanJson_Preserve(data)
 	} else {
 		switch format {
 		case "json":
-			seq, err = scanner.ScanJson(data)
+			seq, isJson, err = scanner.ScanJson(data)
 
 		default:
-			seq, err = scanner.Scan(data, false, pos)
+			seq, isJson, err = scanner.Scan(data, false, pos)
 		}
 	}
-	return seq, err
+	return seq, isJson, err
 }
 
 func testJson(data string) bool {
@@ -78,7 +79,7 @@ func BuildParser(patfile string) *Parser {
 				continue
 			}
 
-			seq, err := scanner.Scan(line, true, pos)
+			seq, _, err := scanner.Scan(line, true, pos)
 			if err != nil {
 				logger.HandleError(err.Error())
 			}
@@ -101,7 +102,7 @@ func BuildParserFromDb(serviceid string) *Parser {
 	pmap := GetPatternsFromDatabaseByService(db, ctx, serviceid)
 	for _, ar := range pmap {
 		pos := SplitToInt(ar.TagPositions, ",")
-		seq, err := scanner.Scan(ar.Pattern, true, pos)
+		seq, _, err := scanner.Scan(ar.Pattern, true, pos)
 		if err != nil {
 			logger.HandleError(err.Error())
 		}

@@ -121,7 +121,7 @@ func NewScanner() *Scanner {
 // Scan is not concurrent-safe, and the returned Sequence is only valid until
 // the next time any Scan*() method is called. The best practice would be to
 // create one Scanner for each goroutine.
-func (this *Scanner) Scan(s string, isParse bool, pos []int) (Sequence, error) {
+func (this *Scanner) Scan(s string, isParse bool, pos []int) (Sequence, bool, error) {
 	this.msg.Data = s
 	this.msg.reset()
 	this.seq = this.seq[:0]
@@ -129,6 +129,7 @@ func (this *Scanner) Scan(s string, isParse bool, pos []int) (Sequence, error) {
 	var (
 		err error
 		tok Token
+		isJson = false
 	)
 
 	spaceBefore := false
@@ -168,10 +169,10 @@ func (this *Scanner) Scan(s string, isParse bool, pos []int) (Sequence, error) {
 	}
 
 	if err != nil && err != io.EOF {
-		return nil, err
+		return nil, isJson, err
 	}
 
-	return this.seq, nil
+	return this.seq, isJson, nil
 }
 
 const (
@@ -208,7 +209,7 @@ const (
 //   - skips any key that has an empty value, so json strings like
 //   		"reference":""		or		"filterSet": {}
 //     will not show up in the Sequence
-func (this *Scanner) ScanJson(s string) (Sequence, error) {
+func (this *Scanner) ScanJson(s string) (Sequence, bool, error) {
 	this.msg.Data = s
 	this.msg.reset()
 	this.seq = this.seq[:0]
@@ -223,6 +224,8 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 
 		state          = jsonStart // state
 		kquote, vquote bool        // quoted key, quoted value
+		//determines if the returned sequence is preserved json
+		isJson = false
 	)
 
 	for tok, err = this.msg.Tokenize(false, pos); err == nil; tok, err = this.msg.Tokenize(false, pos) {
@@ -243,7 +246,7 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 				keys = append(keys, "")
 
 			default:
-				return nil, fmt.Errorf("Invalid message. Expecting \"{\", got %q.", tok.Value)
+				return nil, isJson, fmt.Errorf("Invalid message. Expecting \"{\", got %q.", tok.Value)
 			}
 
 		case jsonObjectStart:
@@ -259,13 +262,13 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 				// start quote, ignore, move on
 				//state = jsonObjectStart
 				if kquote = !kquote; !kquote {
-					return nil, fmt.Errorf("Invalid message. Expecting start quote for key, got end quote.")
+					return nil,isJson, fmt.Errorf("Invalid message. Expecting start quote for key, got end quote.")
 				}
 
 			case "}":
 				// got something like {}, ignore this key
 				if len(keys)-1 < 0 {
-					return nil, fmt.Errorf("Invalid message. Too many } characters.")
+					return nil,isJson, fmt.Errorf("Invalid message. Too many } characters.")
 				}
 
 				keys = keys[:len(keys)-1]
@@ -276,7 +279,7 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 					//glog.Debugf("depth=%d, keys=%v", len(keys), keys)
 					switch len(keys) {
 					case 0:
-						return nil, fmt.Errorf("Invalid message. Expecting inside object, not so.")
+						return nil,isJson, fmt.Errorf("Invalid message. Expecting inside object, not so.")
 
 					case 1:
 						keys[0] = tok.Value
@@ -292,7 +295,7 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 					state = jsonObjectKey
 
 				} else {
-					return nil, fmt.Errorf("Invalid message. Expecting string key, got %q.", tok.Value)
+					return nil, isJson, fmt.Errorf("Invalid message. Expecting string key, got %q.", tok.Value)
 				}
 			}
 
@@ -302,12 +305,12 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 				// end quote, ignore, move on
 				//state = jsonObjectKey
 				if kquote = !kquote; kquote {
-					return nil, fmt.Errorf("Invalid message. Expecting end quote for key, got start quote.")
+					return nil, isJson, fmt.Errorf("Invalid message. Expecting end quote for key, got start quote.")
 				}
 
 			case ":":
 				if kquote {
-					return nil, fmt.Errorf("Invalid message. Expecting end quote for key, got %q.", tok.Value)
+					return nil, isJson, fmt.Errorf("Invalid message. Expecting end quote for key, got %q.", tok.Value)
 				}
 
 				tok.Value = "="
@@ -315,7 +318,7 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 				state = jsonObjectColon
 
 			default:
-				return nil, fmt.Errorf("Invalid message. Expecting colon or quote, got %q.", tok.Value)
+				return nil, isJson, fmt.Errorf("Invalid message. Expecting colon or quote, got %q.", tok.Value)
 			}
 
 		case jsonObjectColon:
@@ -367,13 +370,13 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 				// end quote, ignore, move on
 				//state = jsonObjectKey
 				if vquote = !vquote; vquote {
-					return nil, fmt.Errorf("Invalid message. Expecting end quote for value, got start quote.")
+					return nil, isJson, fmt.Errorf("Invalid message. Expecting end quote for value, got start quote.")
 				}
 
 			case "}":
 				// End of an object
 				if len(keys)-1 < 0 {
-					return nil, fmt.Errorf("Invalid message. Too many } characters.")
+					return nil, isJson, fmt.Errorf("Invalid message. Too many } characters.")
 				}
 
 				keys = keys[:len(keys)-1]
@@ -383,7 +386,7 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 				state = jsonObjectStart
 
 			default:
-				return nil, fmt.Errorf("Invalid message. Expecting '}', ',' or '\"', got %q.", tok.Value)
+				return nil, isJson, fmt.Errorf("Invalid message. Expecting '}', ',' or '\"', got %q.", tok.Value)
 			}
 
 		case jsonObjectEnd, jsonArrayEnd:
@@ -391,7 +394,7 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 			case "}":
 				// End of an object
 				if len(keys)-1 < 0 {
-					return nil, fmt.Errorf("Invalid message. Too many } characters.")
+					return nil, isJson, fmt.Errorf("Invalid message. Too many } characters.")
 				}
 
 				keys = keys[:len(keys)-1]
@@ -400,7 +403,7 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 			case "]":
 				// End of an object
 				if len(arrs)-1 < 0 || len(keys)-1 < 0 {
-					return nil, fmt.Errorf("Invalid message. Mismatched ']' or '}' characters.")
+					return nil, isJson, fmt.Errorf("Invalid message. Mismatched ']' or '}' characters.")
 				}
 
 				keys = keys[:len(keys)-1]
@@ -414,7 +417,7 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 				// keys[len(keys)-2] = keys[len(keys)-3] + "." + strconv.FormatInt(arrs[len(arrs)-1], 10)
 
 			default:
-				return nil, fmt.Errorf("Invalid message. Expecting '}' or ',', got %q.", tok.Value)
+				return nil, isJson, fmt.Errorf("Invalid message. Expecting '}' or ',', got %q.", tok.Value)
 			}
 
 		case jsonArraySeparator:
@@ -424,7 +427,7 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 				keys = append(keys, "")
 
 			default:
-				return nil, fmt.Errorf("Invalid message. Expecting '{', got %q.", tok.Value)
+				return nil, isJson, fmt.Errorf("Invalid message. Expecting '{', got %q.", tok.Value)
 			}
 
 		case jsonArrayStart:
@@ -433,7 +436,7 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 				// start quote, ignore, move on
 				//state = jsonArrayStart
 				if kquote = !kquote; !kquote {
-					return nil, fmt.Errorf("Invalid message. Expecting start quote for value, got end quote.")
+					return nil, isJson, fmt.Errorf("Invalid message. Expecting start quote for value, got end quote.")
 				}
 
 			case "{":
@@ -465,7 +468,7 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 					state = jsonArrayValue
 
 				} else {
-					return nil, fmt.Errorf("Invalid message. Expecting string key, got %q.", tok.Value)
+					return nil, isJson, fmt.Errorf("Invalid message. Expecting string key, got %q.", tok.Value)
 				}
 			}
 
@@ -475,13 +478,13 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 				// end quote, ignore, move on
 				//state = jsonObjectKey
 				if vquote = !vquote; vquote {
-					return nil, fmt.Errorf("Invalid message. Expecting end quote for value, got start quote.")
+					return nil, isJson, fmt.Errorf("Invalid message. Expecting end quote for value, got start quote.")
 				}
 
 			case "]":
 				// End of an object
 				if len(arrs)-1 < 0 || len(keys)-1 < 0 {
-					return nil, fmt.Errorf("Invalid message. Mismatched ']' or '}' characters.")
+					return nil, isJson, fmt.Errorf("Invalid message. Mismatched ']' or '}' characters.")
 				}
 
 				keys = keys[:len(keys)-1]
@@ -494,22 +497,22 @@ func (this *Scanner) ScanJson(s string) (Sequence, error) {
 				keys[len(keys)-1] = keys[len(keys)-2] + "." + strconv.FormatInt(arrs[len(arrs)-1], 10)
 
 			default:
-				return nil, fmt.Errorf("Invalid message. Expecting ']', ',' or '\"', got %q.", tok.Value)
+				return nil, isJson, fmt.Errorf("Invalid message. Expecting ']', ',' or '\"', got %q.", tok.Value)
 			}
 		}
 		//glog.Debugf("2. tok=%s, state=%d, kquote=%t, vquote=%t, depth=%d", tok, state, kquote, vquote, len(keys))
 	}
 
 	if err != nil && err != io.EOF {
-		return nil, err
+		return nil, isJson,  err
 	}
 
-	return this.seq, nil
+	return this.seq, isJson,  nil
 }
 
 //This is essentially the same function as Scan Json about but it preserves the structure of the message for text matching.
 //It does not remove spaces, commas or brackets.
-func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
+func (this *Scanner) ScanJson_Preserve(s string) (Sequence, bool, error) {
 	var (
 		err error
 		tok Token
@@ -520,6 +523,8 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 
 		state          = jsonStart // state
 		kquote, vquote bool        // quoted key, quoted value
+		//determines if the returned sequence is preserved json
+		isJson = true
 	)
 
 	this.msg.Data = s
@@ -549,7 +554,7 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 				this.insertToken(tok)
 
 			default:
-				return nil, fmt.Errorf("Invalid message. Expecting \"{\", got %q.", tok.Value)
+				return nil, isJson, fmt.Errorf("Invalid message. Expecting \"{\", got %q.", tok.Value)
 			}
 
 		case jsonObjectStart:
@@ -564,13 +569,13 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 				// start quote, add token, move on
 				this.insertToken(tok)
 				if kquote = !kquote; !kquote {
-					return nil, fmt.Errorf("Invalid message. Expecting start quote for key, got end quote.")
+					return nil, isJson, fmt.Errorf("Invalid message. Expecting start quote for key, got end quote.")
 				}
 
 			case "}":
 				// got something like {}
 				if len(keys)-1 < 0 {
-					return nil, fmt.Errorf("Invalid message. Too many } characters.")
+					return nil, isJson, fmt.Errorf("Invalid message. Too many } characters.")
 				}
 
 				this.insertToken(tok)
@@ -582,7 +587,7 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 					//glog.Debugf("depth=%d, keys=%v", len(keys), keys)
 					switch len(keys) {
 					case 0:
-						return nil, fmt.Errorf("Invalid message. Expecting inside object, not so.")
+						return nil, isJson, fmt.Errorf("Invalid message. Expecting inside object, not so.")
 
 					default:
 						keys[len(keys)-1] = tok.Value
@@ -596,7 +601,7 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 					state = jsonObjectKey
 
 				} else {
-					return nil, fmt.Errorf("Invalid message. Expecting string key, got %q.", tok.Value)
+					return nil, isJson, fmt.Errorf("Invalid message. Expecting string key, got %q.", tok.Value)
 				}
 			}
 
@@ -606,19 +611,19 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 				// end quote
 				this.insertToken(tok)
 				if kquote = !kquote; kquote {
-					return nil, fmt.Errorf("Invalid message. Expecting end quote for key, got start quote.")
+					return nil, isJson, fmt.Errorf("Invalid message. Expecting end quote for key, got start quote.")
 				}
 
 			case ":":
 				if kquote {
-					return nil, fmt.Errorf("Invalid message. Expecting end quote for key, got %q.", tok.Value)
+					return nil, isJson, fmt.Errorf("Invalid message. Expecting end quote for key, got %q.", tok.Value)
 				}
 
 				this.insertToken(tok)
 				state = jsonObjectColon
 
 			default:
-				return nil, fmt.Errorf("Invalid message. Expecting colon or quote, got %q.", tok.Value)
+				return nil, isJson, fmt.Errorf("Invalid message. Expecting colon or quote, got %q.", tok.Value)
 			}
 
 		case jsonObjectColon:
@@ -657,14 +662,14 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 				// end quote
 				this.insertToken(tok)
 				if vquote = !vquote; vquote {
-					return nil, fmt.Errorf("Invalid message. Expecting end quote for value, got start quote.")
+					return nil, isJson, fmt.Errorf("Invalid message. Expecting end quote for value, got start quote.")
 				}
 
 			case "}":
 				// End of an object
 				this.insertToken(tok)
 				if len(keys)-1 < 0 {
-					return nil, fmt.Errorf("Invalid message. Too many } characters.")
+					return nil, isJson, fmt.Errorf("Invalid message. Too many } characters.")
 				}
 
 				keys = keys[:len(keys)-1]
@@ -675,7 +680,7 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 				state = jsonObjectStart
 
 			default:
-				return nil, fmt.Errorf("Invalid message. Expecting '}', ',' or '\"', got %q.", tok.Value)
+				return nil, isJson, fmt.Errorf("Invalid message. Expecting '}', ',' or '\"', got %q.", tok.Value)
 			}
 
 		case jsonObjectEnd, jsonArrayEnd:
@@ -683,7 +688,7 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 			case "}":
 				// End of an object
 				if len(keys)-1 < 0 {
-					return nil, fmt.Errorf("Invalid message. Too many } characters.")
+					return nil, isJson, fmt.Errorf("Invalid message. Too many } characters.")
 				}
 				this.insertToken(tok)
 				keys = keys[:len(keys)-1]
@@ -692,7 +697,7 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 			case "]":
 				// End of an object
 				if len(arrs)-1 < 0 || len(keys)-1 < 0 {
-					return nil, fmt.Errorf("Invalid message. Mismatched ']' or '}' characters.")
+					return nil, isJson, fmt.Errorf("Invalid message. Mismatched ']' or '}' characters.")
 				}
 
 				//keys = keys[:len(keys)-1]
@@ -705,7 +710,7 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 				this.insertToken(tok)
 
 			default:
-				return nil, fmt.Errorf("Invalid message. Expecting '}' or ',', got %q.", tok.Value)
+				return nil, isJson, fmt.Errorf("Invalid message. Expecting '}' or ',', got %q.", tok.Value)
 			}
 
 		case jsonArraySeparator:
@@ -715,7 +720,7 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 				keys = append(keys, "")
 
 			default:
-				return nil, fmt.Errorf("Invalid message. Expecting '{', got %q.", tok.Value)
+				return nil, isJson, fmt.Errorf("Invalid message. Expecting '{', got %q.", tok.Value)
 			}
 
 		case jsonArrayStart:
@@ -753,13 +758,13 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 				//state = jsonObjectKey
 				this.insertToken(tok)
 				if vquote = !vquote; vquote {
-					return nil, fmt.Errorf("Invalid message. Expecting end quote for value, got start quote.")
+					return nil, isJson, fmt.Errorf("Invalid message. Expecting end quote for value, got start quote.")
 				}
 
 			case "]":
 				// End of an object
 				if len(arrs)-1 < 0 || len(keys)-1 < 0 {
-					return nil, fmt.Errorf("Invalid message. Mismatched ']' or '}' characters.")
+					return nil, isJson, fmt.Errorf("Invalid message. Mismatched ']' or '}' characters.")
 				}
 
 				//keys = keys[:len(keys)-1]
@@ -773,16 +778,16 @@ func (this *Scanner) ScanJson_Preserve(s string) (Sequence, error) {
 				arrs[len(arrs)-1]++
 
 			default:
-				return nil, fmt.Errorf("Invalid message. Expecting ']', ',' or '\"', got %q.", tok.Value)
+				return nil, isJson, fmt.Errorf("Invalid message. Expecting ']', ',' or '\"', got %q.", tok.Value)
 			}
 		}
 		//glog.Debugf("2. tok=%s, state=%d, kquote=%t, vquote=%t, depth=%d", tok, state, kquote, vquote, len(keys))
 	}
 	if err != nil && err != io.EOF {
-		return nil, err
+		return nil, isJson, err
 	}
 
-	return this.seq, nil
+	return this.seq, isJson, nil
 }
 
 func (this *Scanner) insertToken(tok Token) {

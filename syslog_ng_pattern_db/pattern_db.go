@@ -366,11 +366,11 @@ func extractTestValuesForTokens(message string, ar sequence.AnalyzerResult) (map
 	}
 	pos := sequence.SplitToInt(ar.TagPositions, ",")
 	//scan the pattern
-	seq, err := scanner.Scan(ar.Pattern, true, pos)
+	seq, _, err := scanner.Scan(ar.Pattern, true, pos)
 	//add to the parser
 	err = parser.Add(seq)
 	//scan the example
-	mseq, _ := sequence.ScanMessage(scanner, message, "")
+	mseq, _, _ := sequence.ScanMessage(scanner, message, "")
 	//parse the example
 	pseq, err := parser.Parse(mseq)
 	mtc := make(map[string]int)

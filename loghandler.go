@@ -61,7 +61,7 @@ var (
 	eventAnalyzeInfo    = Event{101, "Analyzed %d messages, found %d unique patterns, %d are new, %d saved to the database. %d messages errored, Total time taken: %s, Time for analysis: %s"}
 	eventOutputInfo     = Event{102, "Output %d patterns to file, the top 5 matched patterns are %s, time taken: %s"}
 	eventGenericError   = Event{200, "%s"}
-	eventAnalysisFailed = Event{201, "Unable to analyze: %s"}
+	eventAnalysisFailed = Event{201, "Unable to analyze: %s, Message type: %s"}
 	eventDbInsertFailed = Event{301, "Failed to insert record into %s table, id: %s, reason: %s"}
 	eventDbUpdateFailed = Event{302, "Failed to update record in %s table, id: %s, reason: %s"}
 	eventDbSelectFailed = Event{303, "Failed to select record(s) from %s table, query: %s, reason: %s"}
@@ -69,11 +69,11 @@ var (
 	eventGenericPanic   = Event{500, "Panic occurred, reason: %s"}
 )
 
-func (l *StandardLogger) LogAnalysisFailed(lr LogRecord) {
+func (l *StandardLogger) LogAnalysisFailed(lr LogRecord, mtype string) {
 	l.WithFields(logrus.Fields{
 		"id":      eventAnalysisFailed.id,
 		"version": Version,
-	}).Debugf(eventAnalysisFailed.message, lr.Message)
+	}).Debugf(eventAnalysisFailed.message, lr.Message, mtype)
 }
 
 func (l *StandardLogger) DatabaseInsertFailed(tablename string, id string, reason string) {
