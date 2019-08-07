@@ -36,7 +36,6 @@ method and the flags for exportpatterns along with the expected analyzebyservice
 The original sequence did not handle multiline messages and we have added the functionality to make a pattern from the first line only and absorb the 
 remainder of the message as one token. This seems to be enough for our purposes, but may not work for everyone.
 
-
 For handling larger volumes of messages, we created an analyzebyservice method to do closely what the original analyze method does in the original sequence project,
 but splits and analyses the messages by their source system. This allows processing of a wider range of patterns and prevents messages from
 other services impacting the patterns.  
@@ -53,8 +52,8 @@ but grok does not, so for grok you may find you get a duplication of patterns if
 As with any effort at translation, there are a few situations where it can lead to a translation that is not quite right. For SEQUENCE a pattern such as `%string% %string1%` would only match a two word string,
 but with the patternDB translation `@ESTRING:string: @@ESTRING:string1:@` it would match any message with two words or more.
 To help avoid exporting these patterns we introduced the idea of a complexity score. The scores range from 0 to 1, 0 being a pattern with no tokens and 1 being a pattern with all
-string tokens. Around a complexity score of 0.5, most of the bad patterns are avoided. It is, however, not exact and there are a few with higher scores that are ok too.
-The idea is to give the review some control over what is exported, and the (hopefully) the ability to focus on the best patterns first.
+string tokens. At around a complexity score of 0.5, most of the bad patterns are avoided. It is, however, not exact and there are a few with higher scores that are ok too.
+The idea is to give the reviewer some control over what is exported, and the (hopefully) the ability to focus on the best patterns first.
 
 
 *NOTE: For the export to patterndb and grok, some of the regex values in the config file have not been completed, I have added them as I have needed them for the patterns
