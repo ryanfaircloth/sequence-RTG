@@ -59,6 +59,69 @@ The idea is to give the reviewer some control over what is exported, and the (ho
 *NOTE: For the export to patterndb and grok, some of the regex values in the config file have not been completed, I have added them as I have needed them for the patterns
 that we have found. Any date/time format that has no spaces is just a string variable, but the others need a regex to be matched properly.*
 
+sequence - Quickstart
+========
+
+Here's in a few lines how to get started.
+
+## build
+
+```
+git clone https://github.com/ccin2p3/sequence.git
+git co master
+go build
+cd cmd/sequence_db
+go build
+cd -
+alias sequence=./cmd/sequence_db/sequence_db
+```
+
+## usage without database
+
+
+1. adjust config
+```
+vi sequence.toml
+```
+2. autogenerate patterndb file
+```
+sequence analyzebyservice --all -k json --config sequence.toml -i examples/kernel.json -l /dev/stderr -n info -s patterndb -f yaml,xml -o /tmp/sequence
+```
+3. autogenerate logstash/grok
+```
+sequence analyzebyservice --all -k json --config sequence.toml -i examples/kernel.json -l /dev/stderr -n info -f txt -s grok -o /tmp/sequence.conf
+```
+
+## usage with saved state to database
+
+1. adjust config
+```
+vi sequence.toml
+```
+2. create the database
+```
+sequence createdatabase -l /dev/stderr -n info --conn sequence.sdb --type sqlite3
+```
+3. autogenerate patterns
+```
+sequence analyzebyservice -k json --config sequence.toml -i examples/kernel.json -l /dev/stderr -n info
+```
+4. generate patterndb from patterns stored in the database in previous step
+```
+sequence exportpatterns -s patterndb --config sequence.toml -o /tmp/sequence-patterndb -l /dev/stderr -n info -f yaml,xml
+```
+5. review patterndb
+```
+vi /tmp/sequence-patterndb.xml
+```
+
+## Elasticsearch example
+
+Send logs from Elasticsearch to sequence and generate patterndb file
+
+```
+curl https://localhost:9200/syslog-2019.06.19/_search -Hcontent-type:application/json -d'{"query":{"bool":{"must":[{"query_string":{"query":"-message:ldap_request"}},{"term":{"service":"kernel"}}]}},"size":5000}'|jq -c '.hits.hits[]._source | with_entries(select(.key | in({"message":1, "service":1})))' | sequence analyzebyservice --all -k json --config sequence.toml -i - -l /dev/stderr -n info -s patterndb -f yaml,xml -o /tmp/elasticsearch
+```
 
 sequence - Read me from original author
 ========
