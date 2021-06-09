@@ -200,7 +200,7 @@ func GetPatternsFromDatabaseByService(db *sql.DB, ctx context.Context, sid strin
 		logger.DatabaseSelectFailed("patterns", "Where Serviceid = "+sid, err.Error())
 	}
 	for _, p := range patterns {
-		ar := AnalyzerResult{Pattern: p.SequencePattern, TagPositions: p.TagPositions.String}
+		ar := AnalyzerResult{PatternId: p.ID, Pattern: p.SequencePattern, TagPositions: p.TagPositions.String}
 		ar.Service.Name = svc.Name
 		ar.Service.ID = svc.ID
 		pmap[p.ID] = ar

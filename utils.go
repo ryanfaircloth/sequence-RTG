@@ -104,11 +104,11 @@ func BuildParserFromDb(serviceid string) *Parser {
 		pos := SplitToInt(ar.TagPositions, ",")
 		seq, _, err := scanner.Scan(ar.Pattern, true, pos)
 		if err != nil {
-			logger.HandleError(err.Error())
+			logger.HandleError(fmt.Sprintf("%s, Service: %s, Pattern: %s", err.Error(), ar.Service.Name, ar.PatternId))
 		}
 
 		if err := parser.Add(seq); err != nil {
-			logger.HandleError(err.Error())
+			logger.HandleError(fmt.Sprintf("%s, Service: %s, Pattern: %s", err.Error(), ar.Service.Name, ar.PatternId))
 		}
 	}
 	return parser

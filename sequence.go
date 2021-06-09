@@ -34,10 +34,10 @@ type Sequence []Token
 func (this Sequence) String() (string, []int) {
 	var p string
 	var pos []int
-	var start int
-	for i, token := range this {
+	var start = 0
+	for _, token := range this {
 		var c string
-		if config.markSpaces && token.IsSpaceBefore && i != 0 {
+		if config.markSpaces && token.IsSpaceBefore {
 			start += 1
 		}
 		if token.Tag != TagUnknown {

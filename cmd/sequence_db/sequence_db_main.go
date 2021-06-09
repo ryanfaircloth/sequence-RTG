@@ -198,25 +198,14 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 			standardLogger.HandleDebug("Completed building parser and starting to check if matches existing patterns")
 			var seq sequence.Sequence
 			var isJson bool
+			partitionMap := make(map[int]sequence.LogRecordCollection)
+			var jCol sequence.LogRecordCollection
 			for _, l := range lrc.Records {
 				seq, isJson, _ = sequence.ScanMessage(scanner, l.Message, format)
-				_, err := parser.Parse(seq)
-				if err != nil {
-					if isJson {
-						jsonParser.Add(seq)
-					} else {
-						analyzer.Add(seq)
-					}
-
-				}
-			}
-			analyzer.Finalize()
-			standardLogger.HandleDebug("Added new patterns and finalised. Starting individual analysis")
-			for _, l := range lrc.Records {
-				seq, isJson, _ := sequence.ScanMessage(scanner, l.Message, format)
 				pseq, err := parser.Parse(seq)
+				//if the pattern is found we still need to update the pattern/service relationship
+				//and the statistics
 				if err == nil {
-					//if the pattern is found we might still need to update the pattern/service relationship
 					pat, pos := pseq.String()
 					ar, ok := pmap[pat]
 					if !ok {
@@ -230,14 +219,69 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 					ar.Pattern = pat
 					ar.ExampleCount++
 					pmap[pat] = ar
-				} else {
+
+					processed++
+
+				} else if err != nil {
 					if isJson {
-						aseq, err = jsonParser.Parse(seq)
-						mtype = "json"
+						jsonParser.Add(seq)
+						jCol.Records = append(jCol.Records, l)
 					} else {
-						aseq, err = analyzer.Analyze(seq)
-						mtype = "general"
+						//we need to do something here based on number of tokens
+						//we want to compare only those with same number.
+						if col, ok := partitionMap[len(seq)]; ok {
+							col.Records = append(col.Records, l)
+							partitionMap[len(seq)] = col
+						}else{
+							col.Records = append(col.Records, l)
+							partitionMap[len(seq)] = col
+						}
+						//analyzer.Add(seq)
 					}
+				}
+			}
+			//analyzer.Finalize()
+			standardLogger.HandleDebug("Parsed statistics updated, new messages scanned and grouped.")
+			standardLogger.HandleDebug("Starting analysis of json messages")
+			for _, l := range jCol.Records{
+				seq, _, _ := sequence.ScanMessage(scanner, l.Message, format)
+				aseq, err = jsonParser.Parse(seq)
+				mtype = "json"
+				if err != nil {
+					standardLogger.LogAnalysisFailed(l, mtype)
+					err_count++
+				} else {
+					pat, pos := aseq.String()
+					ar, ok := amap[pat]
+					if !ok {
+						ar = sequence.AnalyzerResult{}
+					}
+					sequence.AddExampleToAnalyzerResult(&ar, l)
+					ar.Service.ID = sid
+					ar.Service.Name = svc
+					ar.TagPositions = sequence.SplitToString(pos, ",")
+					ar.PatternId = sequence.GenerateIDFromString(pat, svc)
+					ar.Pattern = pat
+					ar.ExampleCount++
+					ar.DateCreated = time.Now()
+					ar.DateLastMatched = time.Now()
+					ar.ComplexityScore = sequence.CalculatePatternComplexity(aseq, len(l.Message))
+					amap[pat] = ar
+
+					processed++
+				}
+			}
+			for _, lrc := range partitionMap {
+				analyzer = sequence.NewAnalyzer()
+				for _, l := range lrc.Records {
+					seq, _, _ := sequence.ScanMessage(scanner, l.Message, format)
+					analyzer.Add(seq)
+				}
+				analyzer.Finalize()
+				for _, l := range lrc.Records {
+					seq, _, _ := sequence.ScanMessage(scanner, l.Message, format)
+					aseq, err = analyzer.Analyze(seq)
+					mtype = "general"
 					if err != nil {
 						standardLogger.LogAnalysisFailed(l, mtype)
 						err_count++
@@ -259,9 +303,9 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 						ar.ComplexityScore = sequence.CalculatePatternComplexity(aseq, len(l.Message))
 
 						amap[pat] = ar
+						processed++
 					}
 				}
-				processed++
 			}
 		}
 		anTime := time.Since(anStartTime)
