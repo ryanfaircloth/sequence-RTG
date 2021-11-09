@@ -59,6 +59,11 @@ The idea is to give the reviewer some control over what is exported, and the (ho
 *NOTE: For the export to patterndb and grok, some of the regex values in the config file have not been completed, I have added them as I have needed them for the patterns
 that we have found. Any date/time format that has no spaces is just a string variable, but the others need a regex to be matched properly.*
 
+syslog-ng blogpost
+========
+
+https://www.syslog-ng.com/community/b/blog/posts/sequence-making-patterndb-creation-for-syslog-ng-easier
+
 sequence - Quickstart
 ========
 
