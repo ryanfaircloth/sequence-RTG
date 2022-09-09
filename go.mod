@@ -10,14 +10,14 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.3.2
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.8.0
 	github.com/surge/glog v0.0.0-20141108051140-2578deb2b95c
 	github.com/volatiletech/null v8.0.0+incompatible
 	github.com/volatiletech/sqlboiler v3.7.1+incompatible
 	github.com/willf/bitset v1.1.10
 	github.com/zhenjl/porter2 v0.0.0-20150829210152-56e4718818e8
 	github.com/zhenjl/xparse v0.0.0-20151026232530-92c1990d3c16
-	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
