@@ -42,3 +42,4 @@ cmd/sequence_with_database/sequence_with_database
 /sequence.sdb
 
 
+cmd/sequence_db/sequence_db
