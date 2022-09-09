@@ -33,9 +33,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ryanfaircloth/sequence-RTG/sequence"
 	"github.com/spf13/cobra"
 	"github.com/surge/glog"
-	"gitlab.in2p3.fr/cc-in2p3-system/sequence"
 )
 
 var (
@@ -452,7 +452,7 @@ func buildParser() *sequence.Parser {
 				continue
 			}
 			var pos []int
-			seq, _,  err := scanner.Scan(line, true, pos)
+			seq, _, err := scanner.Scan(line, true, pos)
 			if err != nil {
 				log.Fatal(err)
 			}

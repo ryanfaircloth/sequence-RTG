@@ -1,4 +1,4 @@
-module gitlab.in2p3.fr/cc-in2p3-system/sequence
+module github.com/ryanfaircloth/sequence-RTG/sequence
 
 go 1.12
 

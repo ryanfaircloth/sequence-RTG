@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
-	"gitlab.in2p3.fr/cc-in2p3-system/sequence"
-	"gitlab.in2p3.fr/cc-in2p3-system/sequence/logstash_grok"
-	"gitlab.in2p3.fr/cc-in2p3-system/sequence/syslog_ng_pattern_db"
 	"os"
 	"os/signal"
 	"runtime/pprof"
 	"strings"
 	"time"
+
+	"github.com/ryanfaircloth/sequence-RTG/sequence"
+	"github.com/ryanfaircloth/sequence-RTG/sequence/logstash_grok"
+	"github.com/ryanfaircloth/sequence-RTG/sequence/syslog_ng_pattern_db"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -232,7 +233,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 						if col, ok := partitionMap[len(seq)]; ok {
 							col.Records = append(col.Records, l)
 							partitionMap[len(seq)] = col
-						}else{
+						} else {
 							col.Records = append(col.Records, l)
 							partitionMap[len(seq)] = col
 						}
@@ -243,7 +244,7 @@ func analyzebyservice(cmd *cobra.Command, args []string) {
 			//analyzer.Finalize()
 			standardLogger.HandleDebug("Parsed statistics updated, new messages scanned and grouped.")
 			standardLogger.HandleDebug("Starting analysis of json messages")
-			for _, l := range jCol.Records{
+			for _, l := range jCol.Records {
 				seq, _, _ := sequence.ScanMessage(scanner, l.Message, format)
 				aseq, err = jsonParser.Parse(seq)
 				mtype = "json"
