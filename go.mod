@@ -16,5 +16,6 @@ require (
 	github.com/zhenjl/porter2 v0.0.0-20150829210152-56e4718818e8
 	github.com/zhenjl/xparse v0.0.0-20151026232530-92c1990d3c16
 	golang.org/x/net v0.0.0-20190628185345-da137c7871d7 // indirect
+	golang.org/x/sys v0.0.0-20220908164124-27713097b956 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20190705120443-117fdf03f45f
 )
