@@ -32,4 +32,4 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: artifact-${{ matrix.goplatform }}-${{ matrix.goarch }}
-          path: build
+          path: build/*
