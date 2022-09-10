@@ -134,7 +134,6 @@ func getThreshold(numTotal int, typ string, val string) int {
 			return tr
 		}
 	}
-	return 0
 }
 
 //This can be useful for debugging

@@ -1,8 +1,10 @@
 package sequence
 
 import (
+	"bufio"
 	"context"
 	"database/sql"
+	_ "embed"
 	"strconv"
 	"strings"
 	"time"
@@ -15,6 +17,18 @@ import (
 	"github.com/volatiletech/sqlboiler/queries"
 	"github.com/volatiletech/sqlboiler/queries/qm"
 )
+
+//go:embed database_scripts/mssql.txt
+var createMSSQL string
+
+//go:embed database_scripts/mysql.txt
+var createMYSQL string
+
+//go:embed database_scripts/postgres.txt
+var createPostgres string
+
+//go:embed database_scripts/sqlite3.txt
+var createSQLite string
 
 // This creates the database from the scripts in the toml file at the location and db type specified.
 // SQLite3 needs cinfo and driver
@@ -29,8 +43,7 @@ func CreateDatabase(cinfo string, driver string, path string, dbname string) {
 		logger.HandleFatal(err.Error())
 	}
 	if driver == "sqlite3" {
-		s, file, err := OpenInputFile("database_scripts/sqlite3.txt")
-		defer file.Close()
+		s := bufio.NewScanner(strings.NewReader(createSQLite))
 		for s.Scan() {
 			_, err = database.Exec(s.Text())
 			if err != nil {
@@ -39,8 +52,7 @@ func CreateDatabase(cinfo string, driver string, path string, dbname string) {
 		}
 		tx.Commit()
 	} else if driver == "sqlserver" {
-		s, file, err := OpenInputFile("database_scripts/mssql.txt")
-		defer file.Close()
+		s := bufio.NewScanner(strings.NewReader(createMSSQL))
 		query := ""
 		for s.Scan() {
 			if strings.Contains(s.Text(), "GO") {
