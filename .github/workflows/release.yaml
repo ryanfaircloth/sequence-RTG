@@ -21,7 +21,7 @@ jobs:
           arch: ${{ matrix.goarch }}
       - name: Install libx11-dev for ARM64
         if: ${{ matrix.goarch !='amd64' }}
-        run: sudo apt-get install libx11-dev:${{ matrix.goarch }}
+        run: sudo apt-get libc6-${{ matrix.goarch }}-cross libc6-dev-${{ matrix.goarch }}-cross binutils-${{ matrix.goarch }}-linux-gnueabi
 
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
