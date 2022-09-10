@@ -31,5 +31,5 @@ jobs:
           pkg: cmd/sequence_db
       - uses: actions/upload-artifact@v3
         with:
-          name: artifact-${{ matrix.goarch }}
+          name: artifact
           path: build
