@@ -6,6 +6,8 @@ on:
 
 jobs:
   releases:
+    env:
+      ACTIONS_ALLOW_UNSECURE_COMMANDS: true
     name: Release Go Binary
     runs-on: ubuntu-latest
     steps:
