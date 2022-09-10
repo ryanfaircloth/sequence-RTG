@@ -9,6 +9,7 @@ jobs:
     name: Release Go Binary
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         # build and publish in parallel: linux/386, linux/amd64, linux/arm64, windows/386, windows/amd64, darwin/amd64, darwin/arm64
         goos: [linux, darwin]
@@ -19,9 +20,9 @@ jobs:
         if: ${{ matrix.goarch !='amd64' }}
         with:
           arch: ${{ matrix.goarch }}
-      - name: Install libx11-dev for ARM64
-        if: ${{ matrix.goarch !='amd64' }}
-        run: sudo apt-get libc6-${{ matrix.goarch }}-cross libc6-dev-${{ matrix.goarch }}-cross binutils-${{ matrix.goarch }}-linux-gnueabi
+      - name: Install ARM64
+        if: ${{ matrix.goarch !='arm64' }}
+        run: sudo apt-get libc6-amd64-cross libc6-dev-amd64-cross binutils-aarch64-linux-gnueabi
 
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
