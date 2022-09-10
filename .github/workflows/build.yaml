@@ -16,6 +16,7 @@ jobs:
       - name: Build
         uses: crazy-max/ghaction-xgo@v2.0.0
         env:
+          CGO_ENABLED: 1
           TIME: "${{ steps.current-time.outputs.time }}"
         with:
           xgo_version: latest
