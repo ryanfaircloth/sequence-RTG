@@ -7,29 +7,27 @@ on:
 jobs:
   xgo:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        goplatform: [linux, darwin]
-        goarch: [amd64, arm64]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Get time
+        uses: gerred/actions/current-time@master
+        id: current-time
       - name: Build
-        uses: crazy-max/ghaction-xgo@v2
+        uses: crazy-max/ghaction-xgo@v2.0.0
+        env:
+          TIME: "${{ steps.current-time.outputs.time }}"
         with:
           xgo_version: latest
           go_version: 1.19
-          dest: build
-          targets: ${{ matrix.goplatform }}/${{ matrix.goarch }}
-          v: true
-          x: false
-          race: false
-          ldflags: -s -w
-          buildmode: default
-          trimpath: true
+          dest: dist
+          prefix: hysteria
+          targets: linux/amd64,linux/arm-7,linux/arm64
+          ldflags: -w -s -X main.appCommit=${{ github.sha }} -X main.appDate=${{ env.TIME }}
           pkg: cmd/sequence_db
-      - uses: actions/upload-artifact@v2
+
+      - name: Archive
+        uses: actions/upload-artifact@v3
         with:
-          name: artifact-${{ matrix.goplatform }}-${{ matrix.goarch }}
-          path: build/*
+          name: dist
+          path: dist
