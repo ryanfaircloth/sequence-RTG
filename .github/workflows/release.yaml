@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: Install Cross-Compile Support (ARM64)
         uses: cyberjunk/gha-ubuntu-cross@v1
-        if: ${{ matrix.goarch !='amd64' }}
+        if: ${{ matrix.goarch =='arm64' }}
         with:
           arch: ${{ matrix.goarch }}
       - name: Install ARM64
