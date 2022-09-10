@@ -21,7 +21,7 @@ jobs:
           xgo_version: latest
           go_version: 1.19
           dest: dist
-          prefix: hysteria
+          prefix: sequence
           targets: linux/amd64,linux/arm-7,linux/arm64
           ldflags: -w -s -X main.appCommit=${{ github.sha }} -X main.appDate=${{ env.TIME }}
           pkg: cmd/sequence_db
