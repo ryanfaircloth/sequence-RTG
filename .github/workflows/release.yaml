@@ -21,7 +21,7 @@ jobs:
         with:
           arch: ${{ matrix.goarch }}
       - name: Install ARM64
-        if: ${{ matrix.goarch !='arm64' }}
+        if: ${{ matrix.goarch =='arm64' }}
         run: sudo apt-get install libc6-amd64-cross libc6-dev-amd64-cross binutils-aarch64-linux-gnueabi
 
       - uses: actions/checkout@v3
