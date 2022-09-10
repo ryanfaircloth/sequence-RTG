@@ -29,7 +29,7 @@ jobs:
           buildmode: default
           trimpath: true
           pkg: cmd/sequence_db
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v2
         with:
           name: artifact-${{ matrix.goplatform }}-${{ matrix.goarch }}
           path: build/*
