@@ -11,14 +11,18 @@ jobs:
     strategy:
       matrix:
         # build and publish in parallel: linux/386, linux/amd64, linux/arm64, windows/386, windows/amd64, darwin/amd64, darwin/arm64
-        goos: [linux, windows, darwin]
-        goarch: ["386", amd64, arm64]
-        exclude:
-          - goarch: "386"
-            goos: darwin
-          - goarch: arm64
-            goos: windows
+        goos: [linux, darwin]
+        goarch: [amd64, arm64]
     steps:
+      - name: Install Cross-Compile Support (ARM64)
+        uses: cyberjunk/gha-ubuntu-cross@v1
+        if: ${{ matrix.goarch !='amd64' }}
+        with:
+          arch: ${{ matrix.goarch }}
+      - name: Install libx11-dev for ARM64
+        if: ${{ matrix.goarch !='amd64' }}
+        run: sudo apt-get install libx11-dev:${{ matrix.goarch }}
+
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
         with:
