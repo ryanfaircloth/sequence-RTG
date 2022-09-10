@@ -29,3 +29,4 @@ jobs:
           project_path: "./cmd/sequence_db"
           binary_name: "sequence_db"
           extra_files: README.md
+          compress_assets: false
