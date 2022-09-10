@@ -10,8 +10,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        goarch:
-          [windows/amd64, linux/amd64, linux/arm64, darwin/arm64, darwin/amd64]
+        goplatform: [linux, darwin]
+        goarch: [amd64, arm64]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -21,7 +21,7 @@ jobs:
           xgo_version: latest
           go_version: 1.19
           dest: build
-          targets: ${{ matrix.goarch }}
+          targets: ${{ matrix.goplatform }}/${{ matrix.goarch }}
           v: true
           x: false
           race: false
@@ -31,5 +31,5 @@ jobs:
           pkg: cmd/sequence_db
       - uses: actions/upload-artifact@v3
         with:
-          name: artifact
+          name: artifact-${{ matrix.goplatform }}-${{ matrix.goarch }}
           path: build
