@@ -30,7 +30,8 @@ jobs:
           dest: dist
           prefix: sequence
           targets: linux/amd64,inux/arm-7,linux/arm64
-          ldflags: -w -s -X main.appVersion=${{ env.GIT_TAG_NAME }} -X main.appCommit=${{ github.sha }} -X main.appDate=${{ env.TIME }}
+          ldflags: -X sequence.Version=${{ env.GIT_TAG_NAME }} -X main.appCommit=${{ github.sha }} -X main.appDate=${{ env.TIME }}
+          pkg: cmd/sequence_db
 
       - name: Generate hashes
         run: |
